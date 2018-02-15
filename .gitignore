@@ -86,3 +86,10 @@ output/
 *.tiff
 *.png
 .Rproj.user
+*.zip
+*.prj
+*.sbn
+*.sbx
+*.shp
+*.shx
+
