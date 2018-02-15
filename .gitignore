@@ -51,6 +51,9 @@ Temporary Items
 .Rapp.history
 *.doc*
 *.pdf
+*.Rproj.user
+/.Rproj.user
+
 
 ## Data Files
 *.xlsx
