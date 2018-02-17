@@ -16,6 +16,8 @@ nochange.ras.path <- file.path(getwd(),"data/C2C_Change_NoChange/C2C_change_noch
 
 data.path <- file.path(getwd(),"data")
 year.ras[] <- year.ras[] # Bring raster to memory
+type.ras[] <- type.ras[] # Bring raster to memory
+nochange.ras[] <- nochange.ras[] # Bring raster to memory
 
 #testArea <- sf::st_read(file.path(getwd(),"data/testArea/testArea.shp"))
 testArea <- readOGR(file.path(getwd(),"data/testArea.shp"))
