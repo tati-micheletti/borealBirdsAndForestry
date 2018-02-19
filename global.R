@@ -15,18 +15,17 @@ paths <- list(
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("") # 
+modules <- list("glmerBirdModels") # timeseriesHRFCC, birdPrediction
 
 ## Set simulation and module parameters
 
-times <- list(start = 2009, end = 2020, timeunit = "year")
+times <- list(start = 1985, end = 2000, timeunit = "year")
 parameters <- list(
   .globals = list(.plotInitialTime = 1),
-  warblersPointCountBC = list(overrideModel = TRUE, start = 2009, end = 2011)
+  glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE, start = 1985, end = 1985)
 )
-objects = list(studyArea = "random", areaClass = "territory", areaName = "British Columbia", 
-               polyMatrix = matrix(c(-122.85, 52.04), ncol = 2), areaSize = 500000,
-               species = c("PISI","UEFL","YRWA","DEJU"))
+objects = list(studyArea = "testArea.shp",
+               species = c("PISI","UEFL","YRWA","DEJU")) # TO COMPLETE
 # objects = list(studyArea = "random")
 
 dev.useRSGD(FALSE) # do not use Rstudio graphics device
