@@ -21,5 +21,4 @@ anova.test <- anova(BBWAglmmi, BBWAglmmi2, BBWAglmmi3)
 max(vif.mer(BBWAglmmi3)) #1.811573 NOT BAD!
 max(vif.mer(BBWAglmmi4))
 
-# TOMORROW: CHECK OUT HOW THE DENSITIES VARY THROUGH YEARS FOR EACH BIRD*BEC_LCC thing... 
-# If they don't vary it is settled! If they vary, use the oldest one and hope for the best...
+# About vif and the c. function check https://hlplab.wordpress.com/2011/02/24/diagnosing-collinearity-in-lme4/.
