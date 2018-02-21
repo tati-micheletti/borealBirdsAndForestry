@@ -94,5 +94,6 @@ output/
 *.shx
 
 # Keygens
-sshkeygen.*
+*sshkeygen.*
 *.pub
+sshkeygen
