@@ -15,9 +15,6 @@ summary(BBWAglmmi2)
 summary(BBWAglmmi3)
 summary(BBWAglmmi4)
 
-# aic <- AIC(BBWAglmmi, BBWAglmmi2, BBWAglmmi3)
-anova.test <- anova(BBWAglmmi, BBWAglmmi2, BBWAglmmi3)
-
 max(vif.mer(BBWAglmmi3)) #1.811573 NOT BAD!
 max(vif.mer(BBWAglmmi4))
 
