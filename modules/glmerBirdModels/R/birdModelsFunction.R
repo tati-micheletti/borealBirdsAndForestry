@@ -2,48 +2,42 @@
 
 birdModelsFunction <- function(data){
   
-  # RESTART HERE! Re-write this code and make it better...
-  
   require(lme4)
-  
+  require(data.table)
+
+fullTable <- fread(file.path(getwd(), "data", data))
+    
+if (is.null("fullTable")){
+  require(googledrive)
+  drive_download("BAM/Final_points_BEAD.csv", path = file.path(getwd(), "data", data), overwrite = FALSE,
+                 verbose = FALSE)
+  fullTable <- fread(file.path(getwd(), "data", data))
+}
+
   ###### TRANSITIONAL DISTURBANCES
-  DATA1 = read.csv("Final_points_BEAD.csv")
   # Local scale
-  DATA2 = subset(DATA1, DATA1$State_P_100==0)
-  DATA3 = subset (DATA1, DATA1$Agent_L=="Transitional")
-  DATA=rbind(DATA2,DATA3)
+  localTrans <- fullTable[State_P_100==0|Agent_L=="Transitional"]
+
   # Neighborhood scale
-  DATA2 = subset(DATA1, DATA1$State_P_500==0)
-  DATA3 = subset (DATA1, DATA1$Agent_N=="Transitional")
-  DATA=rbind(DATA2,DATA3)
-  # Neighborhood scale - local intact
-  DATA2 = subset(DATA1, DATA1$State_P_100==0)
-  DATA3 = subset (DATA2, DATA2$State_P_500==0)
-  DATA4 = subset (DATA2, DATA2$Agent_N=="Transitional")
-  DATA=rbind(DATA3,DATA4)
+  neighTrans <- fullTable[State_P_500==0|Agent_N=="Transitional"]
   
+  # Neighborhood scale - local intact
+  localUndistNeighTrans <- neighTrans[State_P_100==0]
+
   ##### PERMANENT DISTURBANCES
-  DATA1 = read.csv("Final_points_BEAD.csv")  
   # Local scale
-  DATA2 = subset(DATA1, DATA1$State_P_100==0)
-  DATA3 = subset (DATA1, DATA1$Agent_L=="Permanent")
-  DATA=rbind(DATA2,DATA3)
+  localPerm <- fullTable[State_P_100==0|Agent_L=="Permanent"]
+  
   # Neighborhood scale
-  DATA2 = subset(DATA1, DATA1$State_P_500==0)
-  DATA3 = subset (DATA1, DATA1$Agent_L=="Permanent")
-  DATA=rbind(DATA2,DATA3)
+  neighPerm <- fullTable[State_P_500==0|Agent_N=="Permanent"]
+  
   # Neighborhood scale - local intact
-  DATA2 = subset(DATA1, DATA1$State_P_100==0)
-  DATA3 = subset (DATA2, DATA2$State_P_500==0)
-  DATA4 = subset (DATA2, DATA2$Agent_N=="Permanent")
-  DATA=rbind(DATA3,DATA4)
+  localUndistNeighPerm <- neighTrans[State_P_100==0]
   
-  
-  ##### MODELS
+##### MODELS
   # LOCAL SCALE
-  
-  DATA = read.csv("Final_points_BEAD_perm_local.csv")
-  DATA = read.csv("Final_points_BEAD_trans_local.csv")
+
+  DATA <- localTrans
   
   BBWAglmmi = glmer(AB_BBWA ~ State_P_100 + LOG_BCR_BBWA + offset(OF_BBWA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=DATA)
   BLPWglmmi = glmer(AB_BLPW ~ State_P_100 + LOG_BCR_BLPW + offset(OF_BLPW) + (1|ClusterSP) + (1|YYYY), family="poisson", data=DATA)
@@ -64,21 +58,6 @@ birdModelsFunction <- function(data){
   YRWAglmmi = glmer(AB_YRWA ~ State_P_100 + LOG_BCR_YRWA + offset(OF_YRWA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=DATA)
   
   # NEIGHBORHOOD SCALE
-  
-  # FULL DATABASE
-  DATA = read.csv("Final_points_BEAD.csv")
-  DATA = read.csv("Final_points_BEAD_perm_neigh.csv")
-  DATA = read.csv("Final_points_BEAD_trans_neigh.csv")
-  
-  # LOCAL DISTURBED
-  DATA = read.csv("Final_points_BEAD_neigh_localdisturbed.csv")
-  DATA = read.csv("Final_points_BEAD_perm_neigh_localdisturbed.csv")
-  DATA = read.csv("Final_points_BEAD_trans_neigh_localdisturbed.CSV")
-  
-  # LOCAL INTACT
-  DATA = read.csv("Final_points_BEAD_neigh_localintact.csv")
-  DATA = read.csv("Final_points_BEAD_perm_neigh_localintact.csv")
-  DATA = read.csv("Final_points_BEAD_trans_neigh_localintact.csv")
   
   BBWAglmmi2 = glmer(AB_BBWA ~ State_P_500 + LOG_BCR_BBWA + offset(OF_BBWA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=DATA)
   BLPWglmmi2 = glmer(AB_BLPW ~ State_P_500 + LOG_BCR_BLPW + offset(OF_BLPW) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=DATA)
