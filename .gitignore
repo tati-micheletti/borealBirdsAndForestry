@@ -93,3 +93,6 @@ output/
 *.shp
 *.shx
 
+# Keygens
+sshkeygen.*
+*.pub
