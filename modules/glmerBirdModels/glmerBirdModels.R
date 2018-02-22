@@ -33,16 +33,19 @@ The rise of industrial development, the fall of boreal songbirds: Industrial dev
   ),
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
-    expectsInput(objectName = "birdData", 
-                 objectClass = "data.table", 
-                 desc = "Bird data assembled by the BAM (Boreal Avian Modelling Project)",
-                 sourceURL = NA)
+    expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension"), 
+                 objectClass = "data.table","character", "vector", "vector"), 
+                 desc = c("Bird data assembled by the BAM (Boreal Avian Modelling Project)",
+                          "Character to define the are to crop",
+                          "Might be Transitional, Permanent, Undisturbed, and/or Both",
+                          "Might be local and/or neighborhood"),
+                 sourceURL = c(NA,NA,NA,NA)
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "models", 
-                  objectClass = "list", 
-                  desc = "list of boreal bird models")
+    createsOutput(objectName = c("models","studyArea","data"),
+                  objectClass = c("list","shapefile","" ),
+                  desc = c("list of boreal bird models"))
   )
 ))
 
