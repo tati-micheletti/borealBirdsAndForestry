@@ -25,8 +25,9 @@ parameters <- list(
   glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE, start = 1985, end = 1985)
 )
 objects = list(studyArea = "testArea.shp",
-               species = c("PISI","UEFL","YRWA","DEJU")) # TO COMPLETE
-# objects = list(studyArea = "random")
+               species = c("PISI","UEFL","YRWA","DEJU"),
+               typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed"),
+               disturbanceDimension = c("local", "neighborhood"))
 
 dev.useRSGD(FALSE) # do not use Rstudio graphics device
 dev() # opens external (non-RStudio) device, which is faster
