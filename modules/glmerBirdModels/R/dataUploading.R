@@ -1,50 +1,55 @@
 # dataUploading
+# disturbanceDimension <- c("local", "neighborhood)
+# typeDisturbance <- c("Transitional", "Permanent", "Undisturbed", "Both")
 
-dataUploading <- function(data){
+dataUploading <- function(data, disturbanceDimension, typeDisturbance){
   
-require(data.table)
+  require(data.table)
   
-  fullTable <- fread(file.path(getwd(), "data", data))
+  fullData <- fread(file.path(getwd(), "data", data))
   
-  if (is.null("fullTable")){
+  if (is.null("fullData")){
     require(googledrive)
     drive_download("BAM/Final_points_BEAD.csv", path = file.path(getwd(), "data", data), overwrite = FALSE,
                    verbose = FALSE)
-    fullTable <- fread(file.path(getwd(), "data", data))
+    fullData <- fread(file.path(getwd(), "data", data))
   }
   
-  fullData <- fullTable
+  dataUploaded <- list()
   
-  localUndist <- fullTable[State_P_100==0]
+  for (dd in length(disturbanceDimension)){
+    for (td in 1:length(typeDisturbance)){
+    }
+    
+    if (disturbanceDimension[dd]=="local"){
+      state <- "State_P_100"
+      agent <- "L"
+    }
+       else {
+      state <- "State_P_500"
+      agent <- "N"
+    }
+    
+    if (typeDisturbance[td]=="Undisturbed"){
+      dataUploaded$localUndisturbed <- fullData[State_P_100==0]
+      next
+    }
+    
+    if (typeDisturbance[td]=="Both"){
+      dataUploaded$fullData <- fullData
+      next
+    }
+    
+    paste0(disturbanceDimension[dd],typeDisturbance[td]) <- fullData[state==0|
+                                                                       paste0("Agent_",agent)==typeDisturbance[td]]
+
+    dataUploaded$disturbanceDimension[dd]$typeDisturbance[td] <- get(paste0(disturbanceDimension[dd],typeDisturbance[td]))
+
+   # If this dataUploaded$disturbanceDimension[dd]$typeDisturbance[td] doesn't work, try:
+    # distDim <- disturbanceDimension[dd]
+    # typeDist <- typeDisturbance[td]
   
-  ###### TRANSITIONAL DISTURBANCES
-  # Local scale
-  localTrans <- fullTable[State_P_100==0|Agent_L=="Transitional"]
-  
-  # Neighborhood scale
-  neighTrans <- fullTable[State_P_500==0|Agent_N=="Transitional"]
-  
-  # Neighborhood scale - local intact
-  localUndistNeighTrans <- neighTrans[State_P_100==0]
-  
-  ##### PERMANENT DISTURBANCES
-  # Local scale
-  localPerm <- fullTable[State_P_100==0|Agent_L=="Permanent"]
-  
-  # Neighborhood scale
-  neighPerm <- fullTable[State_P_500==0|Agent_N=="Permanent"]
-  
-  # Neighborhood scale - local intact trans
-  localUndistNeighPerm <- neighPerm[State_P_100==0]
-  
-  dataUploaded <- list(localTrans = localTrans, 
-                       neighTrans = neighTrans, 
-                       localUndistNeighTrans = localUndistNeighTrans, 
-                       localPerm = localPerm, 
-                       neighPerm = neighPerm,
-                       localUndistNeighPerm = localUndistNeighPerm,
-                       localUndist = localUndist,
-                       fullData = fullData)
-  
-  return(dataUploaded)
+    return(dataUploaded)
+    
+  }
 }
