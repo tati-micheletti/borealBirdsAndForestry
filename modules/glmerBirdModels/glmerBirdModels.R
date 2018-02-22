@@ -44,8 +44,10 @@ The rise of industrial development, the fall of boreal songbirds: Industrial dev
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
     createsOutput(objectName = c("models","studyArea","data"),
-                  objectClass = c("list","shapefile","" ),
-                  desc = c("list of boreal bird models"))
+                  objectClass = c("list","shapefile","list" ),
+                  desc = c("list of boreal bird models",
+                           "shapefile of the study area",
+                           "list of the data already subsetted for the models"))
   )
 ))
 

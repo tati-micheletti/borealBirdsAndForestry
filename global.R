@@ -39,3 +39,6 @@ mySimOut <- spades(mySim, debug = TRUE) #c("warblersPointCountBC","init")
 
 moduleDiagram(mySim)
 objectDiagram(mySim)
+
+
+
