@@ -33,12 +33,16 @@ The rise of industrial development, the fall of boreal songbirds: Industrial dev
   ),
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
-    expectsInput(objectName = "birdData", objectClass = "data.table", desc = "Bird data assembled by the BAM (Boreal Avian Modelling Project)",
+    expectsInput(objectName = "birdData", 
+                 objectClass = "data.table", 
+                 desc = "Bird data assembled by the BAM (Boreal Avian Modelling Project)",
                  sourceURL = NA)
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "models", objectClass = "list", desc = "list of boreal bird models")
+    createsOutput(objectName = "models", 
+                  objectClass = "list", 
+                  desc = "list of boreal bird models")
   )
 ))
 
@@ -52,13 +56,27 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       sim <- Init(sim)
 
       # schedule future event(s)
+      sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "dataUploading")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "birdModels")
       sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "glmerBirdModels", "save")
     },
   
-  birdModels = {
+    dataUploading = {
+      
+      sim$data <- dataUploading(data = sim$birdData, 
+                                disturbanceDimension = sim$disturbanceDimension, 
+                                typeDisturbance = sim$typeDisturbance)
+      
+    },
+    save = {
+      
+      sim <- saveFiles(sim)
+      
+    },
+    birdModels = {
     
-      sim$models <- birdModelsFunction(data = sim$birdData)
+      sim$models <- birdModelsFunction(disturbanceDimension = sim$disturbanceDimension, 
+                                       typeDisturbance = sim$typeDisturbance)
     
     },
     save = {
