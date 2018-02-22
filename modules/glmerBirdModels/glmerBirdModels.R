@@ -3,13 +3,7 @@
 # are put into the simList. To use objects and functions, use sim$xxx.
 defineModule(sim, list(
   name = "glmerBirdModels",
-  description = "The present module is based on the work of Suárez-Esteban et al. (in prep). 
-These models investigate the following questions:
-1. Do cumulative disturbances at local scales have a consistent effect across Canada on old forest-associated songbirds? 
-2. Do neighborhood disturbances influence the abundance of birds at local scales? 
-3. What are the relative effects of permanent and transitional disturbance agents at both scales?. 
-  For more information: Alberto Suárez-Esteban, Steve G. Cumming, Erin M. Bayne, Samantha J. Song, and Fiona K. A. Schmiegelow. 
-The rise of industrial development, the fall of boreal songbirds: Industrial development threatens boreal songbirds across Canada",
+  description = c("The present module is based on the work of Suárez-Esteban et al. (in prep). These models investigate the following questions: 1. Do cumulative disturbances at local scales have a consistent effect across Canada on old forest-associated songbirds? 2. Do neighborhood disturbances influence the abundance of birds at local scales? 3. What are the relative effects of permanent and transitional disturbance agents at both scales?. For more information: Alberto Suárez-Esteban, Steve G. Cumming, Erin M. Bayne, Samantha J. Song, and Fiona K. A. Schmiegelow. The rise of industrial development, the fall of boreal songbirds: Industrial development threatens boreal songbirds across Canada"),
   keywords = c("songbirds", "forestry", "Anthropogenic disturbance"),
   authors = c(person("Tati", "Micheletti", email = "tati.micheletti@gmail.com", role = c("aut", "cre")),
               person("Alberto", "Suárez-Esteban", email = "suarezes@ualberta.ca", role = c("aut"))),
