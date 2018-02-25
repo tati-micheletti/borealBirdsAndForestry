@@ -14,7 +14,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "glmerBirdModels.Rmd"),
-  reqdPkgs = list("data.table", "rgdal", "raster", "sf", "lme4"),
+  reqdPkgs = list("data.table", "rgdal", "raster", "sf", "lme4", "googledrive"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("cropping", "logical", FALSE, NA, NA, "If the rasters should be cropped to a study area or not"),
@@ -23,24 +23,23 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "numeric", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
   ),
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension"), 
-                 objectClass = "data.table","character", "vector", "vector"), 
+                 objectClass = c("data.table","character", "vector", "vector"), 
                  desc = c("Bird data assembled by the BAM (Boreal Avian Modelling Project)",
                           "Character to define the are to crop",
                           "Might be Transitional, Permanent, Undisturbed, and/or Both",
                           "Might be local and/or neighborhood"),
-                 sourceURL = c(NA,NA,NA,NA)
+                 sourceURL = c(NA,NA,NA,NA))
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = c("models","studyArea","data"),
-                  objectClass = c("list","shapefile","list" ),
-                  desc = c("list of boreal bird models",
-                           "shapefile of the study area",
+    createsOutput(objectName = c("models","data"), #"studyArea"
+                  objectClass = c("list","list" ), #,"shapefile"
+                  desc = c("list of boreal bird models", #"shapefile of the study area",
                            "list of the data already subsetted for the models"))
   )
 ))
@@ -62,7 +61,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
   
     dataUploading = {
       
-      sim$data <- dataUploading(data = sim$birdData, 
+      sim$data <- dataUploading(data = "Final_points_BEAD.csv", 
                                 disturbanceDimension = sim$disturbanceDimension, 
                                 typeDisturbance = sim$typeDisturbance)
       
@@ -99,11 +98,11 @@ Init <- function(sim) {
 }
 
 .inputObjects = function(sim) {
-
-if (sim$cropping==TRUE){
-    sim$studyArea <- loadStudyArea(data = studyArea)
-}  
-    sim$birdData <- loadData(data = "Final_points_BEAD.csv")
-
+  
+ if (params(sim)$glmerBirdModels$cropForModel==TRUE){
+     sim$studyArea <- loadStudyArea(data = studyArea)
+     sim$birdData <- loadData(data = "Final_points_BEAD.csv")
+}
+  
   return(invisible(sim))
 }
