@@ -21,10 +21,9 @@ birdModelsFunction <- function(disturbanceDimension, typeDisturbance){
 
     # distDim <- disturbanceDimension[dd]
     # typeDist <- typeDisturbance[td]
-    data <- get(paste0("sim$", 
-                       disturbanceDimension[dd],
-                       "$",
-                       typeDisturbance[td]))
+
+    data <- get(paste0("sim$",disturbanceDimension[dd],
+                       "$",typeDisturbance[td]))
     
   ##### MODELS #####
   
