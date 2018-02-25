@@ -8,13 +8,11 @@ loadData <- function(data){
   require(raster)
   require(sf)
   
-  if (params(sim)$glmerBirdModels$cropForModel==TRUE){
-    
-    if (is.null("birdData")){
-      require(googledrive)
-      drive_download("BAM/Final_points_BEAD.csv", path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = FALSE,verbose = FALSE)
-      birdData <- fread(file.path(getwd(), "modules/glmerBirdModels/data", data))
-    }
+  birdData <- fread(file.path(getwd(), "data", data))
+  
+  if (sim$cropForModel==TRUE){
+    if(checkObject(sim = sim, name = "studyArea")==FALSE)
+      sim$studyArea <- loadStudyArea(data = studyArea)
     
     studyArea <- sf::st_transform(x = sim$studyArea, crs = "+init=epsg:4326")
     

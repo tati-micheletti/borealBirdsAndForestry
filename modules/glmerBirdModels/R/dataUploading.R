@@ -5,24 +5,19 @@
 dataUploading <- function(data, disturbanceDimension, typeDisturbance){
   
   require(data.table)
-  require(googledrive)
   
-  data.path <- file.path(getwd(), "modules/glmerBirdModels/data", data)
+  fullData <- fread(file.path(getwd(), "data", data))
   
-  if (!is.null(data.path)){
-  fullData <- fread(data.path)}
-   else {
+  if (is.null("fullData")){
     require(googledrive)
-    drive_download("BAM/Final_points_BEAD.csv", path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = FALSE, verbose = FALSE)
-    fullData <- fread(file.path(getwd(), "modules/glmerBirdModels/data", data))
+    drive_download("BAM/Final_points_BEAD.csv", path = file.path(getwd(), "data", data), overwrite = FALSE,
+                   verbose = FALSE)
+    fullData <- fread(file.path(getwd(), "data", data))
   }
-  
-  browser() # dataUploading::Fix
-  # td is not being a counter from 1:length(typeDist.). It is starting in 4 and staying. Therefore several DS are not being saved...
   
   dataUploaded <- list()
   
-  for (dd in 1:length(disturbanceDimension)){
+  for (dd in length(disturbanceDimension)){
     for (td in 1:length(typeDisturbance)){
     }
     
