@@ -73,7 +73,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     birdModels = {
     
-      sim$models <- birdModelsFunction(disturbanceDimension = sim$disturbanceDimension, 
+      sim$models <- birdModelsFunction(sim = sim, disturbanceDimension = sim$disturbanceDimension, 
                                        typeDisturbance = sim$typeDisturbance)
     
     },

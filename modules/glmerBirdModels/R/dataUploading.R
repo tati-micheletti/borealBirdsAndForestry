@@ -17,14 +17,15 @@ dataUploading <- function(data, disturbanceDimension, typeDisturbance){
     fullData <- fread(file.path(getwd(), "modules/glmerBirdModels/data", data))
   }
   
-  browser() # dataUploading::Fix
-  # td is not being a counter from 1:length(typeDist.). It is starting in 4 and staying. Therefore several DS are not being saved...
-  
-  dataUploaded <- list()
+  dataUploaded <- list(localUndisturbed = NA, 
+                       fullData = NA,
+                       localTransitional = NA, 
+                       localPermanent = NA, 
+                       neighborhoodTransitional = NA, 
+                       neighborhoodPermanent = NA)
   
   for (dd in 1:length(disturbanceDimension)){
     for (td in 1:length(typeDisturbance)){
-    }
     
     if (disturbanceDimension[dd]=="local"){
       state <- "State_P_100"
@@ -44,17 +45,11 @@ dataUploading <- function(data, disturbanceDimension, typeDisturbance){
       dataUploaded$fullData <- fullData
       next
     }
-    
-    paste0(disturbanceDimension[dd],typeDisturbance[td]) <- fullData[state==0|
-                                                                       paste0("Agent_",agent)==typeDisturbance[td]]
 
-    dataUploaded$disturbanceDimension[dd]$typeDisturbance[td] <- get(paste0(disturbanceDimension[dd],typeDisturbance[td]))
+      dataUploaded[[paste0(disturbanceDimension[dd],typeDisturbance[td])]] <- 
+             fullData[get(paste0(state))==0|get(paste0("Agent_",agent))==typeDisturbance[td]]
 
-   # If this dataUploaded$disturbanceDimension[dd]$typeDisturbance[td] doesn't work, try:
-    # distDim <- disturbanceDimension[dd]
-    # typeDist <- typeDisturbance[td]
-  
-    return(dataUploaded)
-    
   }
+}
+  return(dataUploaded)
 }

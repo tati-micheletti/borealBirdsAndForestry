@@ -29,7 +29,7 @@ objects = list(studyArea = "testArea.shp",
                typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed"),
                disturbanceDimension = c("local", "neighborhood"))
 
-dev.useRSGD(FALSE) # do not use Rstudio graphics device
+dev.useRSGD(TRUE) # do not use Rstudio graphics device
 dev() # opens external (non-RStudio) device, which is faster
 clearPlot()
 
@@ -39,6 +39,4 @@ mySimOut <- spades(mySim, debug = TRUE) #c("warblersPointCountBC","init")
 
 moduleDiagram(mySim)
 objectDiagram(mySim)
-
-
 

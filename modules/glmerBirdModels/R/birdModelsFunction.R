@@ -1,10 +1,11 @@
-birdModelsFunction <- function(disturbanceDimension, typeDisturbance){
+birdModelsFunction <- function(sim, disturbanceDimension, typeDisturbance){
   
 # disturbanceDimension <- c("local", "neighborhood)
 # typeDisturbance <- c("Transitional", "Permanent", "Undisturbed", "Both")
-#  For undisturbed, it uses necessarily neighborhood model, with local==0
+#  For undisturbed, it uses neighborhood model, with local==0
 
   require(lme4)
+  
   models <- list()
   
   for (dd in 1:length(disturbanceDimension)){
@@ -19,11 +20,21 @@ birdModelsFunction <- function(disturbanceDimension, typeDisturbance){
     dimension <- paste0("State_P_500")
   }
 
-    # distDim <- disturbanceDimension[dd]
-    # typeDist <- typeDisturbance[td]
+    if (typeDisturbance[td]=="Both"){
 
-    data <- get(paste0("sim$",disturbanceDimension[dd],
-                       "$",typeDisturbance[td]))
+      data <- sim$data$fullData
+  
+      }  else
+  
+      if (disturbanceDimension[dd]=="neighborhood"&typeDisturbance[td]=="Undisturbed"){
+        
+        next
+
+        } else {
+        
+      data <- sim$data[[paste0(disturbanceDimension[dd],typeDisturbance[td])]]
+      
+      }
     
   ##### MODELS #####
   
@@ -45,7 +56,7 @@ birdModelsFunction <- function(disturbanceDimension, typeDisturbance){
   WETA <- glmer(AB_WETA ~ get(dimension) + LOG_BCR_WETA + offset(OF_WETA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
   YRWA <- glmer(AB_YRWA ~ get(dimension) + LOG_BCR_YRWA + offset(OF_YRWA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
   
-models$typeDisturbance[td]$disturbanceDimension[dd] <- list(BBWA = BBWA,
+models[[paste0(disturbanceDimension[dd],typeDisturbance[td])]] <- list(BBWA = BBWA,
                                                             BLPW = BLPW,
                                                             BOCH = BOCH,
                                                             BRCR = BRCR,
