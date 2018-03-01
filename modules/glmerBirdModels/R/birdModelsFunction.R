@@ -4,6 +4,8 @@ birdModelsFunction <- function(sim, disturbanceDimension, typeDisturbance){
 # typeDisturbance <- c("Transitional", "Permanent", "Undisturbed", "Both")
 #  For undisturbed, it uses neighborhood model, with local==0
 
+  # Still need to update to include a convergence check and an automatic re-run of the models if convergence is not achieved.
+  
   require(lme4)
   
   models <- list()
@@ -46,8 +48,6 @@ birdModelsFunction <- function(sim, disturbanceDimension, typeDisturbance){
   CAWA <- glmer(AB_CAWA ~ get(dimension) + LOG_BCR_CAWA + offset(OF_CAWA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
   CMWA <- glmer(AB_CMWA ~ get(dimension) + LOG_BCR_CMWA + offset(OF_CMWA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
   CONW <- glmer(AB_CONW ~ get(dimension) + LOG_BCR_CONW + offset(OF_CONW) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
-  FOSP <- glmer(AB_FOSP ~ get(dimension) + LOG_BCR_FOSP + offset(OF_FOSP) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
-  NOWA <- glmer(AB_NOWA ~ get(dimension) + LOG_BCR_NOWA + offset(OF_NOWA) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
   OVEN <- glmer(AB_OVEN ~ get(dimension) + LOG_BCR_OVEN + offset(OF_OVEN) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
   PISI <- glmer(AB_PISI ~ get(dimension) + LOG_BCR_PISI + offset(OF_PISI) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
   RBNU <- glmer(AB_RBNU ~ get(dimension) + LOG_BCR_RBNU + offset(OF_RBNU) + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), family="poisson", data=data)
