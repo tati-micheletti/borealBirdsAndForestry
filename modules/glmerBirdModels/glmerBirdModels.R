@@ -50,15 +50,15 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
   switch(
     eventType,
     init = {
-
+      
       sim <- Init(sim)
-
+      
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "dataUploading")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "birdModels")
       sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "glmerBirdModels", "save")
     },
-  
+    
     dataUploading = {
       
       sim$data <- dataUploading(data = "Final_points_BEAD.csv", 
@@ -72,17 +72,18 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       
     },
     birdModels = {
-    
+      
       sim$models <- birdModelsFunction(sim = sim, disturbanceDimension = sim$disturbanceDimension, 
-                                       typeDisturbance = sim$typeDisturbance)
-    
+                                       typeDisturbance = sim$typeDisturbance,
+                                       birdSp = sim$birdSpecies)
+      
     },
     save = {
-     
+      
       sim <- saveFiles(sim)
       
     },
-
+    
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
@@ -99,10 +100,16 @@ Init <- function(sim) {
 
 .inputObjects = function(sim) {
   
- if (params(sim)$glmerBirdModels$cropForModel==TRUE){
-     sim$studyArea <- loadStudyArea(data = studyArea)
-     sim$birdData <- loadData(data = "Final_points_BEAD.csv")
-}
+  if (params(sim)$glmerBirdModels$cropForModel==TRUE){
+    sim$studyArea <- loadStudyArea(data = studyArea)
+    sim$birdData <- loadData(data = "Final_points_BEAD.csv")
+  }
   
+  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) { #Benchmatk later comaring to is.null(sim$birdSpecies)
+    sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
+                         "BTNW", "CAWA", "CMWA", "CONW", 
+                         "OVEN", "PISI", "RBNU", "SWTH", 
+                         "TEWA", "WETA", "YRWA")
+  }  
   return(invisible(sim))
 }
