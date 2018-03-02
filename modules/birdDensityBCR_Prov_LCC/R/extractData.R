@@ -7,14 +7,15 @@ extractData <- function(datasetRaster, typeData, list){
   
   if (typeData == "list") {
     
-    data <- rep(list(NA),length(list))
+    data <- vector(mode = "list", length = length(list))
+    names(data) <- as.list(list)
     
     for (i in 1:length(list)){
-
+      
       names(data)[i] <- list[i]
       
-        data[[paste0(list[i])]] <- data.table(sp::coordinates(datasetRaster[[paste0(list[i])]]),
-                                              raster::values(datasetRaster[[i]]))
+      data[[paste0(list[i])]] <- data.table(sp::coordinates(datasetRaster[[paste0(list[i])]]),
+                                            raster::values(datasetRaster[[i]]))
       names(data[[paste0(list[i])]]) <- c("X", "Y", "Value")
       
     }

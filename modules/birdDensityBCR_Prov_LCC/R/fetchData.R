@@ -10,15 +10,15 @@ fetchData <- function(sim, birdSp) {
     dataDir <- file.path(modulePath(sim),"birdDensityBCR_Prov_LCC/data")
     
     if(!paste0(birdSp[i],"_currmean.asc") %in% list.files(dataDir)){
-    temp <- tempfile()
-    download.file(paste0("https://s3-us-west-2.amazonaws.com/bam-databasin-climatechangepredictions/climatepredictions-ascii/",
-                         birdSp[i],"_current.zip"),destfile = temp, cacheOK = TRUE)
-    unzip(temp, exdir = dataDir)
+      temp <- tempfile()
+      download.file(paste0("https://s3-us-west-2.amazonaws.com/bam-databasin-climatechangepredictions/climatepredictions-ascii/",
+                           birdSp[i],"_current.zip"),destfile = temp, cacheOK = TRUE)
+      unzip(temp, exdir = dataDir)
     }
     
     dataRaster[[paste0(birdSp[i])]] <- raster::raster(file.path(dataDir,paste0(birdSp[i],"_currmean.asc")))
   }
   return(dataRaster)
   
-  }
+}
 
