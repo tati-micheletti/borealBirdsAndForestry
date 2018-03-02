@@ -80,6 +80,7 @@ output/
 *.shx
 *.db
 *.rda
+*.asc
 # Keygens
 *sshkeygen.*
 *.pub
