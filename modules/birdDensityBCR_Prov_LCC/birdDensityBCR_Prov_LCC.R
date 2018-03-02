@@ -20,7 +20,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "birdDensityBCR_Prov_LCC.Rmd"),
-  reqdPkgs = list(),
+  reqdPkgs = list("data.table", "raster"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
@@ -58,12 +58,15 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
 
     fetchData = {
       
-      sim$birdDensityRasters <- fetchData(birdSp = sim$birdSpecies)
+      sim$birdDensityRasters <- fetchData(sim = sim, birdSp = sim$birdSpecies)
       
     },
+    
     extractData = {
       
-      sim$birdDensityTables <- extractData(birdSp = sim$birdSpecies) # Revise function name
+      sim$birdDensityTables <- extractData(datasetRaster = sim$birdDensityRasters, 
+                                           typeData = "list", 
+                                           list = sim$birdSpecies) # Revise function name
       
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -81,7 +84,7 @@ Init <- function(sim) {
 
 .inputObjects = function(sim) {
 
-  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) {
+  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) { #Benchmatk later comaring to is.null(sim$birdSpecies)
    sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                         "BTNW", "CAWA", "CMWA", "CONW", 
                         "OVEN", "PISI", "RBNU", "SWTH", 
