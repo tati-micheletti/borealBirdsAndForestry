@@ -1,0 +1,63 @@
+---
+title: "Checking Alberto's Dataset"
+author: "Tati Micheletti"
+date: "3/6/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dataset Checking
+
+This `.rmd` file was created to make a quality check on Alberto's final dataset (Final_points_BEAD.csv) file for the paper: **The rise of industrial development, the fall of boreal songbirds.**. It checks the dataset for duplicates and also corrects the number of samples per question (Appendix 1).
+
+### Data uploading
+
+The first task is to upload the data and load the required libraries:
+```{r dataUploading}
+
+# load libraries
+library(data.table)
+library(reproducible)
+dataset <- "Final_points_BEAD.csv"
+DT <- suppressWarnings(fread(file.path(getwd(),"modules/glmerBirdModels/data", dataset)))
+```
+
+### Check for duplicates
+Then we check the variables the data table has, create a vector of which have the possible duplicated data and create a table for the checking of duplicates
+```{r checkDuplicates}
+variables <- names(DT)
+variablesIgnore <- c("PKEY","SS")
+source(file = file.path(getwd(),"checkDuplicates.R"))
+duplicates <- checkDuplicates(dataTable = DT, ignoreCols = variablesIgnore)
+knitr::kable(DT[duplicates$ROWS,])
+```
+
+This shows us that we have `r length(duplicates$ROWS)/2` duplicates that have different SS and PKEY, but everything else (including dates, times, coordinates and abundances) identical.
+
+## Data Subsetting
+
+Now we create variables to subset our data:
+```{r createVariables}
+typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed")
+disturbanceDimension = c("local", "neighborhood")
+```
+
+And we use a customized function to subset the dataset:
+```{r dataSubsetting}
+source(file = file.path(getwd(),"modules/glmerBirdModels/R/dataUploading.R"))
+subsettedDT <- suppressMessages(dataUploading(data = dataset, disturbanceDimension = disturbanceDimension, typeDisturbance = typeDisturbance))
+```
+
+Now we can create a table with each subset sample sizes:
+```{r sampleSizeTable}
+source(file = file.path(getwd(),"subsetTable.R"))
+subsettedTable <- subsetTable(dataset = subsettedDT)
+knitr::kable(subsettedTable)
+```
+
+## SOLUTION
+
+I propose we randomly delete duplicated values from the dataset and re-run the models using `SpaDES`.
