@@ -60,4 +60,5 @@ knitr::kable(subsettedTable)
 
 ## SOLUTION
 
-I propose we randomly delete duplicated values from the dataset and re-run the models using `SpaDES`.
+I propose we randomly delete duplicated values from the dataset and re-run the models using `SpaDES`.  
+
