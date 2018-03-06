@@ -31,7 +31,7 @@ objects = list(studyArea = "testArea.shp",
                 birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR", 
                                 "BTNW", "CAWA", "CMWA", "CONW", 
                                 "OVEN", "PISI", "RBNU", "SWTH", 
-                                "TEWA", "WETA", "YRWA"), #Once this works without species, turn on species selection
+                                "TEWA", "WETA", "YRWA"),
                #birdSpecies = c("BBWA", "BLPW"),
                typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed"),
                disturbanceDimension = c("local", "neighborhood"))
