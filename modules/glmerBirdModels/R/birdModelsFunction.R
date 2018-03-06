@@ -3,8 +3,6 @@ birdModelsFunction <- function(sim, disturbanceDimension, typeDisturbance, birdS
 # disturbanceDimension <- c("local", "neighborhood)
 # typeDisturbance <- c("Transitional", "Permanent", "Undisturbed", "Both")
 #  For undisturbed, it uses neighborhood model, with local==0
-
-  # Still need to update to include a convergence check and an automatic re-run of the models if convergence is not achieved.
   
   require(lme4)
   
@@ -55,7 +53,7 @@ birdModelsFunction <- function(sim, disturbanceDimension, typeDisturbance, birdS
       }
         
         if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
-          assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed. Redo model by hand")))}
+          assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed. Try re-running the model with less random effects.")))}
           
         modelsList[[name]] <- get(name)
       

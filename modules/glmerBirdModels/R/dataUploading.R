@@ -13,7 +13,7 @@ dataUploading <- function(data, disturbanceDimension, typeDisturbance){
   fullData <- fread(data.path)}
    else {
     require(googledrive)
-    drive_download("BAM/Final_points_BEAD.csv", path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = FALSE, verbose = FALSE)
+    drive_download(file.path("BAM",data), path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = FALSE, verbose = FALSE)
     fullData <- fread(file.path(getwd(), "modules/glmerBirdModels/data", data))
   }
   
