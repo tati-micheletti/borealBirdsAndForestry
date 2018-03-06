@@ -10,11 +10,11 @@ dataUploading <- function(data, disturbanceDimension, typeDisturbance){
   data.path <- file.path(getwd(), "modules/glmerBirdModels/data", data)
   
   if (!is.null(data.path)){
-  fullData <- fread(data.path)}
+  fullData <- suppressWarnings(fread(data.path))}
    else {
     require(googledrive)
     drive_download(file.path("BAM",data), path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = FALSE, verbose = FALSE)
-    fullData <- fread(file.path(getwd(), "modules/glmerBirdModels/data", data))
+    fullData <- suppressWarnings(fread(file.path(getwd(), "modules/glmerBirdModels/data", data)))
   }
   
   dataUploaded <- list(localUndisturbed = NA, 
