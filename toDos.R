@@ -12,7 +12,7 @@
 
 
 # TO DO's Alberto's work:
-# 1. Double check dataset for duplicates;
-# 2. Run the models in SpaDES with the whole dataset for all species;
+# 1. Double check dataset for duplicates; [OK]
+# 2. Run the models in SpaDES with the whole dataset for all species; [OK]
 # 3. Redo the graphs / figures;
 # 4. Correct the text
