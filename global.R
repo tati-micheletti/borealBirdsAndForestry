@@ -28,16 +28,16 @@ parameters <- list(
 )
 
 objects = list(studyArea = "testArea.shp",
-                birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR", 
-                                "BTNW", "CAWA", "CMWA", "CONW", 
-                                "OVEN", "PISI", "RBNU", "SWTH", 
+               birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
+                                "BTNW", "CAWA", "CMWA", "CONW",
+                                "OVEN", "PISI", "RBNU", "SWTH",
                                 "TEWA", "WETA", "YRWA"),
                #birdSpecies = c("BBWA", "BLPW"),
                typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed"),
-               disturbanceDimension = c("local", "neighborhood"))
+               disturbanceDimension = c("local", "neighborhood"),
+               dataName = "Final_points_BEAD_final.csv")
 
 #objects = list(birdSpecies = c("PISI", "BLPW"))
-
 
 # dev.useRSGD(TRUE) # do not use Rstudio graphics device
 # dev() # opens external (non-RStudio) device, which is faster
