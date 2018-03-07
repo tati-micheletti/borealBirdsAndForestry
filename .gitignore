@@ -54,6 +54,8 @@ output/
 cache/
 backpack.db
 cache/backpack.db
+*cache/backpack.db
+*.db
 ## Data Files
 *.xlsx
 .xls
