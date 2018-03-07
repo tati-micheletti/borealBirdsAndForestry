@@ -1,4 +1,4 @@
-# Global script for birdForestry project
+# Global script for birdForestry project (FULL PROJECT WITH COMBINED DATA FROM OTHER MODULES. See notebook for the scheme.)
 
 library(SpaDES)
 
