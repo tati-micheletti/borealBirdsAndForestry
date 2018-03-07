@@ -6,16 +6,19 @@ dataUploading <- function(data, disturbanceDimension, typeDisturbance){
   
   require(data.table)
   require(googledrive)
-  
+
   data.path <- file.path(getwd(), "modules/glmerBirdModels/data", data)
   
-  if (!is.null(data.path)){
+  if (file.exists(data.path)){
   fullData <- suppressWarnings(fread(data.path))}
    else {
+    invisible(readline(prompt=paste("Make dure you have the dataset in Google Drives folder 'BAM', and press [enter] to continue",
+                                    "\nIf authentication fails, please manually place the dataset file in the folder: ",
+                                    file.path(getwd(), "modules/glmerBirdModels/data"))))
     require(googledrive)
-    drive_download(file.path("BAM",data), path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = FALSE, verbose = FALSE)
+    drive_download(file.path("BAM",data), path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = TRUE,verbose = FALSE)
     fullData <- suppressWarnings(fread(file.path(getwd(), "modules/glmerBirdModels/data", data)))
-  }
+}
   
   dataUploaded <- list(localUndisturbed = NA, 
                        fullData = NA,
