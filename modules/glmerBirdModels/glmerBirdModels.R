@@ -61,7 +61,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     
     dataUploading = {
       
-      sim$data <- dataUploading(data = "Final_points_BEAD.csv", 
+      sim$data <- dataUploading(data = sim$dataName, 
                                 disturbanceDimension = sim$disturbanceDimension, 
                                 typeDisturbance = sim$typeDisturbance)
       
@@ -102,7 +102,7 @@ Init <- function(sim) {
   
   if (params(sim)$glmerBirdModels$cropForModel==TRUE){
     sim$studyArea <- loadStudyArea(data = studyArea)
-    sim$birdData <- loadData(data = "Final_points_BEAD.csv")
+    sim$birdData <- loadCroppedData(data = dataName)
   }
   
   if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) { #Benchmatk later comaring to is.null(sim$birdSpecies)
