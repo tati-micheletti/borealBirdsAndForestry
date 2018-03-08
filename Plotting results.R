@@ -7,10 +7,10 @@ library(ggplot2)
 #### Distribution of area disturbed per sector
 
   # LOCAL SCALE
-DATA1 = read.csv("Final_points_BEAD.csv")
+DATA1 = read.csv(file.path(getwd(),"data","Final_points_BEAD_final.csv"))
 DATA2 = subset(DATA1, DATA1$State_P_100>0)
 Disturbed_100 = subset (DATA2, DATA2$Agent_L=="Transitional")
-Disturbed_100 = subset (DATA2, DATA2$Agent_L=="Permanent")
+#Disturbed_100 = subset (DATA2, DATA2$Agent_L=="Permanent")
 
 Legend=factor(Disturbed_100$Agent_100)
 pl=qplot(Disturbed_100$State_P_100, geom="histogram", fill=Legend, xlab="Proportion of disturbed area, local scale", ylab="Number of surveys") 
