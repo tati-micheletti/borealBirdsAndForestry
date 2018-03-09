@@ -7,7 +7,7 @@ library(ggplot2)
 #### Distribution of area disturbed per sector
 
   # LOCAL SCALE
-DATA1 = read.csv(file.path(getwd(),"data","Final_points_BEAD_final.csv"))
+DATA1 = read.csv(file.path(getwd(),"data","Final_points_BEAD_final.csv")) #TATI
 DATA2 = subset(DATA1, DATA1$State_P_100>0)
 Disturbed_100 = subset (DATA2, DATA2$Agent_L=="Transitional")
 #Disturbed_100 = subset (DATA2, DATA2$Agent_L=="Permanent")
@@ -35,6 +35,7 @@ setwd("D:\\Human_disturbances\\Analyses\\Results\\BEAD single\\One visit per yea
 
 # LOCAL SCALE - ALL DISTURBANCES
 COEF = read.csv("State_P_100_agent_all.csv")
+COEF = read.csv("State_P_100_agent_all.csv") #TATI
 #View(COEF)
 
 x = COEF[,2]
