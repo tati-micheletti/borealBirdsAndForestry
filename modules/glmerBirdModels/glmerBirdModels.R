@@ -110,6 +110,10 @@ Init <- function(sim) {
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
                          "TEWA", "WETA", "YRWA")
+    
+  sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
+      apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
+    
   }  
   return(invisible(sim))
 }
