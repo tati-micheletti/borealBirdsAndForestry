@@ -65,15 +65,9 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                                 combinations =  sim$combinations)
       
     },
-    save = {
-      
-      sim <- saveFiles(sim)
-      
-    },
     birdModels = {
       
-      sim$models <- birdModelsFunction(sim = sim, disturbanceDimension = sim$disturbanceDimension, 
-                                       typeDisturbance = sim$typeDisturbance,
+      sim$models <- birdModelsFunction(dataset = sim$data,
                                        birdSp = sim$birdSpecies)
       
     },
@@ -111,7 +105,7 @@ Init <- function(sim) {
                          "TEWA", "WETA", "YRWA")
     
   sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
-      apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
+    apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
     
   }  
   return(invisible(sim))
