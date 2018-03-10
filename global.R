@@ -27,7 +27,7 @@ parameters <- list(
   #,birdDensityBCR_Prov_LCC = list(start = 1985, end = 1985)
 )
 
-objects = list(studyArea = "testArea.shp",
+objects = list(#studyAreaName = "testArea.shp",
                birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
                                 "BTNW", "CAWA", "CMWA", "CONW",
                                 "OVEN", "PISI", "RBNU", "SWTH",
