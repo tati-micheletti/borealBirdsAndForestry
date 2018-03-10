@@ -62,8 +62,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     dataUploading = {
       
       sim$data <- dataUploading(data = sim$dataName, 
-                                disturbanceDimension = sim$disturbanceDimension, 
-                                typeDisturbance = sim$typeDisturbance)
+                                combinations =  sim$combinations)
       
     },
     save = {
