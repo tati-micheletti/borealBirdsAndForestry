@@ -44,9 +44,7 @@ dataUploading <- function(data, combinations){
   l.dataUploaded[i] <- dataUploaded[[i]]
   }
   names(l.dataUploaded) <- combinations
-    
-  l.dataUploaded$fullData <- fullData
- 
+
   return(l.dataUploaded)
 }
 
