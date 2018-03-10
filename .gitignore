@@ -87,6 +87,7 @@ cache/backpack.db
 *.db
 *.rda
 *.asc
+*.rds
 # Keygens
 *sshkeygen.*
 *.pub
