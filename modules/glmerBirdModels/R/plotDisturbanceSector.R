@@ -1,10 +1,10 @@
 
-types <- c("Transitional", "Permanent") # Pass these as an argument in Global!
-RColorBrewerPalett <- "Pastel1" # Pass these as an argument in Global!
+# types <- c("Transitional", "Permanent") # Pass these as an argument in Global!
+# RColorBrewerPalett <- "Pastel1" # Pass these as an argument in Global!
 
 # This function generated Figure 2 from the manuscript
 
-plotDisturbanceSector <- function(dataset = mySim$data, types = types, RColorBrewerPalett = "Pastel1"){
+plotDisturbanceSector <- function(dataset = sim$data, types = types, RColorBrewerPalett = "Pastel1"){
   
   require(ggplot2)
   require(RColorBrewer)
@@ -58,5 +58,5 @@ plotDisturbanceSector <- function(dataset = mySim$data, types = types, RColorBre
   return(graph)
 }
 
-plotDistSec <- plotDisturbanceSector(dataset = mySim$data, types = types)
-plotDistSec
+# plotDistSec <- plotDisturbanceSector(dataset = mySim$data, types = types)
+# plotDistSec
