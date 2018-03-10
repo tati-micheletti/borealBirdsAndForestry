@@ -14,5 +14,13 @@
 # TO DO's Alberto's work:
 # 1. Double check dataset for duplicates; [OK]
 # 2. Run the models in SpaDES with the whole dataset for all species; [OK]
-# 3. Redo the graphs / figures;
+# 3. Redo the graphs / figures; [Partial]
+  # 3.1 Plot 1: FIgure 2 [OK]
+  # 3.2 Plot 2: Figure 3 and 4
+  # 3.3 Plot 3: Figure S1 and S2
+  # 3.5 Table Appendix 1
+  # 3.6 Table S1
+  # 3.4. Need to place plots in the module once all plots are ready 
 # 4. Correct the text
+# 5. Save Figures and Tables separately
+# 6. Send it to co-authors
