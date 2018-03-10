@@ -24,7 +24,7 @@ times <- list(start = 1985, end = 1985, timeunit = "year")
 parameters <- list(birdDensityBCR_Prov_LCC = list(start = 1985, end = 1985)
 )
 
-# objects = list(studyArea = "testArea.shp",
+# objects = list(studyAreaName = "testArea.shp",
 # #               species = c("PISI","UEFL","YRWA","DEJU"), #Once this works without species, turn on species selection
 #                typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed"),
 #                disturbanceDimension = c("local", "neighborhood"))
