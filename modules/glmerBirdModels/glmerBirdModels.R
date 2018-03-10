@@ -27,13 +27,18 @@ defineModule(sim, list(
   ),
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
-    expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension"), 
-                 objectClass = c("data.table","character", "vector", "vector"), 
+    expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension", 
+                                "birdSpecies", "combinations", "dataName", "studyAreaName"), 
+                 objectClass = c("data.table","character", "character", "character", "character", "character", "character", "character"), 
                  desc = c("Bird data assembled by the BAM (Boreal Avian Modelling Project)",
                           "Character to define the are to crop",
                           "Might be Transitional, Permanent, Undisturbed, and/or Both",
-                          "Might be local and/or neighborhood"),
-                 sourceURL = c(NA,NA,NA,NA))
+                          "Might be local and/or neighborhood",
+                          "List of bird species to be modeled",
+                          "total combination of type and dimension of disturbances",
+                          "File name and extension of original data file",
+                          "Name of the file and extension to crop for study area"),
+                 sourceURL = c(NA,NA,NA,NA,NA,NA, NA,NA))
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
@@ -61,8 +66,11 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     
     dataUploading = {
       
+      ifelse (params(sim)$glmerBirdModels$cropForModel==TRUE,{
+        sim$data <- sim$birdData
+      },{
       sim$data <- dataUploading(data = sim$dataName, 
-                                combinations =  sim$combinations)
+                                combinations =  sim$combinations)})
       
     },
     birdModels = {
@@ -94,11 +102,11 @@ Init <- function(sim) {
 .inputObjects = function(sim) {
   
   if (params(sim)$glmerBirdModels$cropForModel==TRUE){
-    sim$studyArea <- loadStudyArea(data = studyArea)
-    sim$birdData <- loadCroppedData(data = dataName)
+    sim$studyArea <- loadStudyArea(data = sim$studyAreaName)
+    sim$birdData <- loadCroppedData(data = sim$dataName)
   }
   
-  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) { #Benchmatk later comaring to is.null(sim$birdSpecies)
+  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) { #Benchmatk later comparing to is.null(sim$birdSpecies)
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
@@ -106,7 +114,14 @@ Init <- function(sim) {
     
   sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
     apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
-    
+  
+  if (!('typeDisturbance' %in% sim$.userSuppliedObjNames)){
+    typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed")
+  }
+  if (!('disturbanceDimension' %in% sim$.userSuppliedObjNames)){
+    disturbanceDimension = c("local", "neighborhood")
+  }
+
   }  
   return(invisible(sim))
 }
