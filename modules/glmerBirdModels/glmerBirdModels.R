@@ -71,7 +71,6 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       },{
       sim$data <- dataUploading(data = sim$dataName, 
                                 combinations =  sim$combinations)})
-      
     },
     birdModels = {
       
@@ -110,18 +109,17 @@ Init <- function(sim) {
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
-                         "TEWA", "WETA", "YRWA")
+                         "TEWA", "WETA", "YRWA")}
+
+    if (!('typeDisturbance' %in% sim$.userSuppliedObjNames)){
+      typeDisturbance = c("Transitional", "Permanent", "Both")
+    }
+    if (!('disturbanceDimension' %in% sim$.userSuppliedObjNames)){
+      disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
+    }
     
   sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
     apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
   
-  if (!('typeDisturbance' %in% sim$.userSuppliedObjNames)){
-    typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed")
-  }
-  if (!('disturbanceDimension' %in% sim$.userSuppliedObjNames)){
-    disturbanceDimension = c("local", "neighborhood")
-  }
-
-  }  
   return(invisible(sim))
 }
