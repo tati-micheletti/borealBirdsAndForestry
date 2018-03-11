@@ -33,8 +33,8 @@ objects = list(#studyAreaName = "testArea.shp",
                                 "OVEN", "PISI", "RBNU", "SWTH",
                                 "TEWA", "WETA", "YRWA"),
                #birdSpecies = c("BBWA", "BLPW"),
-               typeDisturbance = c("Transitional", "Permanent", "Both", "Undisturbed"),
-               disturbanceDimension = c("local", "neighborhood"),
+               typeDisturbance = c("Transitional", "Permanent", "Both"),
+               disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
                dataName = "Final_points_BEAD_final.csv")
 
 #objects = list(birdSpecies = c("PISI", "BLPW"))
