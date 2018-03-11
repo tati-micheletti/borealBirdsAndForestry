@@ -29,13 +29,16 @@ parameters <- list(
 
 objects = list(#studyAreaName = "testArea.shp",
                birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
-                                "BTNW", "CAWA", "CMWA", "CONW",
+                                "BTNW", "CAWA", "CMWA",
                                 "OVEN", "PISI", "RBNU", "SWTH",
                                 "TEWA", "WETA", "YRWA"),
+               #  birdSpecies = "CONW",
                #birdSpecies = c("BBWA", "BLPW"),
                typeDisturbance = c("Transitional", "Permanent", "Both"),
                disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
                dataName = "Final_points_BEAD_final.csv")
+
+# Problematic birds: "CONW"
 
 #objects = list(birdSpecies = c("PISI", "BLPW"))
 
