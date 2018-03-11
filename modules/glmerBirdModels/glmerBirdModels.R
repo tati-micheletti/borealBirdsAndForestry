@@ -74,7 +74,8 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     birdModels = {
       
-      sim$models <- birdModelsFunction(dataset = sim$data,
+      sim$models <- birdModelsFunction(combinations = sim$combinations, 
+                                       dataset = sim$data,
                                        birdSp = sim$birdSpecies)
       
     },
