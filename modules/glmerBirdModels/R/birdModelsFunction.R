@@ -7,7 +7,8 @@ birdModelsFunction <- function(combinations, dataset, birdSp){
   models <- list()
   modelsList <- list()
   
-  models <- lapply(X = combinations, FUN = function(x){
+  models <- tryCatch(
+    lapply(X = combinations, FUN = function(x){
                     dimension <- ifelse(grepl("local", x),"State_P_100","State_P_500")
                     data <- dataset[[x]]
                     
@@ -28,12 +29,27 @@ birdModelsFunction <- function(combinations, dataset, birdSp){
                         assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed.", 
                                                        "Try re-running the model with less random effects."), sep = " "))}
                       
-                      modelsList[[name]] <- get(name)
+                  modelsList[[name]] <- get(name)
                       models[[x]] <- modelsList
                 }
 
             return(models)
-  })
+                    
+  }), error = function(e){
+    
+    modelsList[[name]] <- "ERROR: Try rescaling offsets or variables."
+    models[[x]] <- modelsList
+    
+    return(models)
+
+    browser()
+    
+    }, finally = return(models))
+  
+  name <- reCenterModelData(x = x, dataset = dataset, name = name)
+  modelsList[[name]] <- get(name)
+  models[[x]] <- modelsList
+  
   
   l.models <- list()
   for (i in 1:length(models)){
