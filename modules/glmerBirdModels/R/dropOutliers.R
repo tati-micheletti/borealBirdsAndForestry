@@ -2,6 +2,7 @@
 
 dropOutliers <- function(x, dataset, name, probs){
   
+  browser()
   
   require(stats)
   
