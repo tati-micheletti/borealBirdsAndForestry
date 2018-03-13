@@ -12,7 +12,7 @@ birdModelsFunction <- function(combinations, dataset, birdSp){
     dimension <- ifelse(grepl("local", x),"State_P_100","State_P_500")
     data <- dataset[[x]]
     
-    models <- lapply(X = birdSp, FUN = function(name){
+    birds <- lapply(X = birdSp, FUN = function(name){
       
       tryCatch({
         
@@ -32,35 +32,25 @@ birdModelsFunction <- function(combinations, dataset, birdSp){
                                          "Try re-running the model with less random effects."), sep = " "))
         }
         
-        modelsList[[name]] <- get(name)
-        models[[x]] <- modelsList
-        return(models)
+        modelsList <- get(name)
+        return(modelsList)
+
+        }, error = function(e){
         
-      }, error = function(e){
+          modelsList <- dropOutliers(x, dataset, name, probs = c(0.20, 0.80))
+          return(modelsList)
         
-        # phrase <- c("WARNING: Offset outliers excluded.")
-        # errorModels[[x]][[name]] <<- phrase # Not working...
-        models[[x]] <- dropOutliers(x, dataset, name, probs = c(0.20, 0.80))
-        return(models)
       }
       ) # End tryCatch
       
     })
     
+    names(birds) <- birdSp
+    return(birds)
+
   })
   
-  l.models <- list()
-  for (i in 1:length(models)){
-    l.models[i] <- models[[i]]
-  }
-  names(l.models) <- combinations
-  
-  l.models2 <- list()
-  for (i in 1:length(l.models)){
-    l.models2[i] <- l.models[[i]]
-  }
-  names(l.models2) <- combinations
-  
-  return(l.models2)
+  names(models) <- combinations
+  return(models)
   
 }
