@@ -1,24 +1,14 @@
-# 1. Save plotList as sim$plotList
 
-# birdSpecies <- c("BBWA", "CONW")
-# combinations <- c("localTransitional","neighborhoodTransitional")
-
-plotList <- data.frame(Species = rep(c("BBWA", "CONW"), 4), 
-                       Estimate = c(-1.1204, -0.7724, -0.2, 0.9, 0.3, 1.5, -0.6, 1.1), 
-                       typeDisturbance = c(rep("TRANSITIONAL", 4),rep("PERMANENT", 4)), 
-                       disturbanceDimension = c(rep("LOCAL", 2),rep("NEIGHBORHOOD", 2)))
-
-predictAbundances <- function(plotList = sim$plotList){
+plotAbundanceDisturbance <- function(plotList = sim$plotList){
   
   require(lme4)
   require(data.table)
   require(ggplot2)
   require(RColorBrewer)
-  
-    predTable <- plotList
+
     distProb <- data.frame(distProb = seq(from = 0, to = 1, by = 0.1))
-    predTable <- predTable[rep(seq_len(nrow(predTable)), each=nrow(distProb)),]
-    expanded <- cbind(predTable, distProb)
+    plotList <- plotList[rep(seq_len(nrow(plotList)), each=nrow(distProb)),]
+    expanded <- cbind(plotList, distProb)
     expanded$coeff <- 1+(exp(expanded$Estimate*expanded$distProb)-1)
     
     predPlot <- ggplot(expanded, aes(x = coeff, y = distProb, col = typeDisturbance)) +
@@ -36,5 +26,7 @@ predictAbundances <- function(plotList = sim$plotList){
             panel.background = element_rect(fill = "grey99"),
             panel.border = element_rect(colour = "black", fill=NA, size=1)) +
       labs(x = "Proportion of disturbed area", y = "Density relative to intact areas")
-
+    
+    return(predPlot)
+    
 }
