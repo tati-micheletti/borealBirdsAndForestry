@@ -50,5 +50,8 @@ objects = list(#studyAreaName = "testArea.shp",
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
 mySimOut <- spades(mySim, debug = TRUE) #c("warblersPointCountBC","init")
 
+# To save
+#saveRDS(mySimOut, file.path(outputPath(mySimOut), "AlbertosModels14Mar18.rds"))
+
 moduleDiagram(mySim)
 objectDiagram(mySim)
