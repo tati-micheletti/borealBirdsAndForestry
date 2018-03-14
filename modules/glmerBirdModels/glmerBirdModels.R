@@ -86,10 +86,10 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       
       sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data, 
                                                types = sim$typeDisturbance)
-
+      
       sim$plotList <- plotList(dataset = sim$models, 
-                                        combinations = sim$combinations, 
-                                        species = sim$birdSpecies)
+                               combinations = sim$combinations, 
+                               species = sim$birdSpecies)
       
       sim$plotCoeff <- plotCoefficients(plotList = sim$plotList)
       
@@ -128,14 +128,14 @@ Init <- function(sim) {
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
                          "TEWA", "WETA", "YRWA")}
-
-    if (!('typeDisturbance' %in% sim$.userSuppliedObjNames)){
-      typeDisturbance = c("Transitional", "Permanent", "Both")
-    }
-    if (!('disturbanceDimension' %in% sim$.userSuppliedObjNames)){
-      disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
-    }
-    
+  
+  if (!('typeDisturbance' %in% sim$.userSuppliedObjNames)){
+    typeDisturbance = c("Transitional", "Permanent", "Both")
+  }
+  if (!('disturbanceDimension' %in% sim$.userSuppliedObjNames)){
+    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
+  }
+  
   sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
     apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
   
