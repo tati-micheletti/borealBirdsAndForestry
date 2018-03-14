@@ -1,10 +1,7 @@
 
-# types <- c("Transitional", "Permanent") # Pass these as an argument in Global!
-# RColorBrewerPalett <- "Pastel1" # Pass these as an argument in Global!
-
 # This function generated Figure 2 from the manuscript
 
-plotDisturbanceSector <- function(dataset = sim$data, types = types, RColorBrewerPalett = "Pastel1"){
+plotDisturbanceSector <- function(dataset = sim$data, types = sim$typeDisturbance, RColorBrewerPalett = "Pastel1"){
   
   require(ggplot2)
   require(RColorBrewer)
@@ -29,34 +26,32 @@ plotDisturbanceSector <- function(dataset = sim$data, types = types, RColorBrewe
     return(DT)})
   names(plotDT) <- listNames
   
-    # Comnbine all lists into one dataset
-    dataset <- data.table::rbindlist(plotDT, use.names=TRUE)
-    
-    # Make the graph
-    dataset <- as.data.frame(dataset)
-    
-    graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) +
-                             facet_grid(DISTURBANCE ~ TYPE, scales = "free_y") +
-                             #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
-                             geom_histogram(binwidth = 0.05) +
-                             theme(strip.text.y = element_text(size=12, face="bold"),
-                                   strip.text.x = element_text(size=12, face="bold"),
-                                   legend.position = "right",
-                                   legend.title = element_text(face = "bold"),
-                                   legend.title.align = 0.5,
-                                   axis.text=element_text(size=12),
-                                   axis.title=element_text(size=16,face="bold"),
-                                   legend.text=element_text(size=12),
-                                   panel.background = element_rect(fill = "grey99"),
-                                   panel.border = element_rect(colour = "black", fill=NA, size=1)) +
-                             labs(x = "Proportion of disturbed area", y = "Number of surveys") +
-                             scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
-                                               name = "Disturbance\nAgent")
-      
+  # Comnbine all lists into one dataset
+  dataset <- data.table::rbindlist(plotDT, use.names=TRUE)
+  
+  # Make the graph
+  dataset <- as.data.frame(dataset)
+  
+  graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) +
+    facet_grid(DISTURBANCE ~ TYPE, scales = "free_y") +
+    #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
+    geom_histogram(binwidth = 0.05) +
+    theme(strip.text.y = element_text(size=12, face="bold"),
+          strip.text.x = element_text(size=12, face="bold"),
+          legend.position = "right",
+          legend.title = element_text(face = "bold"),
+          legend.title.align = 0.5,
+          axis.text=element_text(size=12),
+          axis.title=element_text(size=16,face="bold"),
+          legend.text=element_text(size=12),
+          panel.background = element_rect(fill = "grey99"),
+          panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+    labs(x = "Proportion of disturbed area", y = "Number of surveys") +
+    scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
+                      name = "Disturbance\nAgent")
+  
   
   
   return(graph)
 }
 
-# plotDistSec <- plotDisturbanceSector(dataset = mySim$data, types = types)
-# plotDistSec
