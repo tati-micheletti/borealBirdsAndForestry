@@ -1,9 +1,7 @@
 # dropOutliers
 
 dropOutliers <- function(x, dataset, name, probs){
-  
-  browser()
-  
+
   require(stats)
   
   dimension <- ifelse(grepl("local", x),"State_P_100","State_P_500")
