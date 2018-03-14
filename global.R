@@ -28,17 +28,20 @@ parameters <- list(
 )
 
 objects = list(#studyAreaName = "testArea.shp",
-  # birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
-  #                  "BTNW", "CAWA", "CMWA","CONW",
-  #                  "OVEN", "PISI", "RBNU", "SWTH",
-  #                  "TEWA", "WETA", "YRWA"),
-  birdSpecies = c("BBWA", "CONW"),
-  typeDisturbance = c("Transitional", "Permanent", "Both"),
+  birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
+                  "BTNW", "CAWA", "CMWA","CONW",
+                  "OVEN", "PISI", "RBNU", "SWTH",
+                  "TEWA", "WETA", "YRWA"),
+  #birdSpecies = "CONW",
+  #birdSpecies = c("BBWA", "CONW"),
+  typeDisturbance = c("Transitional", "Permanent","Both"), 
   disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
   dataName = "Final_points_BEAD_final.csv")
 
-#objects = list(birdSpecies = c("PISI", "BLPW"))
+# Problematic birds: "CONW"
 
+#objects = list(birdSpecies = c("PISI", "BLPW"))
+# 
 # dev.useRSGD(TRUE) # do not use Rstudio graphics device
 # dev() # opens external (non-RStudio) device, which is faster
 # clearPlot()
@@ -49,4 +52,3 @@ mySimOut <- spades(mySim, debug = TRUE) #c("warblersPointCountBC","init")
 
 moduleDiagram(mySim)
 objectDiagram(mySim)
-
