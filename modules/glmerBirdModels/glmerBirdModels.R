@@ -42,10 +42,12 @@ defineModule(sim, list(
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = c("models","data"), #"studyArea"
-                  objectClass = c("list","list" ), #,"shapefile"
+    createsOutput(objectName = c("models","data","plotDistSec", "plotCoeff"), #"studyArea"
+                  objectClass = c("list","list","plot","plot"), #,"shapefile"
                   desc = c("list of boreal bird models", #"shapefile of the study area",
-                           "list of the data already subsetted for the models"))
+                           "list of the data already subsetted for the models",
+                           "Plot of disturbance sectors",
+                           "Plot of coefficients of bird models"))
   )
 ))
 
@@ -61,6 +63,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "dataUploading")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "birdModels")
+      sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "plots")
       sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "glmerBirdModels", "save")
     },
     
@@ -69,8 +72,8 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       ifelse (params(sim)$glmerBirdModels$cropForModel==TRUE,{
         sim$data <- sim$birdData
       },{
-      sim$data <- dataUploading(data = sim$dataName, 
-                                combinations =  sim$combinations)})
+        sim$data <- dataUploading(data = sim$dataName, 
+                                  combinations =  sim$combinations)})
     },
     birdModels = {
       
@@ -78,6 +81,14 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                                        dataset = sim$data,
                                        birdSp = sim$birdSpecies)
       
+    },
+    plots = {
+      
+      sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data, 
+                                               types = sim$typeDisturbance)
+      sim$plotCoeff <- plotCoefficients(dataset = sim$models, 
+                                        combinations = sim$combinations, 
+                                        species = sim$birdSpecies)
     },
     save = {
       
