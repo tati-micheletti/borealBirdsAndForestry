@@ -98,7 +98,9 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     save = {
       
-      sim <- saveFiles(sim)
+      sim$tableSampling <- tableSampling(dataName = sim$dataName, dataset = sim$data)
+      
+      sim$AIC <- tableAIC(models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
       
     },
     
