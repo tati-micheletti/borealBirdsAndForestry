@@ -1,0 +1,40 @@
+---
+title: "RunningAlbertosModels"
+author: "Tati Micheletti"
+date: "3/15/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Updating SpaDES.core and reproducible
+
+The present project needs the most updated version of SpaDES and reproducible R packages in their development versions, as well as updated dependencies of these packages. Restart your R session so it is clear. you can use a shortcut Ctrl-shift-F10 if you are in Rstudio. If you have any of our packages or their dependencies, please update them first. Get latest versions of key SpaDES packages from CRAN. Update any versions of these dependencies that are already on your machine.
+
+```{r packages}
+dependencies <- tools::package_dependencies("SpaDES", recursive = TRUE)
+update.packages(oldPkgs = unlist(dependencies), ask = FALSE) 
+```
+
+Install the latest version of the SpaDES packages and any dependencies not yet installed:
+```{r updateSpaDES}
+install.packages("SpaDES", dependencies = TRUE) # install "suggested" packages too with TRUE
+```
+
+Restart again your R session so it is clear and install `reproducible` and `SpaDES.core`.
+``` {r SpaDES.core}
+reproducible::Require("devtools") # installs (if needed) and loads devtools
+devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
