@@ -17,9 +17,13 @@
 # 3. Redo the graphs / figures; [Partial]
 # 3.1 Plot 1: FIgure 2 [OK]
 # 3.2 Plot 2: Figure 3 and 4 [OK]
-# 3.3 Plot 3: Figure S1 and S2
-# 3.5 Fix Table Appendix 1
-# 3.6 Fix Table S1
+# 3.3 Plot 3: Figure S1 and S2 [OK]
+# 3.5 Fix Table Appendix 1 [OK]
+# 3.6 Fix Table S1 [OK]
 # 4. Correct the text
-# 5. Save Figures and Tables separately
+# 5. Save Figures and Tables separately [partially OK]
 # 6. Send it to co-authors
+
+
+# Suggestions:
+# 1. Instead of +- standard error, I would calculate the real CI (lmerTest)
