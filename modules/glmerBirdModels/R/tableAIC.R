@@ -1,6 +1,6 @@
 # Extracting Table S1
 
-tableAIC <- function(models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations){
+tableAIC <- function(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations){
 
   require(reshape2)
   require(tibble)

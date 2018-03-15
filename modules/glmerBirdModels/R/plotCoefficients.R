@@ -1,5 +1,5 @@
 
-plotCoefficients <- function(plotList = sim$plotList){
+plotCoefficients <- function(sim = sim, plotList = sim$plotList){
   
   require(ggplot2)
   require(ggalt)

@@ -1,7 +1,7 @@
 
 # This function generated Figure 2 from the manuscript
 
-plotDisturbanceSector <- function(dataset = sim$data, types = sim$typeDisturbance, RColorBrewerPalett = "Pastel1"){
+plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typeDisturbance, RColorBrewerPalett = "Pastel1"){
   
   require(ggplot2)
   require(RColorBrewer)

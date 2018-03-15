@@ -84,23 +84,23 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     plots = {
       
-      sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data, 
+      sim$plotDistSec <- plotDisturbanceSector(sim = sim, dataset = sim$data, 
                                                types = sim$typeDisturbance)
       
       sim$plotList <- plotList(dataset = sim$models, 
                                combinations = sim$combinations, 
                                species = sim$birdSpecies)
       
-      sim$plotCoeff <- plotCoefficients(plotList = sim$plotList)
+      sim$plotCoeff <- plotCoefficients(sim = sim, plotList = sim$plotList)
       
-      sim$plotAbundDist <- plotAbundanceDisturbance(plotList = sim$plotList)
+      sim$plotAbundDist <- plotAbundanceDisturbance(sim = sim, plotList = sim$plotList)
       
     },
     save = {
       
-      sim$tableSampling <- tableSampling(dataName = sim$dataName, dataset = sim$data)
+      sim$tableSampling <- tableSampling(sim = sim, dataName = sim$dataName, dataset = sim$data)
       
-      sim$AIC <- tableAIC(models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
+      sim$AIC <- tableAIC(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
       
     },
     
