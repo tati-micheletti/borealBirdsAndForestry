@@ -13,8 +13,8 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, spec
       estimate <- coef["get(dimension)",][c(1:2, 4)]
       colnames(estimate) <- c("Estimate", "Std.Error","p")
       rownames(estimate) <- name
-      estimate$lowerCI <- estimate$Estimate - estimate$`Std.Error`
-      estimate$upperCI <- estimate$Estimate + estimate$`Std.Error`
+      estimate$lowerCI <- estimate$Estimate - estimate$`Std.Error` # Not really CI, actually just std.err +- estimate! 
+      estimate$upperCI <- estimate$Estimate + estimate$`Std.Error` # Not really CI, actually just std.err +- estimate!
       
       return(estimate)
     })
@@ -37,6 +37,8 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, spec
     return(tableCols)
     
   })
+  
+  browser()
   
   plotTable <- Map(cbind, coefTable, colToAdd) %>%
     do.call("rbind", .)
