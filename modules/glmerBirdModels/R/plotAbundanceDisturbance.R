@@ -11,7 +11,7 @@ plotAbundanceDisturbance <- function(plotList = sim$plotList){
   expanded <- cbind(plotList, distProb)
   expanded$coeff <- exp(expanded$Estimate*expanded$distProb)
   
-  predPlot <- ggplot(expanded, aes(x = distProb, y = coeff, col = disturbanceDimension)) +
+predPlot <- ggplot(expanded, aes(x = distProb, y = coeff, col = disturbanceDimension)) +
     scale_colour_grey(start = 0.2, end = 0.8, name = "Type of Disturbance") +
     scale_x_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1), labels = c(0, 50, 100)) +
     scale_y_continuous(limits = c(0, 2)) +
@@ -31,6 +31,10 @@ plotAbundanceDisturbance <- function(plotList = sim$plotList){
     labs(x = "Percentage of disturbed area", 
          y = "Density relative to intact areas")
 
+png(file.path(outputPath(sim),"plotAbundanceDisturbance.png"), width = 2000, height = 1150)
+predPlot
+dev.off()
+  
   return(predPlot)
   
 }
