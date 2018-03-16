@@ -38,13 +38,12 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, spec
     
   })
   
-  browser()
-  
-  plotTable <- Map(cbind, coefTable, colToAdd) %>%
+    plotTable <- Map(cbind, coefTable, colToAdd) %>%
     do.call("rbind", .)
   plotTable$Species <- species
   rownames(plotTable) <- NULL
   plotTable <- plotTable[order(plotTable$Estimate),]
+  plotTable$Significancy <- ifelse(plotTable$p<0.05,"*","")
   
   return(plotTable)
   
