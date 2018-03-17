@@ -26,4 +26,21 @@
 
 
 # Suggestions:
+# Question 1 is still not clear to me
 # 1. Instead of +- standard error, I would calculate the real CI (lmerTest)
+# 2. Figure S1, S2: ANOVA on the curves to see signifficance
+# 3. I would have tested models with both local and neighborhood
+# 4. Compare models regarding random effects (run them all without RE and then ANOVA to see)
+# 5. the  estimates for this coefficient should be close to 0 (on a log scale), if the BAM predicted bird densities are unbiased. 
+# 6. Statistical part needs to be improved!
+
+# modelsSum <- lapply(mySimOut$models, FUN = function(x){ 
+#   bird <- lapply(x, FUN = function(bird){
+# #    browser()
+#     a <- summary(bird)
+#     return(a)})
+#     return(bird)
+#   })
+# 
+
+

@@ -19,7 +19,7 @@ plotCoefficients <- function(sim = sim, plotList = sim$plotList){
     labs(x = "Abundance estimates", y = "Bird species") +
     geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
   
-  png(file.path(outputPath(sim),"plotCoefficients.png"), width = 2000, height = 1150)
+  png(file.path(outputPath(sim),"plotCoefficients.png"), width = 1500, height = 863)
   plot
   dev.off()
   

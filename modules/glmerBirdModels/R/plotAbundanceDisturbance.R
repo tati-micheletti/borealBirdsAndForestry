@@ -31,7 +31,7 @@ plotAbundanceDisturbance <- function(sim = sim, plotList = sim$plotList){
     labs(x = "Percentage of disturbed area", 
          y = "Density relative to intact areas")
 
-png(file.path(outputPath(sim),"plotAbundanceDisturbance.png"), width = 2000, height = 1150)
+png(file.path(outputPath(sim),"plotAbundanceDisturbance.png"), width = 1500, height = 863)
 predPlot
 dev.off()
   

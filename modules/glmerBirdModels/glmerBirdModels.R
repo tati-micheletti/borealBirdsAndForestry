@@ -19,7 +19,7 @@ defineModule(sim, list(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("cropping", "logical", FALSE, NA, NA, "If the rasters should be cropped to a study area or not"),
     defineParameter("cropForModel", "logical", FALSE, NA, NA, "If the bird data should be cropped to a study area or not for fitting the model"),
-    defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
+    defineParameter(".plotInitialTime", "numeric", 1, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
@@ -42,12 +42,17 @@ defineModule(sim, list(
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = c("models","data","plotDistSec", "plotCoeff"), #"studyArea"
-                  objectClass = c("list","list","plot","plot"), #,"shapefile"
+    createsOutput(objectName = c("models","data","plotDistSec", "plotCoeff", "plotList", "plotAbundDist", "tableSampling", "AIC"), #"studyArea"
+                  objectClass = c("list","list","plot","plot", "data.table", "plot", "data.table", "data.table"), #,"shapefile"
                   desc = c("list of boreal bird models", #"shapefile of the study area",
                            "list of the data already subsetted for the models",
                            "Plot of disturbance sectors",
-                           "Plot of coefficients of bird models"))
+                           "Plot of coefficients of bird models",
+                           paste0("Data table of all models estimates, and std.error",
+                                  " of % of disturbance per species, type and dimension of disturbance"),
+                           "Plot of relative abundance per disturbance type, dimension and species on varying disturbance proportions",
+                           "Table with the number of samples for each type and dimension",
+                           "Table with all AIC values for all models"))
   )
 ))
 
@@ -64,7 +69,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "dataUploading")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "birdModels")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "plots")
-      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "glmerBirdModels", "save")
+      sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "save")
     },
     
     dataUploading = {

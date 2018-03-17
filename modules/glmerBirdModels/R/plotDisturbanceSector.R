@@ -50,7 +50,7 @@ plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typ
     scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
                       name = "Disturbance\nAgent")
   
-  png(file.path(outputPath(sim),"plotDisturbanceSector.png"), width = 2000, height = 1150)
+  png(file.path(outputPath(sim),"plotDisturbanceSector.png"), width = 1500, height = 863)
   graph
   dev.off()
   
