@@ -1,0 +1,116 @@
+---
+title: "RunningAlbertosModels"
+author: "Tati Micheletti"
+date: "3/15/2018"
+output: pdf_document
+header-includes:
+  - \usepackage{color}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+
+## Updating SpaDES.core and reproducible
+
+The present project needs the most updated version of SpaDES and reproducible R packages in their development versions, as well as updated dependencies of these packages. Restart your R session so it is clear. you can use a shortcut Ctrl-shift-F10 if you are in Rstudio. If you have any of our packages or their dependencies, please update them first. Get latest versions of key SpaDES packages from CRAN. Update any versions of these dependencies that are already on your machine.
+
+```{r packages}
+dependencies <- tools::package_dependencies("SpaDES", recursive = TRUE)
+update.packages(oldPkgs = unlist(dependencies), ask = FALSE) 
+```
+
+Install the latest version of the SpaDES packages and any dependencies not yet installed:
+```{r updateSpaDES}
+install.packages("SpaDES", dependencies = TRUE) # install "suggested" packages too with TRUE
+```
+
+Restart again your R session so it is clear and install `reproducible` and `SpaDES.core`.
+``` {r SpaDES.core}
+reproducible::Require("devtools") # installs (if needed) and loads devtools
+devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development")
+```
+
+## Running module: glmerBirdModels (Alberto's models)
+
+### Sourcing global script: Using all parameters as is
+
+In order to run Alberto's models as they are, it is only necessary to run the following line: 
+```{r run}
+source('global.R')
+```
+
+It is possible to access the results by typing *`mySimOut$`* appended with the following codes:  
+
+\textcolor{blue}{data}: raw data used for the models  
+\textcolor{blue}{birdSpecies}`: species run for the models  
+\textcolor{blue}{models}: results of the models  
+\textcolor{blue}{disturbanceDimension}: disturbance dimensions used in for subsetting the data for the models  
+\textcolor{blue}{typeDisturbance}: type of disturbances accessed in the models  
+\textcolor{blue}{dataName}: name of the dataset used for the analysis  
+\textcolor{blue}{plotAbundDist}: Plot of relative abundance per disturbance type, dimension and species on varying disturbance proportions  
+\textcolor{blue}{plotCoeff}: Plot of coefficients of bird models  
+\textcolor{blue}{plotDistSec}: Plot of disturbance sectors per area size  
+\textcolor{blue}{plotList}: Data table of all models estimates, and std.error of % of disturbance per species, type and dimension of disturbance  
+\textcolor{blue}{tableSampling}: Table with the number of samples for each type and dimension  
+\textcolor{blue}{tableAIC}: Table with all AIC values for all models  
+
+However, to change parameters for Alberto's models, it is necessary to run all the following chunks, making modifications accordingly:
+
+### Global script: Changing parameters
+
+Global script for the glmerBirdModels
+
+```{r loadLib}
+library(SpaDES)
+```
+
+Set the directories and paths
+
+```{r setDir}
+workDirectory <- getwd()
+paths <- list(
+  cachePath = file.path(workDirectory, "cache"),
+  modulePath = file.path(workDirectory, "modules"),
+  inputPath = file.path(workDirectory, "inputs"),
+  outputPath = file.path(workDirectory, "outputs")
+)
+setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
+```
+
+List the modules to use
+
+```{r modules}
+modules <- list("glmerBirdModels")
+```
+
+Set simulation and module parameters
+```{r param}
+times <- list(start = 1985, end = 1985, timeunit = "year")
+parameters <- list(
+  .globals = list(.plotInitialTime = 1),
+  glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE)
+)
+
+objects = list(birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
+                               "BTNW", "CAWA", "CMWA","CONW",
+                               "OVEN", "PISI", "RBNU", "SWTH",
+                               "TEWA", "WETA", "YRWA"),
+               typeDisturbance = c("Transitional", "Permanent","Both"), 
+               disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
+               dataName = "Final_points_BEAD_final.csv")
+```
+
+Simulation setup
+
+```{r setupSpaDES}
+mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
+mySimOut <- spades(mySim, debug = TRUE)
+```
+
+To save the outputs
+
+```{r save}
+saveRDS(mySimOut, file.path(outputPath(mySimOut), "Results.rds"))
+```
+
