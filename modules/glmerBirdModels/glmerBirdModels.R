@@ -28,22 +28,21 @@ defineModule(sim, list(
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension", 
-                                "birdSpecies", "combinations", "dataName", "studyAreaName"), 
-                 objectClass = c("data.table","character", "character", "character", "character", "character", "character", "character"), 
+                                "birdSpecies", "dataName", "studyAreaName"), 
+                 objectClass = c("data.table","character", "character", "character", "character", "character", "character"), 
                  desc = c("Bird data assembled by the BAM (Boreal Avian Modelling Project)",
                           "Character to define the are to crop",
                           "Might be Transitional, Permanent, Undisturbed, and/or Both",
                           "Might be local and/or neighborhood",
                           "List of bird species to be modeled",
-                          "total combination of type and dimension of disturbances",
                           "File name and extension of original data file",
                           "Name of the file and extension to crop for study area"),
-                 sourceURL = c(NA,NA,NA,NA,NA,NA, NA,NA))
+                 sourceURL = c(NA,NA,NA,NA,NA,NA, NA))
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = c("models","data","plotDistSec", "plotCoeff", "plotList", "plotAbundDist", "tableSampling", "AIC"), #"studyArea"
-                  objectClass = c("list","list","plot","plot", "data.table", "plot", "data.table", "data.table"), #,"shapefile"
+    createsOutput(objectName = c("models","data","plotDistSec", "plotCoeff", "plotList", "plotAbundDist", "tableSampling", "AIC", "combinations"), #"studyArea"
+                  objectClass = c("list","list","plot","plot", "data.table", "plot", "data.table", "data.table", "character"), #,"shapefile"
                   desc = c("list of boreal bird models", #"shapefile of the study area",
                            "list of the data already subsetted for the models",
                            "Plot of disturbance sectors",
@@ -52,7 +51,8 @@ defineModule(sim, list(
                                   " of % of disturbance per species, type and dimension of disturbance"),
                            "Plot of relative abundance per disturbance type, dimension and species on varying disturbance proportions",
                            "Table with the number of samples for each type and dimension",
-                           "Table with all AIC values for all models"))
+                           "Table with all AIC values for all models",
+                           "total combination of type and dimension of disturbances"))
   )
 ))
 
@@ -89,6 +89,8 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     plots = {
       
+      browser()
+      
       sim$plotDistSec <- plotDisturbanceSector(sim = sim, dataset = sim$data, 
                                                types = sim$typeDisturbance)
       
@@ -105,7 +107,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       
       sim$tableSampling <- tableSampling(sim = sim, dataName = sim$dataName, dataset = sim$data)
       
-      sim$AIC <- tableAIC(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
+      # sim$AIC <- tableAIC(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
       
     },
     
@@ -118,33 +120,35 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
 ### Save events
 Init <- function(sim) {
   
+  # NEED TO FIX THIS. .InputObjects should not be provided with sim$ objects. This should be all "had coded" as defaults.
+  
   sim$models <- list()
+  sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
+    apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
   
   return(invisible(sim))
 }
 
 .inputObjects = function(sim) {
-  
   if (params(sim)$glmerBirdModels$cropForModel==TRUE){
     sim$studyArea <- loadStudyArea(data = sim$studyAreaName)
-    sim$birdData <- loadCroppedData(data = sim$dataName)
+    sim$birdData <- loadCroppedData(sim = sim, dataName = sim$dataName)
   }
-  
-  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) { #Benchmatk later comparing to is.null(sim$birdSpecies)
+  # if (!suppliedElsewhere(sim$birdSpecies)){ #Fix this to all objects
+  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) {
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
                          "TEWA", "WETA", "YRWA")}
+# }
   
   if (!('typeDisturbance' %in% sim$.userSuppliedObjNames)){
-    typeDisturbance = c("Transitional", "Permanent", "Both")
+    sim$typeDisturbance = c("Transitional", "Permanent", "Both")
   }
   if (!('disturbanceDimension' %in% sim$.userSuppliedObjNames)){
-    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
+    sim$disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
   }
   
-  sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
-    apply(MARGIN = 1, FUN = function(x) paste0(x[1],x[2]))
   
   return(invisible(sim))
 }
