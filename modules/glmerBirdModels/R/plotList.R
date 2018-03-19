@@ -9,7 +9,7 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, spec
     birdSpecies <- lapply(X = species, FUN = function(name){
       
       isolatedModel <- eval(parse(text = paste0("dataset[[x]]$",name)))
-      coef <- as.data.frame(summary(isolatedModel)$coefficients, keep.rownames = TRUE)
+      coef <- as.data.frame(base::summary(isolatedModel)$coefficients, keep.rownames = TRUE)
       estimate <- coef["get(dimension)",][c(1:2, 4)]
       colnames(estimate) <- c("Estimate", "Std.Error","p")
       rownames(estimate) <- name
