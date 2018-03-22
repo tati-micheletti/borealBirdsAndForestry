@@ -25,15 +25,12 @@ parameters <- list(
 )
 
 objects = list(
-  # birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
-  #                              "BTNW", "CAWA", "CMWA","CONW",
-  #                              "OVEN", "PISI", "RBNU", "SWTH",
-  #                              "TEWA", "WETA", "YRWA"),
-  birdSpecies = c("OVEN", "BRCR"),
-               # typeDisturbance = c("Transitional", "Permanent","Both"),
-               # disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
-                typeDisturbance = c("Transitional", "Permanent"),
-                disturbanceDimension = c("neighborhood", "local"),
+  birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
+                               "BTNW", "CAWA", "CMWA","CONW",
+                               "OVEN", "PISI", "RBNU", "SWTH",
+                               "TEWA", "WETA", "YRWA"),
+               typeDisturbance = c("Transitional", "Permanent","Both"),
+               disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
                dataName = "Final_points_BEAD_final.csv")
 
 ## Simulation setup
@@ -41,10 +38,12 @@ mySim <- simInit(times = times, params = parameters, modules = modules, paths = 
 mySimOut <- spades(mySim, debug = TRUE)
 
 # To save the outputs
-saveRDS(mySimOut, file.path(outputPath(mySimOut), "PISI-WETA-TB-nLU.rds"))
+mySimList <- as(mySimOut, "simList_")
+saveRDS(mySimList, file.path(outputPath(mySimOut), "Results_List.rds"))
+saveRDS(mySimOut, file.path(outputPath(mySimOut), "Results_Env.rds"))
 
 # To load the outputs
-mySimOut <- readRDS(file.path(paths$outputPath, "OVEN-CONW-TB-lLU.rds"))
+mySimOut <- readRDS(file.path(paths$outputPath, "Results.rds"))
 
 # To see the objects that are interacting in this module:
 objectDiagram(mySim)
