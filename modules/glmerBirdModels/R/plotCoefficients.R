@@ -4,7 +4,11 @@ plotCoefficients <- function(sim = sim, plotList = sim$plotList){
   require(ggplot2)
   require(ggalt)
   
-  plot <- ggplot(plotList, mapping = aes(x = Estimate, y = Species)) +
+  part <- plotList[plotList$typeDisturbance=="LOCAL"&plotList$disturbanceDimension=="TRANSITIONAL",]
+  extc <- part$Species
+  plotList$newSpecies = factor(plotList$Species, levels=extc, labels=extc)
+
+  plot <- ggplot(plotList, mapping = aes(x = Estimate, y = newSpecies)) +
     facet_grid(typeDisturbance ~ disturbanceDimension, scales = "free_y") +
     geom_segment(aes(x = lowerCI, xend = upperCI, yend = Species)) +
     geom_point(aes(x = Estimate), pch=ifelse(plotList$p < 0.05, 19, 21), 
@@ -19,7 +23,7 @@ plotCoefficients <- function(sim = sim, plotList = sim$plotList){
     labs(x = "Abundance estimates", y = "Bird species") +
     geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
   
-  png(file.path(outputPath(sim),"plotCoefficients.png"), width = 1500, height = 863)
+  png(file.path(sim@paths$outputPath,"plotCoefficients.png"), width = 1500, height = 863)
   plot
   dev.off()
   
