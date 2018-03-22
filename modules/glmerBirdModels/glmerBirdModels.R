@@ -1,6 +1,5 @@
 
-# Everything in this file gets sourced during simInit, and all functions and objects
-# are put into the simList. To use objects and functions, use sim$xxx.
+
 defineModule(sim, list(
   name = "glmerBirdModels",
   description = c("The present module is based on the work of Suárez-Esteban et al. (in prep). These models investigate the following questions: 1. Do cumulative disturbances at local scales have a consistent effect across Canada on old forest-associated songbirds? 2. Do neighborhood disturbances influence the abundance of birds at local scales? 3. What are the relative effects of permanent and transitional disturbance agents at both scales?. For more information: Alberto Suárez-Esteban, Steve G. Cumming, Erin M. Bayne, Samantha J. Song, and Fiona K. A. Schmiegelow. The rise of industrial development, the fall of boreal songbirds: Industrial development threatens boreal songbirds across Canada"),
@@ -88,9 +87,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       
     },
     plots = {
-      
-      browser()
-      
+
       sim$plotDistSec <- plotDisturbanceSector(sim = sim, dataset = sim$data, 
                                                types = sim$typeDisturbance)
       
@@ -106,8 +103,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     save = {
       
       sim$tableSampling <- tableSampling(sim = sim, dataName = sim$dataName, dataset = sim$data)
-      
-      # sim$AIC <- tableAIC(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
+      sim$AIC <- tableAIC(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
       
     },
     
@@ -117,10 +113,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
   return(invisible(sim))
 }
 
-### Save events
 Init <- function(sim) {
-  
-  # NEED TO FIX THIS. .InputObjects should not be provided with sim$ objects. This should be all "had coded" as defaults.
   
   sim$models <- list()
   sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
@@ -131,24 +124,22 @@ Init <- function(sim) {
 
 .inputObjects = function(sim) {
   if (params(sim)$glmerBirdModels$cropForModel==TRUE){
-    sim$studyArea <- loadStudyArea(data = sim$studyAreaName)
-    sim$birdData <- loadCroppedData(sim = sim, dataName = sim$dataName)
+    sim$studyArea <- loadStudyArea(data = "testArea.shp")
+    sim$birdData <- loadCroppedData(sim = sim, dataName = "Final_points_BEAD_final.csv")
   }
-  # if (!suppliedElsewhere(sim$birdSpecies)){ #Fix this to all objects
-  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) {
+   if (!suppliedElsewhere(sim$birdSpecies)){
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
                          "TEWA", "WETA", "YRWA")}
-# }
   
-  if (!('typeDisturbance' %in% sim$.userSuppliedObjNames)){
+  if (!suppliedElsewhere(sim$typeDisturbance)){
     sim$typeDisturbance = c("Transitional", "Permanent", "Both")
   }
-  if (!('disturbanceDimension' %in% sim$.userSuppliedObjNames)){
+
+  if (!suppliedElsewhere(sim$disturbanceDimension)){
     sim$disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
   }
   
-  
-  return(invisible(sim))
+return(invisible(sim))
 }
