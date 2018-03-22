@@ -1,6 +1,8 @@
 
 plotAbundanceDisturbance <- function(sim = sim, plotList = sim$plotList){
   
+  # Following Original. Significancy relates to the original models.
+  
   require(lme4)
   require(data.table)
   require(ggplot2)
@@ -16,7 +18,7 @@ plotAbundanceDisturbance <- function(sim = sim, plotList = sim$plotList){
     scale_x_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1), labels = c(0, 50, 100)) +
     scale_y_continuous(limits = c(0, 2)) +
     facet_grid(typeDisturbance ~ Species) +
-    geom_line(size=1.5) +
+    geom_line(size=1.2, aes(linetype=ifelse(expanded$Significancy=="*","dotted","solid"))) +
     theme(strip.text.y = element_text(size=12, face="bold"),
           strip.text.x = element_text(size=12, face="bold"),
           legend.key = element_blank(),
@@ -29,9 +31,10 @@ plotAbundanceDisturbance <- function(sim = sim, plotList = sim$plotList){
           panel.background = element_rect(fill = "grey99"),
           panel.border = element_rect(colour = "black", fill=NA, size=1)) +
     labs(x = "Percentage of disturbed area", 
-         y = "Density relative to intact areas")
+         y = "Density relative to intact areas") +
+    guides(linetype=FALSE)
 
-png(file.path(outputPath(sim),"plotAbundanceDisturbance.png"), width = 1500, height = 863)
+png(file.path(sim@paths$outputPath,"plotAbundanceDisturbance.png"), width = 1500, height = 863)
 predPlot
 dev.off()
   
