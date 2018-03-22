@@ -7,7 +7,7 @@ loadCroppedData <- function(sim, dataName){
   require(data.table)
   require(raster)
   require(sf)
-  browser()
+  
   if (params(sim)$glmerBirdModels$cropForModel==TRUE){
     
     # data.path <- file.path(getwd(), "modules/glmerBirdModels/data", data)
