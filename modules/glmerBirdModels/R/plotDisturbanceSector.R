@@ -12,11 +12,15 @@ plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typ
   dataset <- dataset[withNames]
   listNames <- colnames(sapply(dataset, names))
   
-  # Adding columns to identify the wrap for the graph
-  Disturbance <- c(rep("LOCAL SCALE",2),rep("NEIGHBORHOOD SCALE",2))  #Make this automatic based on the name of the dataset
-  Type <- rep(c("TRANSITIONAL DISTURBANCES","PERMANENT DISTURBANCES"), times =2) #Make this automatic based on the name of the dataset
-  dataset <- Map(cbind, dataset, DISTURBANCE = Disturbance, TYPE = Type)
-  
+  for (name in names(dataset)){
+    dataset[[name]]$DIMENSION <- ifelse(grepl(pattern = "local", x = name),"LOCAL SCALE", 
+                                   ifelse(grepl(pattern = "neighborhood", x = name),"NEIGHBORHOOD SCALE",
+                                          "LOCAL UNDISTURBED NEIGHBORHOOD SCALE"))
+    dataset[[name]]$TYPE <- ifelse(grepl(pattern = "Transitional", x = name),"TRANSITIONAL DISTURBANCES", 
+                                   ifelse(grepl(pattern = "Permanent", x = name),"PERMANENT DISTURBANCES",
+                                          "BOTH DISTURBANCES"))
+  }
+
   # Subsetting to values that compose the graph and add column with State_P_X depending on the list Scale
   plotDT <- lapply(X = listNames, FUN = function(x){
     state <- ifelse(grepl("local", x),"100","500")
@@ -32,8 +36,13 @@ plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typ
   # Make the graph
   dataset <- as.data.frame(dataset)
   
+  # To exclude localUndisturbed or Both, uncomment below
+  # datasetNoBoth <- dataset[!dataset$TYPE=="BOTH DISTURBANCES",]
+  # datasetNoUndist <- dataset[!dataset$DIMENSION=="LOCAL UNDISTURBED NEIGHBORHOOD SCALE",]
+  # datasetAsOriginal <- datasetNoBoth[!datasetNoBoth$DIMENSION=="LOCAL UNDISTURBED NEIGHBORHOOD SCALE",]
+  
   graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) +
-    facet_grid(DISTURBANCE ~ TYPE, scales = "free_y") +
+    facet_grid(DIMENSION ~ TYPE, scales = "free_y") +
     #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
     geom_histogram(binwidth = 0.05) +
     theme(strip.text.y = element_text(size=12, face="bold"),
@@ -50,7 +59,7 @@ plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typ
     scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
                       name = "Disturbance\nAgent")
   
-  png(file.path(outputPath(sim),"plotDisturbanceSector.png"), width = 1500, height = 863)
+  png(file.path(sim@paths$outputPath,"plotDisturbanceSector.png"), width = 1500, height = 863)
   graph
   dev.off()
   
