@@ -1,8 +1,6 @@
-# Extracting Table S1
+# Extracting Table S1: tableS1-1 considers LOCAL UNDISTURBED, while tableS1-2 doesn't  
 
-# Add signifficance to the table!!!
-
-tableAIC <- function(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations){
+tableAIC <- function(sim = sim, models = sim$models, birdSpecies = sim$birdSpecies, combinations = sim$combinations){
 
   require(reshape2)
   require(tibble)
@@ -12,7 +10,7 @@ tableAIC <- function(sim = sim, models = sim$models, speciesList = sim$birdSpeci
     birds <- lapply(X = birdSpecies, FUN = function(bird){
       
       typeDisturbance <- ifelse(grepl("local", x),"LOCAL",
-                                ifelse(grepl("Local", x),"LOCAL UNDISTURBED","NEIGHBORHOOD"))
+                                ifelse(grepl("Local", x),"LOCAL_UNDISTURBED","NEIGHBORHOOD"))
       disturbanceDimension <- ifelse(grepl("Permanent", x),"PERMANENT",
                                      ifelse(grepl("Transitional", x),"TRANSITIONAL","BOTH"))
       isolatedModel <- eval(parse(text = paste0("models[[x]]$",bird)))
@@ -30,44 +28,60 @@ tableAIC <- function(sim = sim, models = sim$models, speciesList = sim$birdSpeci
   })
   
   names(tableForAIC) <- combinations
-  
   list <- unlist(tableForAIC, recursive = FALSE)
   tableAIC <- do.call("rbind", unname(list))
-  tableAIC$Cols <- paste(tableAIC$TypeDisturbance, tableAIC$DisturbanceDimension, sep = " ")
+  tableAIC$Cols <- paste(tableAIC$TypeDisturbance, tableAIC$DisturbanceDimension, sep = "_")
   tableAIC <- tableAIC[,-c(2:3)]
   finalTable <- reshape2::dcast(tableAIC, Species ~ Cols, value.var="AIC")
-  delta <- numeric(length = length(models))
-  for (i in 1:length(models)){
-    delta[i] <- c(paste("DeltaAIC",i, sep = " "))}
-  Delta <- data.frame(matrix(NA, nrow=nrow(finalTable), ncol=length(delta)))
-  colnames(Delta) <- delta
-  ord <- c(1,2,11,3,12,4,13,5,14,6,15,7,16,8,17,9,18,10,19) # Make it flexible to the table
-  finalTable <- data.table(cbind(finalTable,Delta)) %>%
-    setcolorder(ord)
-  colsKeep <- !(grepl(pattern = "UNDISTURBED", colnames(finalTable))) # IF UNDISTURBED SHOULD BE COMPARED, THINK ON THIS LINE
-  
-  finalTable <- data.frame(finalTable)
-  tabUndist <- finalTable[,!colsKeep]
-  partTable <- finalTable[,colsKeep] %>%
-    .[,-c(1, 8:10)]
-  colsDelta <- grepl(pattern = "Delta", colnames(partTable))
+  colNames <- colnames(finalTable)[-1]
+
+  for (nameColumn in colNames){
+    finalTable <- eval(parse(text = paste0("add_column(.data = finalTable, d.", nameColumn, " = NA, .after = c(nameColumn))")))
+  }
+
+  # WITH UNDISTURBED
+  partTableAll <- finalTable[,-1]
+  colsDelta <- grepl(pattern = "d.", colnames(partTableAll))
   toAddValue <- which(colsDelta)
   
-  for (i in 1:nrow(partTable)){
-    j <-  which.min(partTable[i,])
-    partTable[i,j+1] <- 0
-    refVal <- partTable[i,j]
-    for (t in 1:ncol(partTable)){
-      ifelse(!is.na(partTable[i, t]),
+  for (i in 1:nrow(partTableAll)){
+    j <-  which.min(partTableAll[i,])
+    partTableAll[i,j+1] <- 0
+    refVal <- partTableAll[i,j]
+    for (t in 1:ncol(partTableAll)){
+      ifelse(!is.na(partTableAll[i, t]),
              next,
-             {partTable[i, t] <- partTable[i, t-1]-refVal})
+             {partTableAll[i, t] <- partTableAll[i, t-1]-refVal})
+    }
+  }
+
+  tableS1.withUndis <- cbind(Species = finalTable[,1], partTableAll)
+  write.csv(tableS1.withUndis, file.path(sim@paths$outputPath, "TableS1-1.csv"))
+  
+  # WITHOUT UNDISTURBED
+
+  colsKeep <- !(grepl(pattern = "UNDISTURBED", colnames(finalTable)))
+  partTableUndis <- finalTable[colsKeep] %>%
+    .[,-1]
+  tabUndist <- finalTable[,!colsKeep]
+  tabUndist <- tabUndist[,!grepl(pattern = "d.", colnames(tabUndist))]
+  
+  colsDelta <- grepl(pattern = "d.", colnames(partTableUndis))
+  toAddValue <- which(colsDelta)
+  
+  for (i in 1:nrow(partTableUndis)){
+    j <-  which.min(partTableUndis[i,])
+    partTableUndis[i,j+1] <- 0
+    refVal <- partTableUndis[i,j]
+    for (t in 1:ncol(partTableUndis)){
+      ifelse(!is.na(partTableUndis[i, t]),
+             next,
+             {partTableUndis[i, t] <- partTableUndis[i, t-1]-refVal})
     }
   }
   
-  tableS1 <- cbind(Species = finalTable[,1], partTable,tabUndist)
+  tableS1.withoutUndis <- cbind(Species = finalTable[,1], partTableUndis, tabUndist)
+  write.csv(tableS1.withUndis, file.path(sim@paths$outputPath, "TableS1-2.csv"))
   
-  write.csv(tableS1, file.path(outputPath(sim), "TableS1.csv"))
-  
-  return(tableS1)
+  return(tableS1.withoutUndis)
 }
-
