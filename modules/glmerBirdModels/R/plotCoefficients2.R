@@ -1,5 +1,5 @@
 
-plotCoefficients2 <- function(plotList = sim$plotList){
+plotCoefficients2 <- function(sim = sim, plotList = sim$plotList){
   
   ## got these from: https://github.com/dgrtwo/drlib/blob/master/R/reorder_within.R
   ## arrange Estimate by species within combination of typeDisturbance and disturbanceDimension
@@ -41,6 +41,10 @@ plotCoefficients2 <- function(plotList = sim$plotList){
     labs(y = "Abundance estimates", x = "Bird species") +
     coord_flip() +
     facet_grid(typeDisturbance ~ disturbanceDimension, scales = "free_y") #, scales = "free_y"
+  
+  png(file.path(sim@paths$outputPath,"plotCoefficients2.png"), width = 1500, height = 863)
+  plot
+  dev.off()
   
   return(plot)
   
