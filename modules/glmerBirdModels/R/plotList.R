@@ -13,8 +13,15 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, spec
       estimate <- coef["get(dimension)",][c(1:2, 4)]
       colnames(estimate) <- c("Estimate", "Std.Error","p")
       rownames(estimate) <- name
-      estimate$lowerCI <- estimate$Estimate - estimate$`Std.Error` # Not really CI, actually just std.err +- estimate! 
-      estimate$upperCI <- estimate$Estimate + estimate$`Std.Error` # Not really CI, actually just std.err +- estimate!
+      
+      # JUSTIFICATION FOR USING St.Error*1.96 (errors should be close to normal in a high degree of freedom model) - is this my case?
+      # The t-distribution is asymptotically normal and the degrees of freedom for the error 
+      # term in many multi-level designs is so high that the error distribution is normal at 
+      # that point. Therefore, if you have a design with lots of degrees of freedom this is 
+      # a perfectly reasonable confidence interval estimate.
+      
+      estimate$lowerCI <- estimate$Estimate - 1.96*estimate$`Std.Error` # Not really CI, actually just std.err +- estimate! 
+      estimate$upperCI <- estimate$Estimate + 1.96*estimate$`Std.Error` # Not really CI, actually just std.err +- estimate!
       
       return(estimate)
     })
