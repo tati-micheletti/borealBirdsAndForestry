@@ -13,12 +13,13 @@ plotAbundanceDisturbance <- function(sim = sim, plotList = sim$plotList){
   expanded <- cbind(plotList, distProb)
   expanded$coeff <- exp(expanded$Estimate*expanded$distProb)
   
-  predPlot <- ggplot(expanded, aes(x = distProb, y = coeff, col = disturbanceDimension)) +
+  predPlot <- ggplot(expanded, aes(x = distProb, y = coeff, col = typeDisturbance)) +
     scale_colour_grey(start = 0.2, end = 0.8, name = "Type of Disturbance") +
     scale_x_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1), labels = c(0, 50, 100)) +
     scale_y_continuous(limits = c(0, 2)) +
-    facet_grid(typeDisturbance ~ Species) +
-    geom_line(size=1.2, aes(linetype=ifelse(expanded$Significancy=="*","dotted","solid"))) +
+    facet_grid(disturbanceDimension ~ Species) +
+    geom_line(size=1.2, aes(linetype = as.factor(Significancy))) +
+    scale_linetype_manual(values = c("YES" = "dashed", "NO" = "solid")) +
     theme(strip.text.y = element_text(size=12, face="bold"),
           strip.text.x = element_text(size=12, face="bold"),
           legend.key = element_blank(),
