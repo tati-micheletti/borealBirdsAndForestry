@@ -1,6 +1,6 @@
 # dataUploading
 
-dataUploading <- function(data, combinations){
+dataUploading <- function(data = sim$dataName, combinations = sim$combinations){
   
   require(data.table)
   require(googledrive)
