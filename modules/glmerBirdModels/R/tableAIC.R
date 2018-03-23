@@ -1,13 +1,13 @@
 # Extracting Table S1: tableS1-1 considers LOCAL UNDISTURBED, while tableS1-2 doesn't  
 
-tableAIC <- function(sim = sim, models = sim$models, birdSpecies = sim$birdSpecies, combinations = sim$combinations){
+tableAIC <- function(sim = sim, models = sim$models, birdSp = sim$birdSpecies, combinations = sim$combinations){
 
   require(reshape2)
   require(tibble)
   require(reproducible)
   
   tableForAIC <- lapply(X = combinations, FUN = function(x){
-    birds <- lapply(X = birdSpecies, FUN = function(bird){
+    birds <- lapply(X = birdSp, FUN = function(bird){
       
       typeDisturbance <- ifelse(grepl("local", x),"LOCAL",
                                 ifelse(grepl("Local", x),"LOCAL_UNDISTURBED","NEIGHBORHOOD"))
@@ -22,7 +22,7 @@ tableAIC <- function(sim = sim, models = sim$models, birdSpecies = sim$birdSpeci
       return(aic)
     })
     
-    names(birds) <- birdSpecies
+    names(birds) <- birdSp
     return(birds)
     
   })
