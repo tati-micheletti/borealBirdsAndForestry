@@ -35,7 +35,7 @@ objects = list(
 
 ## Simulation setup
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
-mySimOut <- spades(mySim, debug = TRUE)
+system.time(mySimOut <- spades(mySim, debug = TRUE))
 
 # To save the outputs
 mySimList <- as(mySimOut, "simList_")
