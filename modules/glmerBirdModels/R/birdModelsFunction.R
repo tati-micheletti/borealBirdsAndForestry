@@ -1,6 +1,6 @@
 # Bird model functions version 2
 
-birdModelsFunction <- function(combinations, dataset, birdSp){
+birdModelsFunction <- function(combinations = sim$combinations, dataset = sim$data, birdSp = sim$birdSpecies){
   
   require(lme4)
   
