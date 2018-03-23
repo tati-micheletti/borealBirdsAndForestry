@@ -1,12 +1,12 @@
 # Make plotList. This will be used for more than one plot.
 
-plotList <- function(dataset = sim$models, combinations = sim$combinations, species = sim$birdSpecies){
+plotList <- function(dataset = sim$models, combinations = sim$combinations, birdSp = sim$birdSpecies){
   
   require(data.table)
   
   coefTable <- lapply(X = combinations, FUN = function(x){
     
-    birdSpecies <- lapply(X = species, FUN = function(name){
+    birdSpecies <- lapply(X = birdSp, FUN = function(name){
       
       isolatedModel <- eval(parse(text = paste0("dataset[[x]]$",name)))
       coef <- as.data.frame(base::summary(isolatedModel)$coefficients, keep.rownames = TRUE)
@@ -35,9 +35,9 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, spec
   
   colToAdd <- lapply(X = combinations, FUN = function(x){
     
-    typeDisturbance <- ifelse(grepl("local", x),"LOCAL",
+    disturbanceDimension <- ifelse(grepl("local", x),"LOCAL",
                               ifelse(grepl("Local", x),"LOCAL UNDISTURBED","NEIGHBORHOOD"))
-    disturbanceDimension <- ifelse(grepl("Permanent", x),"PERMANENT",
+    typeDisturbance <- ifelse(grepl("Permanent", x),"PERMANENT",
                                    ifelse(grepl("Transitional", x),"TRANSITIONAL","BOTH"))
     tableCols <- data.frame(typeDisturbance, disturbanceDimension)
     
@@ -47,10 +47,12 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, spec
   
     plotTable <- Map(cbind, coefTable, colToAdd) %>%
     do.call("rbind", .)
-  plotTable$Species <- species
+  plotTable$Species <- birdSp
   rownames(plotTable) <- NULL
   plotTable <- plotTable[order(plotTable$Estimate),]
-  plotTable$Significancy <- ifelse(plotTable$p<0.05,"*","")
+  plotTable$Significancy <- ifelse(plotTable$p<0.1,"YES","NO")
+  
+  write.csv(mySimOut$plotList, file = file.path(paths$outputPath, "plotList.csv"))
   
   return(plotTable)
   
