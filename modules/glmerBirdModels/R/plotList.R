@@ -52,7 +52,7 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, bird
   plotTable <- plotTable[order(plotTable$Estimate),]
   plotTable$Significancy <- ifelse(plotTable$p<0.1,"YES","NO")
   
-  write.csv(mySimOut$plotList, file = file.path(paths$outputPath, "plotList.csv"))
+  write.csv(plotTable, file = file.path(paths$outputPath, "plotList.csv"))
   
   return(plotTable)
   
