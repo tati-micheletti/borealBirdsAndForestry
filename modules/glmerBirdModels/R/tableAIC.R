@@ -9,9 +9,9 @@ tableAIC <- function(sim = sim, models = sim$models, birdSp = sim$birdSpecies, c
   tableForAIC <- lapply(X = combinations, FUN = function(x){
     birds <- lapply(X = birdSp, FUN = function(bird){
       
-      typeDisturbance <- ifelse(grepl("local", x),"LOCAL",
+      disturbanceDimension <- ifelse(grepl("local", x),"LOCAL",
                                 ifelse(grepl("Local", x),"LOCAL_UNDISTURBED","NEIGHBORHOOD"))
-      disturbanceDimension <- ifelse(grepl("Permanent", x),"PERMANENT",
+      typeDisturbance <- ifelse(grepl("Permanent", x),"PERMANENT",
                                      ifelse(grepl("Transitional", x),"TRANSITIONAL","BOTH"))
       isolatedModel <- eval(parse(text = paste0("models[[x]]$",bird)))
       aic <- data.frame(Species = bird, 
@@ -30,7 +30,7 @@ tableAIC <- function(sim = sim, models = sim$models, birdSp = sim$birdSpecies, c
   names(tableForAIC) <- combinations
   list <- unlist(tableForAIC, recursive = FALSE)
   tableAIC <- do.call("rbind", unname(list))
-  tableAIC$Cols <- paste(tableAIC$TypeDisturbance, tableAIC$DisturbanceDimension, sep = "_")
+  tableAIC$Cols <- paste(tableAIC$DisturbanceDimension,tableAIC$TypeDisturbance, sep = "_")
   tableAIC <- tableAIC[,-c(2:3)]
   finalTable <- reshape2::dcast(tableAIC, Species ~ Cols, value.var="AIC")
   colNames <- colnames(finalTable)[-1]
