@@ -71,6 +71,8 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "save")
     },
     
+    #REVIEW ARGUMENTS TO FUNCTIONS!!
+    
     dataUploading = {
       
       ifelse (params(sim)$glmerBirdModels$cropForModel==TRUE,{
@@ -88,22 +90,31 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     plots = {
 
-      sim$plotDistSec <- plotDisturbanceSector(sim = sim, dataset = sim$data, 
+      sim$plotDistSec <- plotDisturbanceSector(sim = sim, 
+                                               dataset = sim$data, 
                                                types = sim$typeDisturbance)
       
       sim$plotList <- plotList(dataset = sim$models, 
                                combinations = sim$combinations, 
-                               species = sim$birdSpecies)
+                               birdSp = sim$birdSpecies)
       
-      sim$plotCoeff <- plotCoefficients(sim = sim, plotList = sim$plotList)
+      sim$plotCoeff <- plotCoefficients(sim = sim, 
+                                        plotList = sim$plotList)
       
-      sim$plotAbundDist <- plotAbundanceDisturbance(sim = sim, plotList = sim$plotList)
+      sim$plotAbundDist <- plotAbundanceDisturbance(sim = sim, 
+                                                    plotList = sim$plotList)
       
     },
     save = {
       
-      sim$tableSampling <- tableSampling(sim = sim, dataName = sim$dataName, dataset = sim$data)
-      sim$AIC <- tableAIC(sim = sim, models = sim$models, speciesList = sim$birdSpecies, combinations = sim$combinations)
+      sim$tableSampling <- tableSampling(sim = sim, 
+                                         dataName = sim$dataName, 
+                                         dataset = sim$data)
+      
+      sim$AIC <- tableAIC(sim = sim, 
+                          models = sim$models, 
+                          birdSp = sim$birdSpecies, 
+                          combinations = sim$combinations)
       
     },
     
