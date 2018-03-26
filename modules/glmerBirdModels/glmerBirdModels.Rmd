@@ -1,79 +1,138 @@
 ---
 title: "glmerBirdModels"
-author: "tmichele"
+author: "Tati Micheletti"
 date: "19 February 2018"
 output: pdf_document
+header-includes:
+  - \usepackage{color}
 ---
 
-# Overview
-
-Provide an overview of what the module does / how to use the module.
-
-Module documentation should be written so that others can use your module.
-This is a template for module documentation, and should be changed to reflect your module.
-
-## R Markdown
-
-R Markdown syntax allows R code, outputs, and figures to be rendered in the documentation.
-
-For help writing in R Markdown, see http://rmarkdown.rstudio.com/.
-
-# Usage
-
-```{r module_usage}
-library(igraph)
-library(SpaDES.core)
-
-moduleDir <- file.path("/home/tmichele/Documents/GitHub/borealBirdsAndForestry/modules")
-inputDir <- file.path(moduleDir, "inputs") %>% reproducible::checkPath(create = TRUE)
-outputDir <- file.path(moduleDir, "outputs")
-cacheDir <- file.path(outputDir, "cache")
-times <- list(start = 0, end = 10)
-parameters <- list(
-  #.progress = list(type = "text", interval = 1), # for a progress bar
-  ## If there are further modules, each can have its own set of parameters:
-  #module1 = list(param1 = value1, param2 = value2),
-  #module2 = list(param1 = value1, param2 = value2)
-)
-modules <- list("glmerBirdModels")
-objects <- list()
-paths <- list(
-  cachePath = cacheDir,
-  modulePath = moduleDir,
-  inputPath = inputDir,
-  outputPath = outputDir
-)
-
-mySim <- simInit(times = times, params = parameters, modules = modules,
-                 objects = objects, paths = paths)
-
-spades(mySim)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
 
-# Events
+## Updating SpaDES.core and reproducible
 
-Describe what happens for each event type.
+The present project needs the most updated version of SpaDES and reproducible R packages in their development versions, as well as updated dependencies of these packages. Restart your R session so it is clear. you can use a shortcut Ctrl-shift-F10 if you are in Rstudio. If you have any of our packages or their dependencies, please update them first. Get latest versions of key SpaDES packages from CRAN. Update any versions of these dependencies that are already on your machine.
 
-## Plotting
+```{r packages}
+dependencies <- tools::package_dependencies("SpaDES", recursive = TRUE)
+update.packages(oldPkgs = unlist(dependencies), ask = FALSE) 
+```
 
-Write what is plotted.
+Install the latest version of the SpaDES packages and any dependencies not yet installed:
+```{r updateSpaDES}
+install.packages("SpaDES", dependencies = TRUE) # install "suggested" packages too
+```
 
-## Saving
+Restart again your R session so it is clear and install `reproducible` and `SpaDES.core`.
+``` {r SpaDES.core}
+reproducible::Require("devtools") # installs (if needed) and loads devtools
+devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development")
+```
 
-Write what is saved.
+## To load previously saved outputs:
 
-# Data dependencies
+To load previously saved outputs, run the following lines and see below how to access the results:
+```{r loading}
+library(SpaDES)
+workDirectory <- getwd()
+paths <- list(
+  cachePath = file.path(workDirectory, "cache"),
+  modulePath = file.path(workDirectory, "modules"),
+  inputPath = file.path(workDirectory, "inputs"),
+  outputPath = file.path(workDirectory, "outputs")
+)
+setPaths(modulePath = paths$modulePath, 
+         inputPath = paths$inputPath, 
+         outputPath = paths$outputPath, 
+         cachePath = paths$cachePath)
+mySimList <- readRDS(file.path(outputPath(mySimOut), "Results_List.rds"))
+```
 
-## Input data
+## To run the module: glmerBirdModels (Alberto's models)
 
-How to obtain input data, and a description of the data required by the module.
-If `sourceURL` is specified, `downloadData("glmerBirdModels", "path/to/modules/dir")` may be sufficient.
+### Sourcing global script: Using all parameters as is
 
-## Output data
+In order to run Alberto's models as they are, it is only necessary to run the following line: 
+```{r run}
+source('global.R')
+```
 
-Description of the module outputs.
+It is possible to access the results by typing *`mySimList$`* appended with the following codes (or *`mySimList@.list$`* for using autocomplete when in RStudio):  
 
-# Links to other modules
+\textcolor{blue}{data}: raw data used for the models  
+\textcolor{blue}{birdSpecies}`: species run for the models  
+\textcolor{blue}{models}: results of the models  
+\textcolor{blue}{disturbanceDimension}: disturbance dimensions used in for subsetting the data for the models  
+\textcolor{blue}{typeDisturbance}: type of disturbances accessed in the models  
+\textcolor{blue}{dataName}: name of the dataset used for the analysis  
+\textcolor{blue}{plotAbundDist}: Plot of relative abundance per disturbance type, dimension and species on varying disturbance proportions  
+\textcolor{blue}{plotCoeff}: Plot of coefficients of bird models  
+\textcolor{blue}{plotDistSec}: Plot of disturbance sectors per area size  
+\textcolor{blue}{plotList}: Data table of all models estimates, and std.error of % of disturbance per species, type and dimension of disturbance  
+\textcolor{blue}{tableSampling}: Table with the number of samples for each type and dimension  
+\textcolor{blue}{tableAIC}: Table with all AIC values for all models  
 
-Describe any anticipated linkages to other modules.
+However, to change parameters for Alberto's models, it is necessary to run all the following chunks, making modifications accordingly:
 
+### Global script: Changing parameters
+
+Global script for the glmerBirdModels
+
+```{r loadLib}
+library(SpaDES)
+```
+
+Set the directories and paths
+
+```{r setDir}
+workDirectory <- getwd()
+paths <- list(
+  cachePath = file.path(workDirectory, "cache"),
+  modulePath = file.path(workDirectory, "modules"),
+  inputPath = file.path(workDirectory, "inputs"),
+  outputPath = file.path(workDirectory, "outputs")
+)
+setPaths(modulePath = paths$modulePath, 
+         inputPath = paths$inputPath, 
+         outputPath = paths$outputPath, 
+         cachePath = paths$cachePath)
+```
+
+List the modules to use
+
+```{r modules}
+modules <- list("glmerBirdModels")
+```
+
+Set simulation and module parameters
+```{r param}
+times <- list(start = 1985, end = 1985, timeunit = "year")
+parameters <- list(
+  .globals = list(.plotInitialTime = 1),
+  glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE)
+)
+
+objects = list(birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
+                               "BTNW", "CAWA", "CMWA","CONW",
+                               "OVEN", "PISI", "RBNU", "SWTH",
+                               "TEWA", "WETA", "YRWA"),
+               typeDisturbance = c("Transitional", "Permanent","Both"), 
+               disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
+               dataName = "Final_points_BEAD_final.csv")
+```
+
+Simulation setup
+
+```{r setupSpaDES}
+mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
+mySimOut <- spades(mySim, debug = TRUE)
+```
+
+To save the outputs:
+
+```{r save}
+mySimList <- as(mySimOut, "simList_")
+saveRDS(mySimList, file.path(outputPath(mySimOut), "Results_List.rds"))
+```
