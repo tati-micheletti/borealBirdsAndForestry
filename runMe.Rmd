@@ -22,7 +22,7 @@ update.packages(oldPkgs = unlist(dependencies), ask = FALSE)
 
 Install the latest version of the SpaDES packages and any dependencies not yet installed:
 ```{r updateSpaDES}
-install.packages("SpaDES", dependencies = TRUE) # install "suggested" packages too with TRUE
+install.packages("SpaDES", dependencies = TRUE) # install "suggested" packages too
 ```
 
 Restart again your R session so it is clear and install `reproducible` and `SpaDES.core`.
@@ -31,7 +31,26 @@ reproducible::Require("devtools") # installs (if needed) and loads devtools
 devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development")
 ```
 
-## Running module: glmerBirdModels (Alberto's models)
+## To load previously saved outputs:
+
+To load previously saved outputs, run the following lines and see below how to access the results:
+```{r loading}
+library(SpaDES)
+workDirectory <- getwd()
+paths <- list(
+  cachePath = file.path(workDirectory, "cache"),
+  modulePath = file.path(workDirectory, "modules"),
+  inputPath = file.path(workDirectory, "inputs"),
+  outputPath = file.path(workDirectory, "outputs")
+)
+setPaths(modulePath = paths$modulePath, 
+         inputPath = paths$inputPath, 
+         outputPath = paths$outputPath, 
+         cachePath = paths$cachePath)
+mySimList <- readRDS(file.path(outputPath(mySimOut), "Results_List.rds"))
+```
+
+## To run the module: glmerBirdModels (Alberto's models)
 
 ### Sourcing global script: Using all parameters as is
 
@@ -40,7 +59,7 @@ In order to run Alberto's models as they are, it is only necessary to run the fo
 source('global.R')
 ```
 
-It is possible to access the results by typing *`mySimOut$`* appended with the following codes:  
+It is possible to access the results by typing *`mySimList$`* appended with the following codes (or *`mySimList@.list$`* for using autocomplete when in RStudio):  
 
 \textcolor{blue}{data}: raw data used for the models  
 \textcolor{blue}{birdSpecies}`: species run for the models  
@@ -75,7 +94,10 @@ paths <- list(
   inputPath = file.path(workDirectory, "inputs"),
   outputPath = file.path(workDirectory, "outputs")
 )
-setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
+setPaths(modulePath = paths$modulePath, 
+         inputPath = paths$inputPath, 
+         outputPath = paths$outputPath, 
+         cachePath = paths$cachePath)
 ```
 
 List the modules to use
@@ -108,9 +130,9 @@ mySim <- simInit(times = times, params = parameters, modules = modules, paths = 
 mySimOut <- spades(mySim, debug = TRUE)
 ```
 
-To save the outputs
+To save the outputs:
 
 ```{r save}
-saveRDS(mySimOut, file.path(outputPath(mySimOut), "Results.rds"))
+mySimList <- as(mySimOut, "simList_")
+saveRDS(mySimList, file.path(outputPath(mySimOut), "Results_List.rds"))
 ```
-
