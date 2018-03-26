@@ -30,8 +30,26 @@ Restart again your R session so it is clear and install `reproducible` and `SpaD
 reproducible::Require("devtools") # installs (if needed) and loads devtools
 devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development")
 ```
+## To load previously saved outputs:
 
-## Running module: glmerBirdModels (Alberto's models)
+To load previously saved outputs, run the following lines and see below how to access the results:
+```{r loading}
+library(SpaDES)
+workDirectory <- getwd()
+paths <- list(
+  cachePath = file.path(workDirectory, "cache"),
+  modulePath = file.path(workDirectory, "modules"),
+  inputPath = file.path(workDirectory, "inputs"),
+  outputPath = file.path(workDirectory, "outputs")
+)
+setPaths(modulePath = paths$modulePath, 
+         inputPath = paths$inputPath, 
+         outputPath = paths$outputPath, 
+         cachePath = paths$cachePath)
+mySimList <- readRDS(file.path(outputPath(mySimOut), "Results_List.rds"))
+```
+
+## To run the module: glmerBirdModels (Alberto's models)
 
 ### Sourcing global script: Using all parameters as is
 
