@@ -11,6 +11,7 @@ header-includes:
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
 
+
 ## Updating SpaDES.core and reproducible
 
 The present project needs the most updated version of SpaDES and reproducible R packages in their development versions, as well as updated dependencies of these packages. Restart your R session so it is clear. you can use a shortcut Ctrl-shift-F10 if you are in Rstudio. If you have any of our packages or their dependencies, please update them first. Get latest versions of key SpaDES packages from CRAN. Update any versions of these dependencies that are already on your machine.
