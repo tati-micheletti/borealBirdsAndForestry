@@ -40,10 +40,10 @@ system.time(mySimOut <- spades(mySim, debug = TRUE))
 # To save the outputs
 mySimList <- as(mySimOut, "simList_")
 saveRDS(mySimList, file.path(outputPath(mySimOut), "Results_List.rds"))
-saveRDS(mySimOut, file.path(outputPath(mySimOut), "Results_Env.rds"))
+# saveRDS(mySimOut, file.path(outputPath(mySimOut), "Results_Env.rds"))
 
 # To load the outputs
-mySimOut <- readRDS(file.path(paths$outputPath, "Results.rds"))
+# mySimOut <- readRDS(file.path(outputPath(mySimOut), "Results_List.rds"))
 
 # To see the objects that are interacting in this module:
-objectDiagram(mySim)
+# objectDiagram(mySim)
