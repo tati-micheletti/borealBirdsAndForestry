@@ -92,29 +92,35 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
 
       sim$plotDistSec <- plotDisturbanceSector(sim = sim, 
                                                dataset = sim$data, 
-                                               types = sim$typeDisturbance)
+                                               types = sim$typeDisturbance,
+                                               outputPath = outputPath(sim))
       
       sim$plotList <- plotList(dataset = sim$models, 
                                combinations = sim$combinations, 
-                               birdSp = sim$birdSpecies)
+                               birdSp = sim$birdSpecies,
+                               outputPath = outputPath(sim))
       
       sim$plotCoeff <- plotCoefficients(sim = sim, 
-                                        plotList = sim$plotList)
+                                        plotList = sim$plotList,
+                                        outputPath = outputPath(sim))
       
       sim$plotAbundDist <- plotAbundanceDisturbance(sim = sim, 
-                                                    plotList = sim$plotList)
+                                                    plotList = sim$plotList,
+                                                    outputPath = outputPath(sim))
       
     },
     save = {
       
       sim$tableSampling <- tableSampling(sim = sim, 
                                          dataName = sim$dataName, 
-                                         dataset = sim$data)
+                                         dataset = sim$data,
+                                         outputPath = outputPath(sim))
       
       sim$AIC <- tableAIC(sim = sim, 
                           models = sim$models, 
                           birdSp = sim$birdSpecies, 
-                          combinations = sim$combinations)
+                          combinations = sim$combinations,
+                          outputPath = outputPath(sim))
       
     },
     

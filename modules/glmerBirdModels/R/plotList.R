@@ -1,6 +1,6 @@
 # Make plotList. This will be used for more than one plot.
 
-plotList <- function(dataset = sim$models, combinations = sim$combinations, birdSp = sim$birdSpecies){
+plotList <- function(sim = sim, outputPath = outputPath(sim), dataset = sim$models, combinations = sim$combinations, birdSp = sim$birdSpecies){
   
   require(data.table)
   
@@ -52,7 +52,7 @@ plotList <- function(dataset = sim$models, combinations = sim$combinations, bird
   plotTable <- plotTable[order(plotTable$Estimate),]
   plotTable$Significancy <- ifelse(plotTable$p<0.1,"YES","NO")
   
-  write.csv(plotTable, file = file.path(paths$outputPath, "plotList.csv"))
+  write.csv(plotTable, file = file.path(outputPath, "plotList.csv"))
   
   return(plotTable)
   

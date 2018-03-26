@@ -1,5 +1,5 @@
 
-plotAbundanceDisturbance <- function(sim = sim, plotList = sim$plotList){
+plotAbundanceDisturbance <- function(outputPath = outputPath(sim), sim = sim, plotList = sim$plotList){
   
   # Following Original. Significancy relates to the original models.
   
@@ -35,7 +35,7 @@ plotAbundanceDisturbance <- function(sim = sim, plotList = sim$plotList){
          y = "Density relative to intact areas") +
     guides(linetype=FALSE)
 
-png(file.path(sim@paths$outputPath,"plotAbundanceDisturbance.png"), width = 1500, height = 863)
+png(file.path(outputPath,"plotAbundanceDisturbance.png"), width = 1500, height = 863)
 predPlot
 dev.off()
   

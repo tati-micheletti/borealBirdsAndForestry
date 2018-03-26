@@ -1,5 +1,5 @@
 
-plotCoefficients <- function(sim = sim, plotList = sim$plotList){
+plotCoefficients <- function(outputPath = outputPath(sim), sim = sim, plotList = sim$plotList){
   
   require(ggplot2)
   require(ggalt)
@@ -24,7 +24,7 @@ plotCoefficients <- function(sim = sim, plotList = sim$plotList){
     labs(x = "Abundance estimates", y = "Bird species") +
     geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
   
-  png(file.path(sim@paths$outputPath,"plotCoefficients.png"), width = 1500, height = 863)
+  png(file.path(outputPath,"plotCoefficients.png"), width = 1500, height = 863)
   plot
   dev.off()
   

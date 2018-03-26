@@ -1,7 +1,7 @@
 
 # This function generated Figure 2 from the manuscript
 
-plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typeDisturbance, RColorBrewerPalett = "Pastel1"){
+plotDisturbanceSector <- function(outputPath = outputPath(sim), sim = sim, dataset = sim$data, types = sim$typeDisturbance, RColorBrewerPalett = "Pastel1"){
   
   require(ggplot2)
   require(RColorBrewer)
@@ -15,7 +15,7 @@ plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typ
   for (name in names(dataset)){
     dataset[[name]]$DIMENSION <- ifelse(grepl(pattern = "local", x = name),"LOCAL SCALE", 
                                    ifelse(grepl(pattern = "neighborhood", x = name),"NEIGHBORHOOD SCALE",
-                                          "LOCAL UNDISTURBED NEIGHBORHOOD SCALE"))
+                                          "LOCAL UNDISTURBED"))
     dataset[[name]]$TYPE <- ifelse(grepl(pattern = "Transitional", x = name),"TRANSITIONAL DISTURBANCES", 
                                    ifelse(grepl(pattern = "Permanent", x = name),"PERMANENT DISTURBANCES",
                                           "BOTH DISTURBANCES"))
@@ -59,7 +59,7 @@ plotDisturbanceSector <- function(sim = sim, dataset = sim$data, types = sim$typ
     scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
                       name = "Disturbance\nAgent")
   
-  png(file.path(sim@paths$outputPath,"plotDisturbanceSector.png"), width = 1500, height = 863)
+  png(file.path(outputPath,"plotDisturbanceSector.png"), width = 1500, height = 863)
   graph
   dev.off()
   

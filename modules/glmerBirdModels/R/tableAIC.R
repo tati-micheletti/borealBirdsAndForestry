@@ -1,6 +1,6 @@
 # Extracting Table S1: tableS1-1 considers LOCAL UNDISTURBED, while tableS1-2 doesn't  
 
-tableAIC <- function(sim = sim, models = sim$models, birdSp = sim$birdSpecies, combinations = sim$combinations){
+tableAIC <- function(outputPath = outputPath(sim), sim = sim, models = sim$models, birdSp = sim$birdSpecies, combinations = sim$combinations){
 
   require(reshape2)
   require(tibble)
@@ -56,7 +56,7 @@ tableAIC <- function(sim = sim, models = sim$models, birdSp = sim$birdSpecies, c
   }
 
   tableS1.withUndis <- cbind(Species = finalTable[,1], partTableAll)
-  write.csv(tableS1.withUndis, file.path(sim@paths$outputPath, "TableS1-1.csv"))
+  write.csv(tableS1.withUndis, file.path(outputPath, "TableS1-1.csv"))
   
   # WITHOUT UNDISTURBED
 
@@ -81,7 +81,7 @@ tableAIC <- function(sim = sim, models = sim$models, birdSp = sim$birdSpecies, c
   }
   
   tableS1.withoutUndis <- cbind(Species = finalTable[,1], partTableUndis, tabUndist)
-  write.csv(tableS1.withUndis, file.path(sim@paths$outputPath, "TableS1-2.csv"))
+  write.csv(tableS1.withUndis, file.path(outputPath, "TableS1-2.csv"))
   
   return(tableS1.withoutUndis)
 }

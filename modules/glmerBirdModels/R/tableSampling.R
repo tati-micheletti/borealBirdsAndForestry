@@ -1,6 +1,6 @@
 
 
-tableSampling <- function(sim = sim, dataName = sim$dataName, dataset = sim$data){
+tableSampling <- function(outputPath = outputPath(sim), sim = sim, dataName = sim$dataName, dataset = sim$data){
   
   data.path <- file.path(getwd(), "modules/glmerBirdModels/data", dataName)
   fullData <- suppressWarnings(fread(data.path))
@@ -17,7 +17,7 @@ tableSampling <- function(sim = sim, dataName = sim$dataName, dataset = sim$data
                     list(Cluster, Surveys, L_Disturbed, L_Undisturbed, N_Disturbed, N_Undisturbed))
   names(tableS2)[1] <- "Year"
   
-  write.csv(tableS2, file.path(sim@paths$outputPath, "TableS2.csv"))
+  write.csv(tableS2, file.path(outputPath, "TableS2.csv"))
   
   return(tableS2)
   
