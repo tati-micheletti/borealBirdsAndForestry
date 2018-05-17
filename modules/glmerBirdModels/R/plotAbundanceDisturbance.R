@@ -19,7 +19,7 @@ plotAbundanceDisturbance <- function(outputPath = outputPath(sim), sim = sim, pl
     scale_y_continuous(limits = c(0, 2)) +
     facet_grid(disturbanceDimension ~ Species) +
     geom_line(size=1.2, aes(linetype = as.factor(Significancy))) +
-    scale_linetype_manual(values = c("YES" = "dashed", "NO" = "solid")) +
+    scale_linetype_manual(values = c("YES" = "solid", "NO" = "dashed")) +
     theme(strip.text.y = element_text(size=12, face="bold"),
           strip.text.x = element_text(size=12, face="bold"),
           legend.key = element_blank(),
@@ -34,7 +34,7 @@ plotAbundanceDisturbance <- function(outputPath = outputPath(sim), sim = sim, pl
     labs(x = "Percentage of disturbed area", 
          y = "Density relative to intact areas") +
     guides(linetype=FALSE)
-
+browser()
 png(file.path(outputPath,"plotAbundanceDisturbance.png"), width = 1500, height = 863)
 predPlot
 dev.off()
