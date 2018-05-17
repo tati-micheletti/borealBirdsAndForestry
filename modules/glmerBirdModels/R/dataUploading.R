@@ -10,11 +10,11 @@ dataUploading <- function(data = sim$dataName, combinations = sim$combinations){
   if (file.exists(data.path)){
     fullData <- suppressWarnings(fread(data.path))}
   else {
-    invisible(readline(prompt=paste("Make dure you have the dataset in Google Drives folder 'BAM', and press [enter] to continue",
+    invisible(readline(prompt=paste("Make dure you have the dataset in Google Drives folder 'BAM/Datasets/borealBirdsAndForestry', and press [enter] to continue",
                                     "\nIf authentication fails, please manually place the dataset file in the folder: ",
                                     file.path(getwd(), "modules/glmerBirdModels/data"))))
     require(googledrive)
-    drive_download(file.path("BAM",data), path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = TRUE,verbose = FALSE)
+    drive_download(file.path("BAM/Datasets/borealBirdsAndForestry",data), path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = TRUE,verbose = FALSE)
     fullData <- suppressWarnings(fread(file.path(getwd(), "modules/glmerBirdModels/data", data)))
   }
   
