@@ -15,32 +15,31 @@ paths <- list(
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("glmerBirdModels")
+modules <- list("bayesianBirdModel") #glmerBirdModels
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 1985, timeunit = "year")
 parameters <- list(
-  .globals = list(.plotInitialTime = 1),
-  glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE)
+    glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE)
 )
 
-objects = list(
-  birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
+objects <- list(
+    dataName = "Final_points_BEAD_final.csv",
+    birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
                                "BTNW", "CAWA", "CMWA","CONW",
                                "OVEN", "PISI", "RBNU", "SWTH",
                                "TEWA", "WETA", "YRWA"),
-               typeDisturbance = c("Transitional", "Permanent","Both"),
-               disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"),
-               dataName = "Final_points_BEAD_final.csv")
+    typeDisturbance = c("Transitional", "Permanent","Both"),
+    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
+)
 
 ## Simulation setup
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
 system.time(mySimOut <- spades(mySim, debug = TRUE))
 
 # To save the outputs
-mySimList <- as(mySimOut, "simList_")
-saveRDS(mySimList, file.path(outputPath(mySimOut), "Results_List.rds"))
-# saveRDS(mySimOut, file.path(outputPath(mySimOut), "Results_Env.rds"))
+# mySimList <- as(mySimOut, "simList_")
+# saveRDS(mySimList, file.path(outputPath(mySimOut), "bayesModel.rds"))
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "Results_List.rds"))
