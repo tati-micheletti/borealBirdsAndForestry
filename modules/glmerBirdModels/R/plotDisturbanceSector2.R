@@ -1,7 +1,8 @@
 
 # This function generated Figure 2 from the manuscript
+# THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018
 
-plotDisturbanceSector <- function(outputPath = outputPath(sim), sim = sim, 
+plotDisturbanceSector2 <- function(outputPath = outputPath(sim), sim = sim, 
                                   dataset = sim$data, 
                                   types = sim$typeDisturbance, 
                                   RColorBrewerPalett = "Set1"){
@@ -17,13 +18,13 @@ plotDisturbanceSector <- function(outputPath = outputPath(sim), sim = sim,
   
   for (name in names(dataset)){
     dataset[[name]]$DIMENSION <- ifelse(grepl(pattern = "local", x = name),"LOCAL SCALE", 
-                                   ifelse(grepl(pattern = "neighborhood", x = name),"NEIGHBORHOOD SCALE",
-                                          "LOCAL UNDISTURBED"))
-    dataset[[name]]$TYPE <- ifelse(grepl(pattern = "Transitional", x = name),"TRANSITIONAL DISTURBANCES", 
-                                   ifelse(grepl(pattern = "Permanent", x = name),"PERMANENT DISTURBANCES",
-                                          "BOTH DISTURBANCES"))
+                                        ifelse(grepl(pattern = "neighborhood", x = name),"NEIGHBORHOOD SCALE",
+                                               "LOCAL UNDISTURBED"))
+    dataset[[name]]$TYPE <- ifelse(grepl(pattern = "Transitional", x = name),"SUCCESSIONAL DISTURBANCES", 
+                                   ifelse(grepl(pattern = "Permanent", x = name),"ALIENATING DISTURBANCES",
+                                          "COMBINED DISTURBANCES"))
   }
-
+  
   # Subsetting to values that compose the graph and add column with State_P_X depending on the list Scale
   plotDT <- lapply(X = listNames, FUN = function(x){
     state <- ifelse(grepl("local", x),"100","500")
@@ -39,12 +40,12 @@ plotDisturbanceSector <- function(outputPath = outputPath(sim), sim = sim,
   # Make the graph
   dataset <- as.data.frame(dataset)
   
-  # To exclude localUndisturbed or Both, uncomment below
-  # datasetNoBoth <- dataset[!dataset$TYPE=="BOTH DISTURBANCES",]
-  # datasetNoUndist <- dataset[!dataset$DIMENSION=="LOCAL UNDISTURBED NEIGHBORHOOD SCALE",]
-  # datasetAsOriginal <- datasetNoBoth[!datasetNoBoth$DIMENSION=="LOCAL UNDISTURBED NEIGHBORHOOD SCALE",]
+  # To include localUndisturbed or Both, comment below
+  datasetNoBoth <- dataset[!dataset$TYPE=="COMBINED DISTURBANCES",]
+  datasetNoBoth <- datasetNoBoth[!datasetNoBoth$DIMENSION=="LOCAL UNDISTURBED",]
+  datasetNoBoth$TYPE <- factor(datasetNoBoth$TYPE, levels = c("SUCCESSIONAL DISTURBANCES","ALIENATING DISTURBANCES"))
   
-  graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) +
+  graph <- ggplot(datasetNoBoth, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset
     facet_grid(DIMENSION ~ TYPE, scales = "free_y") +
     #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
     geom_histogram(binwidth = 0.05) +
