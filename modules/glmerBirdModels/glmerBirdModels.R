@@ -90,7 +90,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     plots = {
 
-      sim$plotDistSec <- plotDisturbanceSector(sim = sim, 
+      sim$plotDistSec <- plotDisturbanceSector2(sim = sim, 
                                                dataset = sim$data, 
                                                types = sim$typeDisturbance,
                                                outputPath = outputPath(sim))
@@ -100,7 +100,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                                birdSp = sim$birdSpecies,
                                outputPath = outputPath(sim))
       
-      sim$plotCoeff <- plotCoefficients(sim = sim, 
+      sim$plotCoeff <- plotCoefficients3(sim = sim, 
                                         plotList = sim$plotList,
                                         outputPath = outputPath(sim))
       
