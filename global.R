@@ -25,13 +25,21 @@ parameters <- list(
 
 objects <- list(
     dataName = "Final_points_BEAD_final.csv",
-    birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
-                               "BTNW", "CAWA", "CMWA","CONW",
-                               "OVEN", "PISI", "RBNU", "SWTH",
-                               "TEWA", "WETA", "YRWA"),
+    birdSpecies = c("BBWA", "BLPW", 
+                    "BOCH", "BRCR",
+                    "BTNW", "CAWA", 
+                    "CMWA","CONW",
+                    "OVEN", "PISI",
+                    "RBNU", "SWTH",
+                    "TEWA", "WETA", "YRWA"),
     typeDisturbance = c("Transitional", "Permanent","Both"),
     disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
 )
+
+## Using external viewer
+dev.useRSGD(FALSE) # do not use Rstudio graphics device
+dev() # opens external (non-RStudio) device, which is faster
+clearPlot()
 
 ## Simulation setup
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)

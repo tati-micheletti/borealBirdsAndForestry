@@ -1,4 +1,7 @@
-bayesModel <- function(birdData = sim$birdData, birdSpecies = sim$birdSpecies, ageMap = sim$ageMap){
+bayesModel <- function(birdData = sim$birdData, 
+                       birdSpecies = sim$birdSpecies, 
+                       ageMap = sim$ageMap,
+                       beads = sim$beads){
   
   # Observations
   #   Not sure negative binomial is the best one… Maybe ZIP would be better? 
@@ -15,7 +18,7 @@ bayesModel <- function(birdData = sim$birdData, birdSpecies = sim$birdSpecies, a
   #   # Assumptions
   # 1. Bird abundance might vary depending on cluster (RE)
   # 2. Bird abundance might vary depending on the year (RE)
-  # 3.
+  # 
   
   # Subsetting to avoid using data from other types of disturbance
   birdDataN <- birdData[Agent_500=="Forestry" | Agent_500==""]
@@ -26,7 +29,21 @@ bayesModel <- function(birdData = sim$birdData, birdSpecies = sim$birdSpecies, a
   unique(birdDataFinal$Agent_100)
   unique(birdDataN$Agent_500)
   
-  browser()
+  browser() # check alighnment 
+  
+  BDFcoor <- birdDataFinal
+  coordinates(BDFcoor)=~X+Y
+  proj4string(BDFcoor)<- CRS("+proj=longlat +datum=WGS84") # Not aligning
+  # proj4string(BDFcoor)<- CRS("+proj=longlat +datum=NAD83") # Not aligning
+  # proj4string(BDFcoor)<- CRS("+proj=longlat +datum=NAD27") # Not aligning
+  birdShape <- projectInputs(x = BDFcoor, targetCRS = sp::proj4string(beads))
+  plot(ageMap)
+  plot(birdShape, col = "red", add=TRUE)
+  clearPlot()
+  plot(birdShape, col = "red")
+  plot(ageMap, add=TRUE)
+
+
   
   age <- raster::getValues(ageMap)
   ageMapDF <- data.frame(X = birdDataFinal$X, Y = birdDataFinal$Y, age = age)
