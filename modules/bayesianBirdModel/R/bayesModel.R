@@ -25,9 +25,11 @@ bayesModel <- function(birdData = sim$birdData,
   birdDataFinal <- birdDataN[Agent_100=="Forestry" | Agent_100==""]
   length(unique(birdDataFinal$SS))-nrow(birdDataFinal) # How many sites have been revisited in different years? # up to 2775, but likely less as many have 3 years of visits
   
-  # Checking subset
-  unique(birdDataFinal$Agent_100)
-  unique(birdDataN$Agent_500)
+  # dissolving beads so it 
+  ras <- raster(extent(beads))
+  shp <- raster::rasterToPolygons(x = ras)
+#  shp.cropped <- raster::crop(x = shp, y = beads)
+  
   
   browser() # check alighnment 
   
@@ -36,7 +38,8 @@ bayesModel <- function(birdData = sim$birdData,
   proj4string(BDFcoor)<- CRS("+proj=longlat +datum=WGS84") # Not aligning
   # proj4string(BDFcoor)<- CRS("+proj=longlat +datum=NAD83") # Not aligning
   # proj4string(BDFcoor)<- CRS("+proj=longlat +datum=NAD27") # Not aligning
-  birdShape <- projectInputs(x = BDFcoor, targetCRS = sp::proj4string(beads))
+  birdShape <- SpaDES.tools::postProcess(x = BDFcoor, rasterToMatch = ageMap)
+  
   plot(ageMap)
   plot(birdShape, col = "red", add=TRUE)
   clearPlot()
