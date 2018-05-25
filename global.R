@@ -37,9 +37,9 @@ objects <- list(
 )
 
 ## Using external viewer
-dev.useRSGD(FALSE) # do not use Rstudio graphics device
-dev() # opens external (non-RStudio) device, which is faster
-clearPlot()
+# dev.useRSGD(FALSE) # do not use Rstudio graphics device
+# dev() # opens external (non-RStudio) device, which is faster
+# clearPlot()
 
 ## Simulation setup
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)

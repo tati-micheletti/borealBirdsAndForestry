@@ -11,7 +11,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "bayesianBirdModel.Rmd"),
-  reqdPkgs = list("googledrive", "data.table", "raster"),
+  reqdPkgs = list("googledrive", "data.table", "raster", "stats", "gstat"),
   parameters = rbind(
     defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
   ),
@@ -54,7 +54,8 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
       sim$models <- bayesModel(birdData = sim$birdData, 
                                ageMap = sim$ageMap, 
                                beads = sim$beads,
-                               birdSpecies = sim$birdSpecies)
+                               birdSpecies = sim$birdSpecies,
+                               dataPath = dataPath(sim))
     },
 
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],

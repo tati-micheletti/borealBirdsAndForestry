@@ -1,7 +1,8 @@
 bayesModel <- function(birdData = sim$birdData, 
                        birdSpecies = sim$birdSpecies, 
                        ageMap = sim$ageMap,
-                       beads = sim$beads){
+                       beads = sim$beads,
+                       dataPath = dataPath(sim)){
   
   # Observations
   #   Not sure negative binomial is the best one… Maybe ZIP would be better? 
@@ -25,39 +26,45 @@ bayesModel <- function(birdData = sim$birdData,
   birdDataFinal <- birdDataN[Agent_100=="Forestry" | Agent_100==""]
   length(unique(birdDataFinal$SS))-nrow(birdDataFinal) # How many sites have been revisited in different years? # up to 2775, but likely less as many have 3 years of visits
   
-  # dissolving beads so it 
-  ras <- raster(extent(beads))
-  shp <- raster::rasterToPolygons(x = ras)
-#  shp.cropped <- raster::crop(x = shp, y = beads)
-  
-  
-  browser() # check alighnment 
-  
+  # Creating a Spatial object from BAM points
   BDFcoor <- birdDataFinal
   coordinates(BDFcoor)=~X+Y
-  proj4string(BDFcoor)<- CRS("+proj=longlat +datum=WGS84") # Not aligning
-  # proj4string(BDFcoor)<- CRS("+proj=longlat +datum=NAD83") # Not aligning
-  # proj4string(BDFcoor)<- CRS("+proj=longlat +datum=NAD27") # Not aligning
-  birdShape <- SpaDES.tools::postProcess(x = BDFcoor, rasterToMatch = ageMap)
+  proj4string(BDFcoor)<- CRS("+proj=longlat +datum=WGS84") # Seems to be aligning, confirm data is only for boreal forest
+#  birdShape <- SpaDES.tools::postProcess(x = BDFcoor, rasterToMatch = ageMap) #Failing silently! Need to fix it! [ FIX ]
+  birdShape <- spTransform(BDFcoor, CRSobj = crs(beads))
   
-  plot(ageMap)
-  plot(birdShape, col = "red", add=TRUE)
-  clearPlot()
-  plot(birdShape, col = "red")
-  plot(ageMap, add=TRUE)
-
-
+  # Cropping and masking age map
+  canadaShapefile <- raster::getData("GADM", country="CAN", level=1,
+                              path = dataPath) %>%
+    spTransform(CRSobj = crs(ageMap))
+  borealShape <- prepInputs(targetFile = file.path(dataPath, "NABoreal.shp"), 
+                            url = "http://cfs.nrcan.gc.ca/common/boreal.zip", 
+                            destinationPath = dataPath, 
+                            rasterToMatch = ageMap, studyArea = canadaShapefile)
   
-  age <- raster::getValues(ageMap)
-  ageMapDF <- data.frame(X = birdDataFinal$X, Y = birdDataFinal$Y, age = age)
+  browser()
+  # ageMap2 <- Cache(crop, x = ageMap, y = canadaShapefile) %>%
+  #   Cache(mask, ., mask = canadaShapefile)
   
-
-
+  #
+  
+  #Interpolate for getting rid of NA's in ageMap
+  # library(gstat)
+  # gs <- gstat(formula=prec~1, locations=ageMap2, nmax=5, set=list(idp = 0))
+  # nn <- interpolate(ageMap2, gs) ## [inverse distance weighted interpolation]
+  # ageMapComplete <- mask(nn, vr)
+  
+  age <- extract(ageMap, birdShape)
+  ageMapDF <- data.frame(X = birdDataFinal$X, Y = birdDataFinal$Y, 
+                         Year = birdDataFinal$YYYY, Age = age)
+  # ageMapDF$projectedAge <- 
+  
+  
   # Model dataframe
   dfModel <- lapply(X = birdSpecies, FUN = function(x){
     data.frame(percDistL = birdDataFinal$State_P_100,
                percDistN = birdDataFinal$State_P_500,
-               age = ageMapDf$age,
+               age = ageMapDf$projectedAge,
                estDensity = get(paste0("birdDataFinal$LOG_BCR_", x)),
                offset = get(paste0("birdDataFinal$OF_", x)),
                Cluster = birdData$ClusterSP,
