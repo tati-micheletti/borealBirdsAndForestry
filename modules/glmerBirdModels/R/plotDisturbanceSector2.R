@@ -1,6 +1,6 @@
 
 # This function generated Figure 2 from the manuscript
-# THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018
+# THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018 and 31st May
 
 plotDisturbanceSector2 <- function(outputPath = outputPath(sim), sim = sim, 
                                   dataset = sim$data, 
@@ -40,17 +40,17 @@ plotDisturbanceSector2 <- function(outputPath = outputPath(sim), sim = sim,
   # Make the graph
   dataset <- as.data.frame(dataset)
   
-  # To include localUndisturbed or Both, comment below
-  datasetNoBoth <- dataset[!dataset$TYPE=="COMBINED DISTURBANCES",]
-  datasetNoBoth <- datasetNoBoth[!datasetNoBoth$DIMENSION=="LOCAL UNDISTURBED",]
-  datasetNoBoth$TYPE <- factor(datasetNoBoth$TYPE, levels = c("SUCCESSIONAL DISTURBANCES","ALIENATING DISTURBANCES"))
+  # # To include localUndisturbed or Both, comment below # Asked on 31st May
+  # datasetNoBoth <- dataset[!dataset$TYPE=="COMBINED DISTURBANCES",]
+  # datasetNoBoth <- datasetNoBoth[!datasetNoBoth$DIMENSION=="LOCAL UNDISTURBED",]
+  # datasetNoBoth$TYPE <- factor(datasetNoBoth$TYPE, levels = c("SUCCESSIONAL DISTURBANCES","ALIENATING DISTURBANCES"))
   
-  graph <- ggplot(datasetNoBoth, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset
+  graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset #Cganged back datasetNoBoth
     facet_grid(DIMENSION ~ TYPE, scales = "free_y") +
     #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
     geom_histogram(binwidth = 0.05) +
-    theme(strip.text.y = element_text(size=12, face="bold"),
-          strip.text.x = element_text(size=12, face="bold"),
+    theme(strip.text.y = element_text(size=16, face="bold"),
+          strip.text.x = element_text(size=16, face="bold"),
           legend.position = "right",
           legend.title = element_text(face = "bold"),
           legend.title.align = 0.5,
@@ -63,6 +63,7 @@ plotDisturbanceSector2 <- function(outputPath = outputPath(sim), sim = sim,
     scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
                       name = "Disturbance\nAgent")
   
+  browser()
   png(file.path(outputPath,"plotDisturbanceSector.png"), width = 1500, height = 863)
   graph
   dev.off()

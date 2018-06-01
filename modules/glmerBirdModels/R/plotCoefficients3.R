@@ -1,6 +1,6 @@
 plotCoefficients3 <- function(outputPath = outputPath(sim), sim = sim, plotList = sim$plotList){
   
-  # THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018
+  # THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018 + 31st May
 
     require(ggplot2)
     require(ggalt)
@@ -29,8 +29,8 @@ plotCoefficients3 <- function(outputPath = outputPath(sim), sim = sim, plotList 
       geom_point(data = plotList, aes(x = Estimate, fill = as.factor(Significancy)), pch=21) +
       scale_fill_manual(values = c("YES" = "black", "NO" = "white")) +
       theme(legend.position = "none",
-            strip.text.y = element_text(size=12, face="bold"),
-            strip.text.x = element_text(size=12, face="bold"),
+            strip.text.y = element_text(size=16, face="bold"), # changed this on 31st May
+            strip.text.x = element_text(size=16, face="bold"), # changed this on 31st May
             legend.title = element_text(face = "bold"),
             axis.text=element_text(size=12),
             axis.title=element_text(size=16,face="bold"),
@@ -39,7 +39,8 @@ plotCoefficients3 <- function(outputPath = outputPath(sim), sim = sim, plotList 
       labs(x = "Model coefficients", y = "Bird species") +
       geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
     
-    png(file.path(outputPath,"plotCoefficients.png"), width = 1500, height = 863)
+    browser()
+    png(file.path(outputPath,"plotCoefficientsX.png"), width = 1500, height = 863)
     plot
     dev.off()
     
