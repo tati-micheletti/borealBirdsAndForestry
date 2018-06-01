@@ -1,4 +1,7 @@
-loadAndProcessAgeMap <- function(dataPath = dataPath(sim), projection = NULL){
+loadAndProcessAgeMap <- function(dataPath = dataPath(sim), 
+                                 projection = NULL,
+                                 rP = sim$rP){
+  
   if(!file.exists(file.path(dataPath,"can_age04_1km.tif"))){
     invisible(readline(prompt=paste0("ageMap was not found. Please download it manually at \n",
                                      "ftp://ftp.daac.ornl.gov/data/nacp/NA_TreeAge//data/can_age04_1km.tif",
@@ -13,8 +16,14 @@ loadAndProcessAgeMap <- function(dataPath = dataPath(sim), projection = NULL){
     message(paste0("Reprojecting using "), projection)
   }
   ageMap[] <- round(ageMap[], 0)
-  cols <- length(which(!is.na(unique(getValues(ageMap)))))
-  ageMap <- setColors(ageMap, n=cols,colorRampPalette(c("LightGreen", "DarkGreen"))(cols))
+  
+  if(!is.null(rP)){
+    ageMap <- crop(ageMap, rP) %>%
+      mask(rP)
+  }
+
+  # cols <- length(which(!is.na(unique(getValues(ageMap)))))
+  # ageMap <- setColors(ageMap, n=cols,colorRampPalette(c("LightGreen", "DarkGreen"))(cols)) #Make colors better but messes up map
   
   return(ageMap)
 }

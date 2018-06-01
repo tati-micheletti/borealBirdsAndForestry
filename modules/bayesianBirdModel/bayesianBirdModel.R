@@ -39,23 +39,24 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                               url = "https://drive.google.com/open?id=1VSlDXiID7A-R9ryim0NYOAaxq7Cf00n_",
                               archive = "BEAD_2000.zip",
                               destinationPath = dataPath(sim), 
-                              overwrite = FALSE, 
+                              overwrite = FALSE,
+                              studyArea = sim$rP,
                               useCache = TRUE)
       
-      
-#~~~~~~>      # CHECK PROJECTION FROM AGEMAP. IT IS NOT REPROJECTING TO BEADS...
-      sim$ageMap <- loadAndProcessAgeMap(dataPath = dataPath(sim), projection = sp::proj4string(sim$beads))
+      sim$ageMap <- loadAndProcessAgeMap(dataPath = dataPath(sim), projection = sp::proj4string(sim$beads), rP = sim$rP)
 
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "bayesianBirdModel", "model")
     },
     model = {
+  
       
       sim$models <- bayesModel(birdData = sim$birdData, 
                                ageMap = sim$ageMap, 
                                beads = sim$beads,
                                birdSpecies = sim$birdSpecies,
-                               dataPath = dataPath(sim))
+                               dataPath = dataPath(sim),
+                               rP = sim$rP)
     },
 
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -69,6 +70,15 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
   if(!suppliedElsewhere("dataName", sim)){
     sim$dataName <- "Final_points_BEAD_final.csv"
   }
+  
+if(!is.null(P(sim)$testArea) & P(sim)$testArea==TRUE){
+    sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
+    sim$areaSize <- 5000000
+    sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon    
+    message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
+  } else {
+    sim$rP <- NULL
+    }
   
   return(invisible(sim))
 }
