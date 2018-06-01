@@ -15,11 +15,12 @@ paths <- list(
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("bayesianBirdModel") #glmerBirdModels
+modules <- list("glmerBirdModels") #bayesianBirdModel
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 1985, timeunit = "year")
 parameters <- list(
+    bayesianBirdModel = list(testArea = TRUE),
     glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE)
 )
 
@@ -32,13 +33,14 @@ objects <- list(
                     "OVEN", "PISI",
                     "RBNU", "SWTH",
                     "TEWA", "WETA", "YRWA"),
-    typeDisturbance = c("Transitional", "Permanent","Both"),
+    typeDisturbance = c("Transitional", "Permanent", "Both"),
     disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
 )
 
 ## Using external viewer
 # dev.useRSGD(FALSE) # do not use Rstudio graphics device
 # dev() # opens external (non-RStudio) device, which is faster
+
 # clearPlot()
 
 ## Simulation setup
