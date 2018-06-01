@@ -36,7 +36,6 @@ dataUploading <- function(data = sim$dataName, combinations = sim$combinations){
                      ifelse(undist==FALSE & both==TRUE,
                             dataUploaded[[paste(x)]] <- fullData,
                             dataUploaded[[paste(x)]] <- fullData[get(state)==0|get(paste0("Agent_",stateLetter))==agent])))
-       
     return(dataUploaded)
   })
 
