@@ -31,7 +31,8 @@ dataUploading <- function(data = sim$dataName, combinations = sim$combinations){
        ifelse(undist==TRUE & both==TRUE,
               dataUploaded[[paste(x)]] <- fullData[State_P_100==0],
               ifelse(undist==TRUE & both==FALSE,
-                     dataUploaded[[paste(x)]] <- fullData[State_P_100==0 & get(paste0("Agent_",stateLetter))==agent],
+                     dataUploaded[[paste(x)]] <- fullData[State_P_100==0 & 
+                                                            (get(paste0("Agent_",stateLetter))==agent | get(paste0("Agent_",stateLetter))=="")], # Fixed on 1st June 2018
                      ifelse(undist==FALSE & both==TRUE,
                             dataUploaded[[paste(x)]] <- fullData,
                             dataUploaded[[paste(x)]] <- fullData[get(state)==0|get(paste0("Agent_",stateLetter))==agent])))
