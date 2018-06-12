@@ -1,7 +1,7 @@
 ---
-title: "getDisturbanceData"
-author: "tmichele"
-date: "05 March 2018"
+title: "splitModelPlot"
+author: ""
+date: "04 June 2018"
 output: pdf_document
 ---
 
@@ -21,33 +21,28 @@ For help writing in R Markdown, see http://rmarkdown.rstudio.com/.
 # Usage
 
 ```{r module_usage}
-library(igraph)
-library(SpaDES.core)
+library(SpaDES)
 
-moduleDir <- file.path("/home/tmichele/Documents/GitHub/borealBirdsAndForestry/modules")
-inputDir <- file.path(moduleDir, "inputs") %>% reproducible::checkPath(create = TRUE)
-outputDir <- file.path(moduleDir, "outputs")
-cacheDir <- file.path(outputDir, "cache")
+setPaths(modulePath = file.path("C:/Ian/Tati/borealBirdsAndForestry/modules"))
+getPaths() # shows where the 4 relevant paths are
+
 times <- list(start = 0, end = 10)
+
 parameters <- list(
   #.progress = list(type = "text", interval = 1), # for a progress bar
   ## If there are further modules, each can have its own set of parameters:
   #module1 = list(param1 = value1, param2 = value2),
   #module2 = list(param1 = value1, param2 = value2)
 )
-modules <- list("getDisturbanceData")
+modules <- list("splitModelPlot")
 objects <- list()
-paths <- list(
-  cachePath = cacheDir,
-  modulePath = moduleDir,
-  inputPath = inputDir,
-  outputPath = outputDir
-)
+inputs <- list()
+outputs <- list()
 
 mySim <- simInit(times = times, params = parameters, modules = modules,
-                 objects = objects, paths = paths)
+                 objects = objects)
 
-spades(mySim)
+mySimOut <- spades(mySim)
 ```
 
 # Events
@@ -67,7 +62,7 @@ Write what is saved.
 ## Input data
 
 How to obtain input data, and a description of the data required by the module.
-If `sourceURL` is specified, `downloadData("getDisturbanceData", "path/to/modules/dir")` may be sufficient.
+If `sourceURL` is specified, `downloadData("splitModelPlot", "path/to/modules/dir")` may be sufficient.
 
 ## Output data
 
