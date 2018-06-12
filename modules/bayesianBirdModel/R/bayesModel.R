@@ -145,7 +145,8 @@ bayesModel <- function(birdData = sim$birdData,
   
   browser()
   
-  toCheck <- 54873.7227316193:77760.0004461716
+  toCheck <- 54873.7227316193:77760.0004461716 # This doesn't seem to exist?! I need to check if it is casting ok. I need a count per year.
+  dfCounts$BBWA[dfCounts$BBWA$site==toCheck,]
     
   # Extract year sequence of data: THIS ARE MY COLUMNS IN COUNT DF
   ys <- sort(unique(ageMapDF$Year))
