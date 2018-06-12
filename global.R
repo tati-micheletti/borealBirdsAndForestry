@@ -22,13 +22,21 @@ paths <- list(
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("glmerBirdModels") # #bayesianBirdModel
+modules <- list("birdDensityBCR_Prov_LCC", "glmerBirdModels", "splitModelPlot") # #bayesianBirdModel
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 1985, timeunit = "year")
+times <- list(start = 1985, end = 1986, timeunit = "year")
 parameters <- list(
     bayesianBirdModel = list(testArea = TRUE),
-    glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE)
+    glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE),
+    splitModelPlot = list(focalDistance = 3, 
+                          disturbanceClass = 2,
+                          nx = 2,
+                          ny = 2,
+                          rType = "FLT4S",
+                          buffer = c(18,18),
+                          forestClass = 1:6,
+                          .useCache = TRUE)
 )
 
 objects <- list(
@@ -41,9 +49,10 @@ objects <- list(
                     # "OVEN", "PISI",
                     # "RBNU", "SWTH",
                     # "TEWA", "WETA", 
-                    "YRWA"),
-    typeDisturbance = c("Transitional", "Permanent", "Both"),
-    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
+                    # "YRWA"
+                    ),
+    typeDisturbance = c("Transitional"), #, "Permanent", "Both"
+    disturbanceDimension = c("local") #, "neighborhood", "LocalUndisturbed"
 )
 
 ## Using external viewer
