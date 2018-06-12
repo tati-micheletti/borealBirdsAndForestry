@@ -84,7 +84,7 @@ Init <- function(sim) {
 
 .inputObjects = function(sim) {
 
-  if (!('birdSpecies' %in% sim$.userSuppliedObjNames)) { #Benchmatk later comaring to is.null(sim$birdSpecies)
+  if (!suppliedElsewhere('birdSpecies', sim)) { #Benchmatk later comaring to is.null(sim$birdSpecies)
    sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                         "BTNW", "CAWA", "CMWA", "CONW", 
                         "OVEN", "PISI", "RBNU", "SWTH", 
