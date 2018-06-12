@@ -63,7 +63,6 @@ plotDisturbanceSector2 <- function(outputPath = outputPath(sim), sim = sim,
     scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
                       name = "Disturbance\nAgent")
   
-  browser()
   png(file.path(outputPath,"plotDisturbanceSector.png"), width = 1500, height = 863)
   graph
   dev.off()
