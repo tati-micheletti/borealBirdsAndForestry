@@ -1,9 +1,16 @@
 # Global script for the glmerBirdModels
 
-library(SpaDES)
+#devtools::install(local = FALSE)
+#try(detach("package:SpaDES.core", unload = TRUE)); devtools::load_all("~/Documents/GitHub/SpaDES.tools"); devtools::load_all("~/Documents/GitHub/SpaDES.core")
+ library(SpaDES)
+
+#debug(fixErrors)
 
 # set the directories
-workDirectory <- getwd()
+ workDirectory <- getwd()
+
+#workDirectory <- "/home/tmichele/Documents/GitHub/borealBirdsAndForestry" #For working on prepInputs
+#debug(cropInputs)
 
 paths <- list(
   cachePath = file.path(workDirectory, "cache"),
@@ -15,7 +22,7 @@ paths <- list(
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("glmerBirdModels") #bayesianBirdModel
+modules <- list("glmerBirdModels") # #bayesianBirdModel
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 1985, timeunit = "year")
@@ -26,13 +33,15 @@ parameters <- list(
 
 objects <- list(
     dataName = "Final_points_BEAD_final.csv",
-    birdSpecies = c("BBWA", "BLPW", 
-                    "BOCH", "BRCR",
-                    "BTNW", "CAWA", 
-                    "CMWA","CONW",
-                    "OVEN", "PISI",
-                    "RBNU", "SWTH",
-                    "TEWA", "WETA", "YRWA"),
+    birdSpecies = c("BBWA", 
+                    # "BLPW", 
+                    # "BOCH", "BRCR",
+                    # "BTNW", "CAWA", 
+                    # "CMWA","CONW",
+                    # "OVEN", "PISI",
+                    # "RBNU", "SWTH",
+                    # "TEWA", "WETA", 
+                    "YRWA"),
     typeDisturbance = c("Transitional", "Permanent", "Both"),
     disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
 )
@@ -49,7 +58,7 @@ system.time(mySimOut <- spades(mySim, debug = TRUE))
 
 # To save the outputs
 # mySimList <- as(mySimOut, "simList_")
-# saveRDS(mySimList, file.path(outputPath(mySimOut), "bayesModel.rds"))
+# saveRDS(mySimList, file.path(outputPath(mySimOut), "bayesResults.rds"))
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "Results_List.rds"))
