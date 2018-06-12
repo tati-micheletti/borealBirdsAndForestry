@@ -39,7 +39,6 @@ plotCoefficients3 <- function(outputPath = outputPath(sim), sim = sim, plotList 
       labs(x = "Model coefficients", y = "Bird species") +
       geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
     
-    browser()
     png(file.path(outputPath,"plotCoefficients.png"), width = 1500, height = 863)
     plot
     dev.off()
