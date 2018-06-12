@@ -8,23 +8,20 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
   modelsList <- list()
   errorModels <- list()
   
-  browser()
-  
   models <- lapply(X = combinations, FUN = function(x){
-    if (grepl("local", x)) "State_P_100","State_P_500")
+    if (grepl("local", x)) {
     data <- dataset[[x]]
-    
     birds <- lapply(X = birdSp, FUN = function(name){
       
       tryCatch({
         
-        suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ get(dimension) + LOG_BCR_", name, " + ", 
+        suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
                                                                "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY)",
                                                                ", family='poisson', data=data)")))))
         
         if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
           
-          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ get(dimension) + LOG_BCR_", name, " + ",
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
                                                                  "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
                                                                  ", family='poisson', data=data)")))))
         }
@@ -39,13 +36,13 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
 
         }, error = function(e){
           
-          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ get(dimension) + LOG_BCR_", name, " + ", 
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
                                                                  "offset(OF_", name,") + (1|YYYY) + (1|ClusterSP:YYYY)",
                                                                  ", family='poisson', data=data)")))))
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
-            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ get(dimension) + LOG_BCR_", name, " + ",
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
                                                                    "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
                                                                    ", family='poisson', data=data)")))))
           }
@@ -62,11 +59,62 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
       }
       ) # End tryCatch
       
-    })
+     })
+    } else {
+      data <- dataset[[x]]
+      birds <- lapply(X = birdSp, FUN = function(name){
+        
+        tryCatch({
+          
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
+                                                                 "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY)",
+                                                                 ", family='poisson', data=data)")))))
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+                                                                   "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
+                                                                   ", family='poisson', data=data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed.", 
+                                           "Try re-running the model with less random effects."), sep = " "))
+          }
+          
+          modelsList <- get(name)
+          return(modelsList)
+          
+        }, error = function(e){
+          
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
+                                                                 "offset(OF_", name,") + (1|YYYY) + (1|ClusterSP:YYYY)",
+                                                                 ", family='poisson', data=data)")))))
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+                                                                   "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
+                                                                   ", family='poisson', data=data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed.", 
+                                           "Try re-running the model with less random effects."), sep = " "))
+            
+          }
+          
+          modelsList <- get(name)
+          return(modelsList)
+          
+        }
+        ) # End tryCatch
+        
+      })
+    }
     
     names(birds) <- birdSp
     return(birds)
-
   })
   
   names(models) <- combinations
