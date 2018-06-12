@@ -83,7 +83,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     birdModels = {
       
-      sim$models <- Cache(birdModelsFunction, combinations = sim$combinations, 
+      sim$models <- Cache(birdModelsFunctionUpdated, combinations = sim$combinations, 
                                        dataset = sim$data,
                                        birdSp = sim$birdSpecies)
       
@@ -104,7 +104,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                                         plotList = sim$plotList,
                                         outputPath = outputPath(sim))
       
-      sim$plotAbundDist <- plotAbundanceDisturbance(sim = sim, 
+      sim$plotAbundDist <- plotAbundanceDisturbance3(sim = sim, 
                                                     plotList = sim$plotList,
                                                     outputPath = outputPath(sim))
       
