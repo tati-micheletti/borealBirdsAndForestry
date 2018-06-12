@@ -18,7 +18,8 @@ defineModule(sim, list(
   inputObjects = bind_rows(
     expectsInput(objectName = "dataName", objectClass = "character", desc = "File name of used dataset", sourceURL = NA),
     expectsInput(objectName = "ageMap", objectClass = "RasterLayer", desc = "Age class map raster", sourceURL = "ftp://ftp.daac.ornl.gov/data/nacp/NA_TreeAge//data/can_age04_1km.tif"),
-    expectsInput(objectName = "beads", objectClass = "", desc = "shapefile with forestry and bird count locations", sourceURL = "https://drive.google.com/open?id=1VSlDXiID7A-R9ryim0NYOAaxq7Cf00n_")
+    expectsInput(objectName = "beads", objectClass = "SpatialPolygonDataFrame", desc = "shapefile with forestry and bird count locations", sourceURL = "https://drive.google.com/open?id=1VSlDXiID7A-R9ryim0NYOAaxq7Cf00n_"),
+    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA)
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "birdData", objectClass = "data.table", desc = "Bird dataset"),
@@ -32,24 +33,23 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
-     
+      
       # do stuff for this event
       sim$birdData <- datasetUploading(dataPath = dataPath(sim), data = sim$dataName)
       sim$beads <- prepInputs(targetFile = file.path(dataPath(sim), "BEAD_2000.shp"),
+                              alsoExtract = c("BEAD_2000.dbf", "BEAD_2000.prj", "BEAD_2000.sbn", 
+                                              "BEAD_2000.sbx", "BEAD_2000.shp", "BEAD_2000.shp.xml", "BEAD_2000.shx"),
                               url = "https://drive.google.com/open?id=1VSlDXiID7A-R9ryim0NYOAaxq7Cf00n_",
                               archive = "BEAD_2000.zip",
                               destinationPath = dataPath(sim), 
-                              overwrite = FALSE,
-                              studyArea = sim$rP,
-                              useCache = TRUE)
+                              studyArea = sim$rP)
       
       sim$ageMap <- loadAndProcessAgeMap(dataPath = dataPath(sim), projection = sp::proj4string(sim$beads), rP = sim$rP)
-
+      
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "bayesianBirdModel", "model")
     },
     model = {
-  
       
       sim$models <- bayesModel(birdData = sim$birdData, 
                                ageMap = sim$ageMap, 
@@ -58,7 +58,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                                dataPath = dataPath(sim),
                                rP = sim$rP)
     },
-
+    
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
@@ -66,19 +66,20 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
 }
 
 .inputObjects <- function(sim) {
-
+  
   if(!suppliedElsewhere("dataName", sim)){
     sim$dataName <- "Final_points_BEAD_final.csv"
   }
   
-if(!is.null(P(sim)$testArea) & P(sim)$testArea==TRUE){
+  if(!is.null(P(sim)$testArea) & P(sim)$testArea==TRUE){
     sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
     sim$areaSize <- 5000000
+    set.seed(1234)
     sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon    
     message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
   } else {
     sim$rP <- NULL
-    }
+  }
   
   return(invisible(sim))
 }
