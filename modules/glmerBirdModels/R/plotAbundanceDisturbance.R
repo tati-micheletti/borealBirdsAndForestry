@@ -34,7 +34,7 @@ plotAbundanceDisturbance <- function(outputPath = outputPath(sim), sim = sim, pl
     labs(x = "Percentage of disturbed area", 
          y = "Density relative to intact areas") +
     guides(linetype=FALSE)
-browser()
+
 png(file.path(outputPath,"plotAbundanceDisturbance.png"), width = 1500, height = 863)
 predPlot
 dev.off()
