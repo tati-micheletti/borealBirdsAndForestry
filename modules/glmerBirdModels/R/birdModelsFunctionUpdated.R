@@ -16,13 +16,13 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
       tryCatch({
         
         suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
-                                                               "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY)",
+                                                               "offset = OF_", name," + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY)",
                                                                ", family='poisson', data=data)")))))
         
         if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
           
           suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
-                                                                 "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
+                                                                 "offset = OF_", name," + (1|ClusterSP) + (1|YYYY)",
                                                                  ", family='poisson', data=data)")))))
         }
         
@@ -37,13 +37,13 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
         }, error = function(e){
           
           suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
-                                                                 "offset(OF_", name,") + (1|YYYY) + (1|ClusterSP:YYYY)",
+                                                                 "offset = OF_", name," + (1|YYYY) + (1|ClusterSP:YYYY)",
                                                                  ", family='poisson', data=data)")))))
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
             suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
-                                                                   "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
+                                                                   "offset = OF_", name," + (1|ClusterSP) + (1|YYYY)",
                                                                    ", family='poisson', data=data)")))))
           }
           
@@ -67,13 +67,13 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
         tryCatch({
           
           suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
-                                                                 "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY)",
+                                                                 "offset = OF_", name," + (1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY)",
                                                                  ", family='poisson', data=data)")))))
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
             suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
-                                                                   "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
+                                                                   "offse = OF_", name," + (1|ClusterSP) + (1|YYYY)",
                                                                    ", family='poisson', data=data)")))))
           }
           
@@ -88,13 +88,13 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
         }, error = function(e){
           
           suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ", 
-                                                                 "offset(OF_", name,") + (1|YYYY) + (1|ClusterSP:YYYY)",
+                                                                 "offset = OF_", name," + (1|YYYY) + (1|ClusterSP:YYYY)",
                                                                  ", family='poisson', data=data)")))))
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
             suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
-                                                                   "offset(OF_", name,") + (1|ClusterSP) + (1|YYYY)",
+                                                                   "offset = OF_", name," + (1|ClusterSP) + (1|YYYY)",
                                                                    ", family='poisson', data=data)")))))
           }
           
