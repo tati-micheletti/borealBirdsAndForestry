@@ -1,4 +1,7 @@
-MergeDistances <- function(inList, times, abund, passedModel){
+MergeDistances <- function(inList = fDistanceLists, 
+                           times = times, 
+                           abund = inputTiles$birdDensityRasters,
+                           passedModel = mod){
   
   mergeList <- rlist::list.cbind(inList) %>%
     list.parse(.)

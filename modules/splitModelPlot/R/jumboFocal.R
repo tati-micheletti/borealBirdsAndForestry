@@ -1,4 +1,4 @@
-jumboFocal <- function(inList, inWeight, denomRas){
+jumboFocal <- function(inList = distStack, inWeight = focalMatrices, denomRas = LCFocals){
   
   a <- lapply(inList, FUN = raster::focal, w = inWeight, na.rm = TRUE)
   

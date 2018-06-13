@@ -32,41 +32,63 @@ defineModule(sim, list(
   ),
   inputObjects = bind_rows(
     expectsInput(objectName = "disturbanceType", objectClass = "RasterLayer", 
-                 desc = "disturbanceType prouduct", sourceURL = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Type.zip"),
+                 desc = "disturbanceType prouduct", 
+                 sourceURL = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Type.zip"),
     expectsInput(objectName = "disturbanceYear", objectClass = "RasterLayer", 
                  desc = "filepath to a raster layer representing year of disturbance occurence", 
                  sourceURL = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Year.zip"),
-    expectsInput(objectName = "landCover", objectClass = "RasterLayer", desc = "Landcover classes. The default is LCC2005", 
-                 sourceURL = "http://www.cec.org/sites/default/files/Atlas/Files/2010nalcms30m/can_landcover_2010_30m.rar"),
+    expectsInput(objectName = "landCover", objectClass = "RasterLayer", desc = "Landcover classes. The default is LCC2010 30m", 
+                 sourceURL = "http://www.cec.org/sites/default/files/Atlas/Files/2010nalcms30m/can_landcover_2010_30m.rar"), # CHECK
     expectsInput(objectName = "inputSpecies", objectClass = "list", 
                  desc = "a list of bird species", sourceURL = NA),
-    expectsInput(objectName = "inputModels", objectClass = "list", 
+    expectsInput(objectName = "models", objectClass = "list", 
                  desc = "a list of models corresponding to bird species", sourceURL = NA),
-    expectsInput(objectName = "inputAbundances", objectClass = "list",
-    desc = "a list of rasters represnting abundance and corresponding to species")
+    expectsInput(objectName = "birdDensityRasters", objectClass = "list",
+    desc = "a list of rasters representing abundance and corresponding to species"),
+    expectsInput(objectName = "models", objectClass = "list", 
+                 desc = "a list of models corresponding to bird species", sourceURL = NA),
+    expectsInput(objectName = "landCoverDS", objectClass = "character",
+                 desc = "name of land cover raster for identifying pixels that are 'forest'")
   ),
   outputObjects = bind_rows(
-    #createsOutput("objectName", "objectClass", "output object description", ...),
-    # createsOutput(objectName = "abundanceTS", objectClass = "list", desc = "a list of time series"),
-    createsOutput(objectName = "populationTrends", objectClass = "list", desc = "a list predicted trends in species, including rasters representing trend in abundance over study period, a list of time series plots and the time series themselves")
-  )
+    createsOutput(objectName = "populationTrends", objectClass = "list", 
+                  desc = paste0("a list predicted trends in species, including rasters",
+                                "representing trend in abundance over study period, a list of", 
+                                "time series plots and the time series themselves")))
 ))
-
-## event types
-#   - type `init` is required for initialiazation
 
 doEvent.splitModelPlot = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
-      ### check for more detailed object dependencies:
-      ### (use `checkObject` or similar)
+      
+      sim$landCover <- prepInputs(targetFile = file.path(dataPath(sim), "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"), 
+                                  destinationPath = dataPath(sim), useCache = TRUE,
+                                  url = "http://www.cec.org/sites/default/files/Atlas/Files/2010nalcms30m/can_landcover_2010_30m.rar",
+                                  rasterToMatch = sim$birdDensityRasters[[1]]) #Check with Eliot how prepInputs ended up to fix the url here
+      
+      sim$disturbanceType <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_type.tif"), 
+                                        destinationPath = dataPath(sim), useCache = TRUE,
+                                        archive = "C2C_change_type.zip",
+                                        alsoExtract = c("C2C_change_type.tif.ovr", "C2C_change_type.xml", "C2C_change_type.tfw",
+                                                        "C2C_change_type.lyr", "C2C_change_type.dbf", "C2C_change_type.cpg", 
+                                                        "C2C_change_type_README.txt"),
+                                        url = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Type.zip",
+                                        rasterToMatch = sim$birdDensityRasters[[1]]) #Check with Eliot how prepInputs ended up to fix the url here
+      
+      sim$disturbanceYear <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_year.tif"), 
+                                        destinationPath = dataPath(sim), useCache = TRUE,
+                                        archive = "C2C_change_year.zip",
+                                        alsoExtract = c("C2C_change_year.tif.ovr", "C2C_change_year.xml", "C2C_change_year.tfw",
+                                                        "C2C_change_year.lyr", "C2C_change_year.dbf", "C2C_change_year.cpg", 
+                                                        "C2C_change_year_README.txt"),
+                                        url = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Year.zip",
+                                        rasterToMatch = sim$birdDensityRasters[[1]]) #Check with Eliot how prepInputs ended up to fix the url here
 
-      # do stuff for this event
-      sim <- Init(sim)
-
-      # schedule future event(s)
-
+      sim$populationTrends <- splitRasterAndPredict(inputSpecies = sim$inputSpecies,
+                                                    models = sim$models,
+                                                    birdDensityRasters = sim$birdDensityRasters)
+      
     },
 
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -75,41 +97,30 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
   return(invisible(sim))
 }
 
-## event functions
-#   - follow the naming convention `modulenameEventtype()`;
-#   - `modulenameInit()` function is required for initiliazation;
-#   - keep event functions short and clean, modularize by calling subroutines from section below.
-
-### template initialization
-Init <- function(sim) {
-    
-    a <- Map(sim$inputSpecies, sim$inputModels, sim$inputAbundances, f = groupSplitRaster, 
-             MoreArgs = list(sim = sim))
-    names(a) <- inputSpecies
-    sim$populationTrends <- a
-    
-    return(invisible(sim))
-}
-
-
-
 .inputObjects <- function(sim) {
-  # Any code written here will be run during the simInit for the purpose of creating
-  # any objects required by this module and identified in the inputObjects element of defineModule.
-  # This is useful if there is something required before simulation to produce the module
-  # object dependencies, including such things as downloading default datasets, e.g.,
-  # SpaDES.tools::downloadData("LCC2005", modulePath(sim)).
-  # Nothing should be created here that does not create an named object in inputObjects.
-  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
-  # Note: the module developer can check if an object is 'suppliedElsewhere' to
-  # selectively skip unnecessary steps because the user has provided those inputObjects in the
-  # simInit call, or another module will supply or has supplied it. e.g.,
-  # if (!suppliedElsewhere('defaultColor', sim)) {
-  #   sim$defaultColor <- 'red'
-  # }
-  # ! ----- EDIT BELOW ----- ! #
 
-  # ! ----- STOP EDITING ----- ! #
+  if (!suppliedElsewhere("birdSpecies", sim)){
+    sim$inputSpecies <- list("BBWA", "BLPW",
+                      "BOCH", "BRCR",
+                      "BTNW", "CAWA",
+                      "CMWA","CONW",
+                      "OVEN", "PISI",
+                      "RBNU", "SWTH",
+                      "TEWA", "WETA",
+                      "YRWA")
+  }
+  
+  if (suppliedElsewhere("birdSpecies", sim)& !is(sim$birdSpecies, "list")){
+    inputSpecies <- as.list(sim$birdSpecies)
+  }
+  
+  if (!suppliedElsewhere("birdDensityRasters", sim)){
+    stop("No bird density rasters were provided. Please provide these.")
+  }
+  
+  if (!suppliedElsewhere("models", sim)){
+    stop("Models not supplied. Please supply these.")
+  }
+  
   return(invisible(sim))
 }
-### add additional events as needed by copy/pasting from above
