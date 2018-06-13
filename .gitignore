@@ -62,10 +62,9 @@ cache/backpack.db
 .xls
 *.csv
 .csv
-.txt
+#.txt
 *.mxd
 .mxd
-*.txt
 *.cpg
 *.dbf
 *.lyr
