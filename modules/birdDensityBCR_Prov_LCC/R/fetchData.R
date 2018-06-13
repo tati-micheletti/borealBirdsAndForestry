@@ -17,9 +17,16 @@ fetchData <- function(sim, birdSp) {
     }
     
     dataRaster[[paste0(birdSp[i])]] <- raster::raster(file.path(dataDir,paste0(birdSp[i],"_currmean.asc")))
-    browser()
+
   }
-  return(dataRaster)
+  
+  # For log values in the raster
+  logDataRaster <- lapply(X = dataRaster, FUN = function(x){
+    raster::values(x) <- log(raster::values(x))
+    return(x)
+  })
+
+  return(logDataRaster)
   
 }
 
