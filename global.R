@@ -41,7 +41,7 @@ parameters <- list(
 
 objects <- list(
     dataName = "Final_points_BEAD_final.csv",
-    birdSpecies = c("BBWA", 
+    birdSpecies = c("BBWA"
                     # "BLPW", 
                     # "BOCH", "BRCR",
                     # "BTNW", "CAWA", 
@@ -64,6 +64,7 @@ objects <- list(
 ## Simulation setup
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
 system.time(mySimOut <- spades(mySim, debug = TRUE))
+
 
 # To save the outputs
 # mySimList <- as(mySimOut, "simList_")
