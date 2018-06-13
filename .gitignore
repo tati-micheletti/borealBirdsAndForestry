@@ -62,7 +62,8 @@ cache/backpack.db
 .xls
 *.csv
 .csv
-#.txt
+*.txt
+!CHECKSUMS.txt
 *.mxd
 .mxd
 *.cpg
