@@ -2,7 +2,9 @@
 
 #devtools::install(local = FALSE)
 #try(detach("package:SpaDES.core", unload = TRUE)); devtools::load_all("~/Documents/GitHub/SpaDES.tools"); devtools::load_all("~/Documents/GitHub/SpaDES.core")
- library(SpaDES)
+
+#Note: BRCR for localPermanent and for localUndisturbedBoth didn't converge even taking the interactive random effect out, but it did taking the year (random effect) as well.
+library(SpaDES)
 
 #debug(fixErrors)
 
@@ -32,9 +34,12 @@ parameters <- list(
 
 objects <- list(
     dataName = "BAM_BEAD_final_2010.csv",
-    birdSpecies = c("BBWA",
+    birdSpecies = c(
+                     "BBWA",
                      "BLPW",
-                     "BOCH", "BRCR",
+                     "BOCH",
+                     "BRCR"
+                     ,
                      "BTNW", "CAWA",
                      "CMWA","CONW",
                      "OVEN", "PISI",
@@ -42,8 +47,8 @@ objects <- list(
                      "TEWA", "WETA",
                      "YRWA"
                     ),
-    typeDisturbance = c("Transitional", "Permanent", "Both"), #
-    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed") #, 
+    typeDisturbance = c("Permanent", "Transitional", "Both"), # 
+    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed") #
 )
 
 ## Using external viewer
@@ -56,7 +61,7 @@ system.time(mySimOut <- spades(mySim, debug = TRUE))
 
 # To save the outputs
 mySimList <- as(mySimOut, "simList_")
-saveRDS(mySimList, file.path(outputPath(mySimOut), "Results19JUN18.rds"))
+saveRDS(mySimList, file.path(outputPath(mySimOut), "Results20JUN18.rds"))
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "Results19JUN18.rds"))

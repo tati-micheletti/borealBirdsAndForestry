@@ -1,6 +1,6 @@
 
 
-tableSampling <- function(outputPath = outputPath(sim), sim = sim, dataName = sim$dataName, dataset = sim$data){
+tableSampling <- function(outputPath = outputPath(sim), dataName = sim$dataName, dataset = sim$data){
   
   data.path <- file.path(getwd(), "modules/glmerBirdModels/data", dataName)
   fullData <- suppressWarnings(fread(data.path))
