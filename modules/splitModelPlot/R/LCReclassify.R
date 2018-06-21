@@ -3,7 +3,8 @@ LCReclassify <- function(inputTiles = tilelist,
                          end = end,
                          forestClass = forestClass,
                          focalDistance = focalDistance,
-                         disturbanceClass = disturbanceClass, ...){
+                         disturbanceClass = disturbanceClass,
+                         pathData = pathData, ...){
   
   #Assumed that abundance reflects landcover of non-forest as well. 
   #reclassify landcover into binary with 1 = forest
@@ -21,9 +22,13 @@ LCReclassify <- function(inputTiles = tilelist,
   #Generate new raster for each year, where only values disturbed in a given year are 1
   times <- c(start:end)
   
-  distStack <- lapply(X = times, FUN = jumboMask, inputRas = binaryDisturb, 
+  distStack <- lapply(X = times, FUN = function(x){
+    jumbMasked <- jumboMask(inputRas = binaryDisturb, 
                       inputMask = inputTiles$distYear, updateValue = 0, 
-                      inverseLogic = TRUE)
+                      inverseLogic = TRUE, mskVal = x)
+    return(jumbMasked)
+    })
+  
   names(distStack) <- paste("year", times)
   
   #For each distance parameter, apply focal function (jumboFocal) to each year raster (distStack) using focalWeight matrices
@@ -35,7 +40,7 @@ LCReclassify <- function(inputTiles = tilelist,
   #Combine distance rasters by year
   newPlots <- MergeDistances(inList = fDistanceLists,
                              times = times,
-                             abund = inputTiles$birdDensityRasters, ...)
+                             birdDensityRasters = inputTiles$birdDensityRasters, pathData = pathData, ...)
   
   return(newPlots)
   
