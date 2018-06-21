@@ -1,20 +1,25 @@
 # Make plotList. This will be used for more than one plot.
 
-plotList <- function(sim = sim, outputPath = outputPath(sim), dataset = sim$models, combinations = sim$combinations, birdSp = sim$birdSpecies){
+plotList <- function(outputPath = outputPath(sim), 
+                     dataset = sim$models, 
+                     combinations = sim$combinations, 
+                     birdSp = sim$birdSpecies){
   
   require(data.table)
   
   coefTable <- lapply(X = combinations, FUN = function(x){
     
     birdSpecies <- lapply(X = birdSp, FUN = function(name){
-      
+
+      tryCatch({
       isolatedModel <- eval(parse(text = paste0("dataset[[x]]$",name)))
       coef <- as.data.frame(base::summary(isolatedModel)$coefficients, keep.rownames = TRUE)
       estimate <- coef["get(dimension)",][c(1:2, 4)]
       colnames(estimate) <- c("Estimate", "Std.Error","p")
       rownames(estimate) <- name
       
-      # JUSTIFICATION FOR USING St.Error*1.96 (errors should be close to normal in a high degree of freedom model) - is this my case?
+      # JUSTIFICATION FOR USING St.Error*1.96 
+      # (errors should be close to normal in a high degree of freedom model) - is this my case?
       # The t-distribution is asymptotically normal and the degrees of freedom for the error 
       # term in many multi-level designs is so high that the error distribution is normal at 
       # that point. Therefore, if you have a design with lots of degrees of freedom this is 
@@ -24,11 +29,13 @@ plotList <- function(sim = sim, outputPath = outputPath(sim), dataset = sim$mode
       estimate$upperCI <- estimate$Estimate + 1.96*estimate$`Std.Error` # Not really CI, actually just std.err +- estimate!
       
       return(estimate)
+      }, error = function(e){
+        return(NA)
+      })
     })
     
     birdSpeciesUnlisted <- do.call(rbind, unname(birdSpecies))
     return(birdSpeciesUnlisted)
-    
   })
   
   names(coefTable) <- combinations

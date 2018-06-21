@@ -1,5 +1,5 @@
 
-plotAbundanceDisturbance3 <- function(outputPath = outputPath(sim), sim = sim, plotList = sim$plotList){
+plotAbundanceDisturbance3 <- function(outputPath = outputPath(sim), plotList = sim$plotList){
   
   # Following Original. Significancy relates to the original models.
   # THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018

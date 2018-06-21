@@ -1,4 +1,4 @@
-# Bird model functions version 2
+# Bird model functions version 2 - TO BE USED WHEN PREDICTING
 
 birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset = sim$data, birdSp = sim$birdSpecies){
   
