@@ -83,42 +83,37 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     birdModels = {
       
-      sim$models <- Cache(birdModelsFunctionUpdated, combinations = sim$combinations, 
+      sim$models <- Cache(birdModelsFunction, combinations = sim$combinations, 
                                        dataset = sim$data,
                                        birdSp = sim$birdSpecies)
       
     },
     plots = {
 
-      sim$plotDistSec <- plotDisturbanceSector2(sim = sim, 
-                                               dataset = sim$data, 
-                                               types = sim$typeDisturbance,
-                                               outputPath = outputPath(sim))
+       sim$plotDistSec <- plotDisturbanceSector2(dataset = sim$data,
+                                                types = sim$typeDisturbance,
+                                                outputPath = outputPath(sim))
+
+       sim$plotList <- plotList(dataset = sim$models,
+                                combinations = sim$combinations,
+                                birdSp = sim$birdSpecies,
+                                outputPath = outputPath(sim))
       
-      sim$plotList <- plotList(dataset = sim$models, 
-                               combinations = sim$combinations, 
-                               birdSp = sim$birdSpecies,
-                               outputPath = outputPath(sim))
+       sim$plotCoeff <- plotCoefficients3(plotList = sim$plotList,
+                                         outputPath = outputPath(sim))
       
-      sim$plotCoeff <- plotCoefficients3(sim = sim, 
-                                        plotList = sim$plotList,
-                                        outputPath = outputPath(sim))
-      
-      sim$plotAbundDist <- plotAbundanceDisturbance3(sim = sim, 
-                                                    plotList = sim$plotList,
-                                                    outputPath = outputPath(sim))
+       sim$plotAbundDist <- plotAbundanceDisturbance3(plotList = sim$plotList,
+                                                     outputPath = outputPath(sim))
       
     },
     save = {
       
-      sim$tableSampling <- tableSampling(sim = sim, 
-                                         dataName = sim$dataName, 
+      sim$tableSampling <- tableSampling(dataName = sim$dataName,
                                          dataset = sim$data,
                                          outputPath = outputPath(sim))
-      
-      sim$AIC <- tableAIC(sim = sim, 
-                          models = sim$models, 
-                          birdSp = sim$birdSpecies, 
+
+      sim$AIC <- tableAIC(models = sim$models,
+                          birdSp = sim$birdSpecies,
                           combinations = sim$combinations,
                           outputPath = outputPath(sim))
       
