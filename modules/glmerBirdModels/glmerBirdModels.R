@@ -135,7 +135,7 @@ Init <- function(sim) {
 }
 
 .inputObjects = function(sim) {
-  if (params(sim)$glmerBirdModels$cropForModel==TRUE){
+  if (params(sim)$glmerBirdModels$cropForModel == TRUE){
     sim$studyArea <- loadStudyArea(data = "testArea.shp")
     sim$birdData <- loadCroppedData(sim = sim, dataName = "Final_points_BEAD_final.csv")
   }

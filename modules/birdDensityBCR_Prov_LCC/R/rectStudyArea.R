@@ -14,6 +14,7 @@ rectStudyArea <- function(x, hectares) {
                         +units=m +no_defs"))
   
   areaM2 <- hectares * 1e4 * 1.304 # rescale so mean area is close to hectares
+  
   y <- sp::spTransform(x, areaCRS)
   
   radius <- areaM2/2
