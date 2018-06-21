@@ -89,6 +89,10 @@ cache/backpack.db
 *.rds
 *.odt
 *.rar
+*.CPG
+*.grd
+*.gri
+!Final_points_2010.csv
 # Keygens
 *sshkeygen.*
 *.pub

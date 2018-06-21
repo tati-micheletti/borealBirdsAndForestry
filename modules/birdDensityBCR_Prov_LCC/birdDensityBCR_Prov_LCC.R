@@ -22,18 +22,14 @@ defineModule(sim, list(
   documentation = list("README.txt", "birdDensityBCR_Prov_LCC.Rmd"),
   reqdPkgs = list("data.table", "raster"),
   parameters = rbind(
-    #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
-    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
+    defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
   ),
   inputObjects = bind_rows(
-    #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
-    expectsInput(objectName = "birdSpecies", 
-                 objectClass = "character", 
-                 desc = "list of species to download density information based on LCC and BCR/Prov",
-                 sourceURL = NA)
+    expectsInput(objectName = "birdSpecies", objectClass = "character", desc = "list of species to download density information based on LCC and BCR/Prov", sourceURL = NA),
+    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA)
   ),
   outputObjects = bind_rows(
-    #createsOutput("objectName", "objectClass", "output object description", ...),
     createsOutput(objectName = c("birdDensityRasters","birdDensityTables"), 
                   objectClass = c("list","list"),
                   desc = c("list of rasters with information on species densities based on LCC and BCR/Prov",
@@ -47,26 +43,23 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
   switch(
     eventType,
     init = {
-  
-      # do stuff for this event
-      sim <- Init(sim)
 
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "birdDensityBCR_Prov_LCC", "fetchData")
-      sim <- scheduleEvent(sim, start(sim), "birdDensityBCR_Prov_LCC", "extractData") #CHGECK IF MY FUNCTION extractData is good for it
+      sim <- scheduleEvent(sim, start(sim), "birdDensityBCR_Prov_LCC", "extractData")
       },
 
     fetchData = {
-      
-      sim$birdDensityRasters <- fetchData(sim = sim, birdSp = sim$birdSpecies)
+
+      sim$birdDensityRasters <- fetchData(pathData = dataPath(sim), birdSp = sim$birdSpecies, studyArea = sim$rP)
       
     },
     
     extractData = {
       
-      sim$birdDensityTables <- extractData(datasetRaster = sim$birdDensityRasters, 
-                                           typeData = "list", 
-                                           list = sim$birdSpecies) # Revise function name
+      # sim$birdDensityTables <- extractData(datasetRaster = sim$birdDensityRasters, 
+      #                                      typeData = "list", 
+      #                                      list = sim$birdSpecies) # Revise function and name
       
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -75,22 +68,25 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
   return(invisible(sim))
 }
 
-
-Init <- function(sim) {
-
-
-  return(invisible(sim))
-}
-
 .inputObjects = function(sim) {
-
-  if (!suppliedElsewhere('birdSpecies', sim)) { #Benchmatk later comaring to is.null(sim$birdSpecies)
-   sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
-                        "BTNW", "CAWA", "CMWA", "CONW", 
-                        "OVEN", "PISI", "RBNU", "SWTH", 
-                        "TEWA", "WETA", "YRWA")
+  
+  if (!suppliedElsewhere('birdSpecies', sim)) {
+    sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
+                         "BTNW", "CAWA", "CMWA", "CONW", 
+                         "OVEN", "PISI", "RBNU", "SWTH", 
+                         "TEWA", "WETA", "YRWA")
   }
-
+  
+  if(!is.null(P(sim)$testArea) & P(sim)$testArea == TRUE){
+    sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
+    sim$areaSize <- 5000000
+    set.seed(1234)
+    sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon    
+    message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
+  } else {
+    sim$rP <- NULL
+  }
+  
   return(invisible(sim))
 }
 

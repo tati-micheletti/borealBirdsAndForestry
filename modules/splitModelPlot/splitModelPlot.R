@@ -15,7 +15,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "splitModelPlot.Rmd"),
-  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify"),
+  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify", "trend"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("focalDistance", "numeric", 100, NA, NA, 
@@ -28,7 +28,8 @@ defineModule(sim, list(
     defineParameter("rType", "character", "FLT4S", NA, NA, "pixel data type for splitRaster"),
     defineParameter("buffer", "numeric", 3, 0, NA, "the number of cells to buffer tiles during splitRaster. Measured in cells, not distance"),
     defineParameter("forestClass", "numeric", 1:6, NA, NA, "Relevant forest classes in land cover map"),
-    defineParameter(".useCache", "logical", TRUE, NA, NA,"Should this entire module be run with caching activated?")
+    defineParameter(".useCache", "logical", TRUE, NA, NA,"Should this entire module be run with caching activated?"),
+    defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
   ),
   inputObjects = bind_rows(
     expectsInput(objectName = "disturbanceType", objectClass = "RasterLayer", 
@@ -38,7 +39,8 @@ defineModule(sim, list(
                  desc = "filepath to a raster layer representing year of disturbance occurence", 
                  sourceURL = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Year.zip"),
     expectsInput(objectName = "landCover", objectClass = "RasterLayer", desc = "Landcover classes. The default is LCC2010 30m", 
-                 sourceURL = "http://www.cec.org/sites/default/files/Atlas/Files/2010nalcms30m/can_landcover_2010_30m.rar"), # CHECK
+                 sourceURL = "http://www.cec.org/sites/default/files/Atlas/Files/2010nalcms30m/can_landcover_2010_30m.rar"), # The download doesn't directly, talk to Eliot about it
+    
     expectsInput(objectName = "inputSpecies", objectClass = "list", 
                  desc = "a list of bird species", sourceURL = NA),
     expectsInput(objectName = "models", objectClass = "list", 
@@ -48,7 +50,8 @@ defineModule(sim, list(
     expectsInput(objectName = "models", objectClass = "list", 
                  desc = "a list of models corresponding to bird species", sourceURL = NA),
     expectsInput(objectName = "landCoverDS", objectClass = "character",
-                 desc = "name of land cover raster for identifying pixels that are 'forest'")
+                 desc = "name of land cover raster for identifying pixels that are 'forest'"),
+    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA)
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "populationTrends", objectClass = "list", 
@@ -62,10 +65,19 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
     eventType,
     init = {
       
+      sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "fetchGIS")
+      sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "prediction")
+
+      
+    },
+    fetchGIS = {
+      
       sim$landCover <- prepInputs(targetFile = file.path(dataPath(sim), "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"), 
                                   destinationPath = dataPath(sim), useCache = TRUE,
+                                  archive = "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.rar",
                                   url = "http://www.cec.org/sites/default/files/Atlas/Files/2010nalcms30m/can_landcover_2010_30m.rar",
-                                  rasterToMatch = sim$birdDensityRasters[[1]]) #Check with Eliot how prepInputs ended up to fix the url here
+                                  rasterToMatch = sim$birdDensityRasters[[1]],
+                                  studyArea = sim$rP)
       
       sim$disturbanceType <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_type.tif"), 
                                         destinationPath = dataPath(sim), useCache = TRUE,
@@ -74,7 +86,8 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                                         "C2C_change_type.lyr", "C2C_change_type.dbf", "C2C_change_type.cpg", 
                                                         "C2C_change_type_README.txt"),
                                         url = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Type.zip",
-                                        rasterToMatch = sim$birdDensityRasters[[1]]) #Check with Eliot how prepInputs ended up to fix the url here
+                                        rasterToMatch = sim$birdDensityRasters[[1]],
+                                        studyArea = sim$rP) #Check with Eliot how prepInputs ended up to fix the url here
       
       sim$disturbanceYear <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_year.tif"), 
                                         destinationPath = dataPath(sim), useCache = TRUE,
@@ -83,12 +96,27 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                                         "C2C_change_year.lyr", "C2C_change_year.dbf", "C2C_change_year.cpg", 
                                                         "C2C_change_year_README.txt"),
                                         url = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Year.zip",
-                                        rasterToMatch = sim$birdDensityRasters[[1]]) #Check with Eliot how prepInputs ended up to fix the url here
-
+                                        rasterToMatch = sim$birdDensityRasters[[1]],
+                                        studyArea = sim$rP) #Check with Eliot how prepInputs ended up to fix the url here
+    },
+    prediction = {
+      
       sim$populationTrends <- splitRasterAndPredict(inputSpecies = sim$inputSpecies,
                                                     models = sim$models,
-                                                    birdDensityRasters = sim$birdDensityRasters)
-      
+                                                    birdDensityRasters = sim$birdDensityRasters,
+                                                    disturbanceType = sim$disturbanceType,
+                                                    disturbanceYear = sim$disturbanceYear,
+                                                    landCover = sim$landCover,
+                                                    pathData = dataPath(sim),
+                                                    nx = P(sim)$nx,
+                                                    ny = P(sim)$ny,
+                                                    buffer = P(sim)$buffer,
+                                                    rType = P(sim)$rType,
+                                                    start = start(sim),
+                                                    end = end(sim),
+                                                    forestClass = P(sim)$forestClass,
+                                                    focalDistance = P(sim)$focalDistance,
+                                                    disturbanceClass = P(sim)$disturbanceClass)
     },
 
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -110,9 +138,20 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                       "YRWA")
   }
   
-  if (suppliedElsewhere("birdSpecies", sim)& !is(sim$birdSpecies, "list")){
-    inputSpecies <- as.list(sim$birdSpecies)
+  if (!suppliedElsewhere('birdSpecies', sim)) {
+    sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
+                         "BTNW", "CAWA", "CMWA", "CONW", 
+                         "OVEN", "PISI", "RBNU", "SWTH", 
+                         "TEWA", "WETA", "YRWA")
   }
+  
+  if (suppliedElsewhere("birdSpecies", sim) & !is(sim$birdSpecies, "list")){
+    sim$inputSpecies <- as.list(sim$birdSpecies)
+  } else {
+      if (suppliedElsewhere("birdSpecies", sim) & is(sim$birdSpecies, "list")){
+      sim$inputSpecies <- sim$birdSpecies
+      }
+    }
   
   if (!suppliedElsewhere("birdDensityRasters", sim)){
     stop("No bird density rasters were provided. Please provide these.")
@@ -120,6 +159,16 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
   
   if (!suppliedElsewhere("models", sim)){
     stop("Models not supplied. Please supply these.")
+  }
+  
+  if(!is.null(P(sim)$testArea) & P(sim)$testArea == TRUE){
+    sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
+    sim$areaSize <- 5000000
+    set.seed(1234)
+    sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create a squared studyArea
+    message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
+  } else {
+    sim$rP <- NULL
   }
   
   return(invisible(sim))

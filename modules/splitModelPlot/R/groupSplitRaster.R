@@ -1,10 +1,9 @@
-groupSplitRaster <- function(spec = sim$inputSpecies, 
-                             mod = sim$models, 
-                             abund = sim$birdDensityRasters,
+groupSplitRaster <- function(models = sim$models, 
+                             birdDensityRasters = sim$birdDensityRasters,
                              disturbanceType = sim$disturbanceType,
                              disturbanceYear = sim$disturbanceYear,
                              landCover = sim$landCover,
-                             dataPath = dataPath(sim),
+                             pathData = pathData,
                              nx = P(sim)$nx,
                              ny = P(sim)$ny,
                              buffer = P(sim)$buffer,
@@ -15,11 +14,12 @@ groupSplitRaster <- function(spec = sim$inputSpecies,
                              focalDistance = P(sim)$focalDistance,
                              disturbanceClass = P(sim)$disturbanceClass) {
   
+
   rasterList <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover) 
-  rasterList[["birdDensityRasters"]] <- abund
-  newlist <- Cache(Map, rasterList, path = file.path(dataPath, names(rasterList)), f =  splitRaster, 
+  rasterList[["birdDensityRasters"]] <- birdDensityRasters
+  newlist <- Cache(Map, rasterList, path = file.path(pathData, names(rasterList)), f =  splitRaster, 
                  MoreArgs = list(nx = nx, ny = ny, buffer = buffer, rType = rType))
- 
+  
   lengthvect <- 1:(nx * ny)
   outList <- lapply(lengthvect, FUN = tileReorder, 
                     inList = newlist, 
@@ -29,27 +29,24 @@ groupSplitRaster <- function(spec = sim$inputSpecies,
                     forestClass = forestClass,
                     focalDistance = focalDistance,
                     disturbanceClass = disturbanceClass, 
-                    passedModel = mod)
+                    passedModel = models,
+                    pathData = pathData)
   
-  #Merge will not work if the list is named. Investigate why one day. 
-  rasList <- lapply(outList, function(s) s[[1]])
-  mergePlot <- mergeRaster(rasList) #recombine tiles into single raster layer
+  lengthResultRasters <- 1:length(outList[[1]])
+  finalRasList <- lapply(lengthResultRasters, function(nRas){
+    rasList <- lapply(X = outList, `[[`, nRas)
+    rasName <- names(outList[[1]])[nRas]
+    finalRasPath <- file.path("/mnt/storage/", "outputRasters", paste0(rasName, ".tif"))
+    gdalUtils::mosaic_rasters(gdalfile = unlist(rasList), 
+                                dst_dataset = finalRasPath)
+      
+    return(finalRasPath)
+      
+  })
   
-  #Make time series from sum
-  timeSums <- lapply(outList, function(s) s[[2]]) %>%
-    list.stack(.) %>%
-    apply(., MARGIN = 2, FUN = sum)
-  sumTS <- ts(timeSums, start = start + 1900, end = end + 1900, frequency = 1)
-  timePlot <- ggplot2::autoplot(sumTS)+
-    ggplot2::theme_bw() +
-    ggplot2::labs(title = paste(spec, "population"),
-                  y = "Predicted population",
-                  x = "year") +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5),
-                   panel.grid.minor = ggplot2::element_blank())
-    
-  #Return time series and raster as list
-  outList <- list("trendRas" = mergePlot, "timePlot" = timePlot, "population" = sumTS)
+  browser()
   
-  return(outList)
+  names(finalRasPath) <- names(outList[[1]])
+  return(finalRasList)
+  
 }
