@@ -33,7 +33,7 @@ parameters <- list(
 )
 
 objects <- list(
-    dataName = "BAM_BEAD_final_2010.csv",
+    dataName = "Final_points_2010.csv",
     birdSpecies = c(
                      "BBWA",
                      "BLPW",
@@ -61,7 +61,7 @@ system.time(mySimOut <- spades(mySim, debug = TRUE))
 
 # To save the outputs
 mySimList <- as(mySimOut, "simList_")
-saveRDS(mySimList, file.path(outputPath(mySimOut), "Results20JUN18.rds"))
+saveRDS(mySimList, file.path(outputPath(mySimOut), "Results21JUN18.rds"))
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "Results19JUN18.rds"))

@@ -29,6 +29,21 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
         }
         
         if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+          
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+                                                                 "(1|ClusterSP), ",
+                                                                 "offset = OF_", name,
+                                                                 ", family = 'poisson', data = data)")))))
+        }
+        
+        if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+          
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+                                                                 "offset = OF_", name,
+                                                                 ", family = 'poisson', data = data)")))))
+        }
+        
+        if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
           assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed.", 
                                          "Try re-running the model with less random effects."), sep = " "))
         }
@@ -47,6 +62,21 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
             
             suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
                                                                    "(1|ClusterSP) + (1|YYYY), ",
+                                                                   "offset = OF_", name,
+                                                                   ", family = 'poisson', data = data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+                                                                   "(1|ClusterSP), ",
+                                                                   "offset = OF_", name,
+                                                                   ", family = 'poisson', data = data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
                                                                    "offset = OF_", name,
                                                                    ", family = 'poisson', data = data)")))))
           }
@@ -84,6 +114,21 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
           }
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ",
+                                                                   "(1|ClusterSP), ",
+                                                                   "offset = OF_", name,
+                                                                   ", family = 'poisson', data = data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ",
+                                                                   "offset = OF_", name,
+                                                                   ", family = 'poisson', data = data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed.", 
                                            "Try re-running the model with less random effects."), sep = " "))
           }
@@ -104,6 +149,21 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
                                                                    "(1|ClusterSP) + (1|YYYY), ",
                                                                    "offset = OF_", name,
                                                                    ", family='poisson', data=data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ",
+                                                                   "(1|ClusterSP), ",
+                                                                   "offset = OF_", name,
+                                                                   ", family = 'poisson', data = data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ",
+                                                                   "offset = OF_", name,
+                                                                   ", family = 'poisson', data = data)")))))
           }
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
