@@ -1,12 +1,14 @@
 # Bird model functions version 2 - TO BE USED WHEN PREDICTING
 
 birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset = sim$data, birdSp = sim$birdSpecies){
-  
+
   require(lme4)
   
   models <- list()
   modelsList <- list()
   errorModels <- list()
+  
+  browser()
   
   models <- lapply(X = combinations, FUN = function(x){
     if (grepl("local", x)) {

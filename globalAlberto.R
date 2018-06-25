@@ -61,7 +61,7 @@ system.time(mySimOut <- spades(mySim, debug = TRUE))
 
 # To save the outputs
 mySimList <- as(mySimOut, "simList_")
-saveRDS(mySimList, file.path(outputPath(mySimOut), "Results21JUN18.rds"))
+saveRDS(mySimList, file.path(outputPath(mySimOut), "Results25JUN18.rds"))
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "Results19JUN18.rds"))

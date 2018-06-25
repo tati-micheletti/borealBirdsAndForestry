@@ -137,7 +137,7 @@ Init <- function(sim) {
 .inputObjects = function(sim) {
   if (params(sim)$glmerBirdModels$cropForModel == TRUE){
     sim$studyArea <- loadStudyArea(data = "testArea.shp")
-    sim$birdData <- loadCroppedData(sim = sim, dataName = "Final_points_BEAD_final.csv")
+    sim$birdData <- loadCroppedData(sim = sim, dataName = "Final_points_2010.csv")
   }
    if (!suppliedElsewhere(sim$birdSpecies)){
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
