@@ -8,8 +8,6 @@ birdModelsFunctionUpdated <- function(combinations = sim$combinations, dataset =
   modelsList <- list()
   errorModels <- list()
   
-  browser()
-  
   models <- lapply(X = combinations, FUN = function(x){
     if (grepl("local", x)) {
     data <- dataset[[x]]

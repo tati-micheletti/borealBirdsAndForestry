@@ -56,6 +56,7 @@ objects <- list(
 # dev() # opens external (non-RStudio) device, which is faster
 
 ## Simulation setup
+debug(birdModelsFunctionUpdated)
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
 system.time(mySimOut <- spades(mySim, debug = TRUE))
 
