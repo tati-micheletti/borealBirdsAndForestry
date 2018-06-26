@@ -81,7 +81,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     birdModels = {
       
-      sim$models <- Cache(birdModelsFunctionUpdated, 
+      sim$models <- Cache(birdModelsFunction, 
                           combinations = sim$combinations, 
                           dataName = sim$dataName,
                           birdSp = sim$birdSpecies)
@@ -89,7 +89,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     plots = {
 
-       sim$plotDistSec <- plotDisturbanceSector2(dataset = sim$data,
+       sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data,
                                                 types = sim$typeDisturbance,
                                                 outputPath = outputPath(sim))
 
@@ -98,10 +98,10 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                                 birdSp = sim$birdSpecies,
                                 outputPath = outputPath(sim))
       
-       sim$plotCoeff <- plotCoefficients3(plotList = sim$plotList,
+       sim$plotCoeff <- plotCoefficients(plotList = sim$plotList,
                                          outputPath = outputPath(sim))
       
-       sim$plotAbundDist <- plotAbundanceDisturbance3(plotList = sim$plotList,
+       sim$plotAbundDist <- plotAbundanceDisturbance(plotList = sim$plotList,
                                                      outputPath = outputPath(sim))
       
     },
