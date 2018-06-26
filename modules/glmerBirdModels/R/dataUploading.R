@@ -1,21 +1,21 @@
 # dataUploading
 
-dataUploading <- function(data = sim$dataName, combinations = sim$combinations){
+dataUploading <- function(dataset = sim$dataName, combinations = sim$combinations){
   
   require(data.table)
   require(googledrive)
   
-  data.path <- file.path(getwd(), "modules/glmerBirdModels/data", data)
+  data.path <- file.path(getwd(), "modules/glmerBirdModels/data", dataset)
   
   if (file.exists(data.path)){
     fullData <- suppressWarnings(fread(data.path))}
   else {
     invisible(readline(prompt=paste("Make dure you have the dataset in Google Drives folder 'BAM/Datasets/borealBirdsAndForestry', and press [enter] to continue",
-                                    "\nIf authentication fails, please manually place the dataset file in the folder: ",
+                                    "\nIf authentication fails, please manually place the dataset file in the folder: \n",
                                     file.path(getwd(), "modules/glmerBirdModels/data"))))
     require(googledrive)
-    drive_download(file.path("BAM/Datasets/borealBirdsAndForestry",data), path = file.path(getwd(), "modules/glmerBirdModels/data", data), overwrite = TRUE,verbose = FALSE)
-    fullData <- suppressWarnings(fread(file.path(getwd(), "modules/glmerBirdModels/data", data)))
+    drive_download(file.path("BAM/Datasets/borealBirdsAndForestry", dataset), path = file.path(getwd(), "modules/glmerBirdModels/data", dataset), overwrite = TRUE,verbose = FALSE)
+    fullData <- suppressWarnings(fread(file.path(getwd(), "modules/glmerBirdModels/data", dataset)))
   }
   
   dataUploaded <- list()
