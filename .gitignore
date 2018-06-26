@@ -93,6 +93,13 @@ cache/backpack.db
 *.grd
 *.gri
 !Final_points_2010.csv
+!plotAbundanceDisturbance.png 
+!plotCoefficients.png
+!plotDisturbanceSector.png!
+!plotList.csv
+!TableS1-1.csv
+!TableS1-2.csv               
+!TableS2.csv                 
 # Keygens
 *sshkeygen.*
 *.pub
