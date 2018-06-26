@@ -9,13 +9,15 @@ library(SpaDES)
 #debug(fixErrors)
 
 # set the directories
- workDirectory <- getwd()
+workDirectory <- getwd()
 
 #workDirectory <- "/home/tmichele/Documents/GitHub/borealBirdsAndForestry" #For working on prepInputs
 #debug(cropInputs)
 
 paths <- list(
-  cachePath = file.path(workDirectory, "cache"),
+  # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
+  cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
+  # while the other folders are in the working directory
   modulePath = file.path(workDirectory, "modules"),
   inputPath = file.path(workDirectory, "inputs"),
   outputPath = file.path(workDirectory, "outputs")
@@ -56,9 +58,9 @@ objects <- list(
 # dev() # opens external (non-RStudio) device, which is faster
 
 ## Simulation setup
-debug(birdModelsFunctionUpdated)
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
-system.time(mySimOut <- spades(mySim, debug = TRUE))
+# debug(mySim@.envir$glmerBirdModels$birdModelsFunctionUpdated)
+mySimOut <- spades(mySim, debug = TRUE)
 
 # To save the outputs
 mySimList <- as(mySimOut, "simList_")
