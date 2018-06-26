@@ -1,11 +1,60 @@
-plotCoefficients3 <- function(outputPath = outputPath(sim), sim = sim, plotList = sim$plotList){
+plotCoefficients3 <- function(outputPath = outputPath(sim), 
+                              plotList = sim$plotList){
   
   # THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018 + 31st May
 
     require(ggplot2)
     require(ggalt)
     
-    part <- plotList[plotList$disturbanceDimension=="LOCAL"&plotList$typeDisturbance=="TRANSITIONAL",]
+  if ("LOCAL" %in% unique(plotList$disturbanceDimension) &  # Re-write better. For organizing the plot
+      "TRANSITIONAL" %in% unique(plotList$typeDisturbance)) {
+    part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "TRANSITIONAL",]
+  } else {
+    if ("LOCAL" %in% unique(plotList$disturbanceDimension) & 
+        "BOTH" %in% unique(plotList$typeDisturbance)) { 
+      part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "BOTH",]
+    } else {
+      if ("LOCAL" %in% unique(plotList$disturbanceDimension) & 
+          "PERMANENT" %in% unique(plotList$typeDisturbance)) { 
+        part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "PERMANENT",]
+      } else {
+        if ("NEIGHBORHOOD" %in% unique(plotList$disturbanceDimension) & 
+            "TRANSITIONAL" %in% unique(plotList$typeDisturbance)) { 
+          part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "TRANSITIONAL",]
+        } else {
+          if ("NEIGHBORHOOD" %in% unique(plotList$disturbanceDimension) & 
+              "BOTH" %in% unique(plotList$typeDisturbance)) { 
+            part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "BOTH",]
+          } else {
+            if ("NEIGHBORHOOD" %in% unique(plotList$disturbanceDimension) & 
+                "PERMANENT" %in% unique(plotList$typeDisturbance)) { 
+              part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "PERMANENT",]
+            } else {
+              if ("LOCAL UNDISTURBED" %in% unique(plotList$disturbanceDimension) & 
+                  "TRANSITIONAL" %in% unique(plotList$typeDisturbance)) { 
+                part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "TRANSITIONAL",]
+              } else {
+                if ("LOCAL UNDISTURBED" %in% unique(plotList$disturbanceDimension) & 
+                    "BOTH" %in% unique(plotList$typeDisturbance)) { 
+                  part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "BOTH",]
+                } else {
+                  if ("LOCAL UNDISTURBED" %in% unique(plotList$disturbanceDimension) & 
+                      "PERMANENT" %in% unique(plotList$typeDisturbance)) { 
+                    part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "PERMANENT",]
+                  } else {
+                    
+                  }
+                }
+              }
+              
+            }
+          }
+        }
+        
+      }
+    }
+  }
+
     extc <- part$Species
     plotList$newSpecies <- factor(plotList$Species, levels=extc, labels=extc)
 
@@ -38,7 +87,7 @@ plotCoefficients3 <- function(outputPath = outputPath(sim), sim = sim, plotList 
             panel.border = element_rect(colour = "black", fill=NA, size=1)) +
       labs(x = "Model coefficients", y = "Bird species") +
       geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
-    
+
     png(file.path(outputPath,"plotCoefficients.png"), width = 1500, height = 863)
     plot
     dev.off()
