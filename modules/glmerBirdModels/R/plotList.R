@@ -14,8 +14,8 @@ plotList <- function(outputPath = outputPath(sim),
       tryCatch({
       isolatedModel <- eval(parse(text = paste0("dataset[[x]]$",name)))
       coef <- as.data.frame(base::summary(isolatedModel)$coefficients, keep.rownames = TRUE)
-      browser() # Fix get dimension here
-      # estimate <- coef["get(dimension)",][c(1:2, 4)]
+      state <- rownames(coef)[2]
+      estimate <- coef[state,][c(1:2, 4)]
       colnames(estimate) <- c("Estimate", "Std.Error","p")
       rownames(estimate) <- name
       
