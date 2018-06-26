@@ -71,21 +71,20 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "save")
     },
     
-    #REVIEW ARGUMENTS TO FUNCTIONS!!
-    
     dataUploading = {
       
-      ifelse (params(sim)$glmerBirdModels$cropForModel==TRUE,{
+      if (params(sim)$glmerBirdModels$cropForModel == TRUE) {
         sim$data <- sim$birdData
-      },{
+      } else {
         sim$data <- dataUploading(data = sim$dataName, 
-                                  combinations =  sim$combinations)})
+                                  combinations =  sim$combinations)}
     },
     birdModels = {
       
-      sim$models <- Cache(birdModelsFunctionUpdated, combinations = sim$combinations, 
-                                       dataset = sim$data,
-                                       birdSp = sim$birdSpecies)
+      sim$models <- Cache(birdModelsFunctionUpdated, 
+                          combinations = sim$combinations, 
+                          dataName = sim$dataName,
+                          birdSp = sim$birdSpecies)
       
     },
     plots = {
