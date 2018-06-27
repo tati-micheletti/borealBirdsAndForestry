@@ -2,7 +2,7 @@
 # This function generated Figure 2 from the manuscript
 # THESE ARE THE MODIFICATIONS ASKED FROM ALBERTO ON 23rd MAY 2018 and 31st May
 
-plotDisturbanceSector <- function(outputPath = outputPath(sim), sim = sim, 
+plotDisturbanceSector <- function(outputPath = outputPath(sim), 
                                   dataset = sim$data, 
                                   types = sim$typeDisturbance, 
                                   RColorBrewerPalett = "Set1"){
@@ -45,7 +45,28 @@ plotDisturbanceSector <- function(outputPath = outputPath(sim), sim = sim,
   # datasetNoBoth <- datasetNoBoth[!datasetNoBoth$DIMENSION=="LOCAL UNDISTURBED",]
   # datasetNoBoth$TYPE <- factor(datasetNoBoth$TYPE, levels = c("SUCCESSIONAL DISTURBANCES","ALIENATING DISTURBANCES"))
   
-  graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset #Cganged back datasetNoBoth
+  if(length(unique(dataset$TYPE))*length(unique(dataset$DIMENSION)) == 9){
+        dataset$DIMENSION2 <- factor(dataset$DIMENSION, levels = c("LOCAL SCALE", "NEIGHBORHOOD SCALE", "LOCAL UNDISTURBED"))
+        dataset$TYPE2 <- factor(dataset$TYPE, levels = c("SUCCESSIONAL DISTURBANCES", "ALIENATING DISTURBANCES", "COMBINED DISTURBANCES"))
+        graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset #Canged back datasetNoBoth
+        facet_grid(DIMENSION2 ~ TYPE2, scales = "free_y") +
+        #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
+        geom_histogram(binwidth = 0.05) +
+        theme(strip.text.y = element_text(size=16, face="bold"),
+              strip.text.x = element_text(size=16, face="bold"),
+              legend.position = "right",
+              legend.title = element_text(face = "bold"),
+              legend.title.align = 0.5,
+              axis.text=element_text(size=12),
+              axis.title=element_text(size=16,face="bold"),
+              legend.text=element_text(size=12),
+              panel.background = element_rect(fill = "grey99"),
+              panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+        labs(x = "Proportion of disturbed area", y = "Number of surveys") +
+        scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
+                          name = "Disturbance\nAgent")
+  } else {
+  graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset #Canged back datasetNoBoth
     facet_grid(DIMENSION ~ TYPE, scales = "free_y") +
     #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
     geom_histogram(binwidth = 0.05) +
@@ -62,6 +83,7 @@ plotDisturbanceSector <- function(outputPath = outputPath(sim), sim = sim,
     labs(x = "Proportion of disturbed area", y = "Number of surveys") +
     scale_fill_brewer(palette=RColorBrewerPalett, direction = 1, 
                       name = "Disturbance\nAgent")
+  }
   
   png(file.path(outputPath,"plotDisturbanceSector.png"), width = 1500, height = 863)
   graph
