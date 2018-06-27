@@ -1,10 +1,11 @@
 # dataUploading
 
-dataUploading <- function(dataset = sim$dataName, combinations = sim$combinations){
+dataUploading <- function(dataset = sim$dataName, 
+                          combinations = sim$combinations){
   
   require(data.table)
   require(googledrive)
-  
+
   data.path <- file.path(getwd(), "modules/glmerBirdModels/data", dataset)
   
   if (file.exists(data.path)){
@@ -18,34 +19,34 @@ dataUploading <- function(dataset = sim$dataName, combinations = sim$combination
     fullData <- suppressWarnings(fread(file.path(getwd(), "modules/glmerBirdModels/data", dataset)))
   }
   
-  dataUploaded <- list()
   dataUploaded <- lapply(X = combinations, FUN = function(x){
-
        state <- ifelse(grepl("local", x),"State_P_100","State_P_500")
        stateLetter <- ifelse(state=="State_P_100","L","N")
        agent <- ifelse(grepl("Permanent", x),"Permanent",
                        ifelse(grepl("Transitional", x),"Transitional","Both"))
        undist <- ifelse(grepl("Undisturbed", x),TRUE,FALSE)
        both <- ifelse(grepl("Both", x),TRUE,FALSE)
-      
-       ifelse(undist==TRUE & both==TRUE,
-              dataUploaded[[paste(x)]] <- fullData[State_P_100==0],
-              ifelse(undist==TRUE & both==FALSE,
-                     dataUploaded[[paste(x)]] <- fullData[State_P_100==0 & 
-                                                            (get(paste0("Agent_",stateLetter))==agent | get(paste0("Agent_",stateLetter))=="")], # Fixed on 1st June 2018
-                     ifelse(undist==FALSE & both==TRUE,
-                            dataUploaded[[paste(x)]] <- fullData,
-                            dataUploaded[[paste(x)]] <- fullData[get(state)==0|get(paste0("Agent_",stateLetter))==agent])))
+       dataUploaded <- if (undist == TRUE & both == TRUE) {
+         fullData[State_P_100 == 0]} else {
+           if (undist == TRUE & both == FALSE) {
+             fullData[State_P_100 == 0 &
+                        (get(paste0("Agent_", stateLetter)) == agent |
+                           get(paste0("Agent_", stateLetter)) == "")]
+           } else {
+             if (undist == FALSE & both == TRUE) {
+               fullData
+             } else {
+               fullData[get(state) == 0 |
+                          get(paste0("Agent_", stateLetter)) == agent]
+             }
+           }
+         }
+
     return(dataUploaded)
   })
-
-    l.dataUploaded <- list()
-  for (i in 1:length(dataUploaded)){
-  l.dataUploaded[i] <- dataUploaded[[i]]
-  }
-  names(l.dataUploaded) <- combinations
-
-  return(l.dataUploaded)
+  
+  names(dataUploaded) <- combinations
+  return(dataUploaded)
 }
 
 

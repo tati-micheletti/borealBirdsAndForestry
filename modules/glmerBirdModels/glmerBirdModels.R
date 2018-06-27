@@ -81,9 +81,9 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     birdModels = {
       
-      sim$models <- Cache(birdModelsFunction, 
-                          combinations = sim$combinations, 
-                          dataName = sim$dataName,
+      sim$models <- Cache(birdModelsFunction,
+                          combinations = sim$combinations,
+                          dataset = sim$dataName,
                           birdSp = sim$birdSpecies)
       
     },
