@@ -1,7 +1,8 @@
 # Global script for the glmerBirdModels
 
 #devtools::install(local = FALSE)
-library(SpaDES)
+library(SpaDES.core)
+library(SpaDES.tools)
 
 #debug(fixErrors)
 

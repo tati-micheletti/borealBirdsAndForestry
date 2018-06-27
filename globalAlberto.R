@@ -4,9 +4,8 @@
 #try(detach("package:SpaDES.core", unload = TRUE)); devtools::load_all("~/Documents/GitHub/SpaDES.tools"); devtools::load_all("~/Documents/GitHub/SpaDES.core")
 
 #Note: BRCR for localPermanent and for localUndisturbedBoth didn't converge even taking the interactive random effect out, but it did taking the year (random effect) as well.
-library(SpaDES)
-
-#debug(fixErrors)
+library(SpaDES.core)
+library(SpaDES.tools)
 
 # set the directories
 workDirectory <- getwd()
