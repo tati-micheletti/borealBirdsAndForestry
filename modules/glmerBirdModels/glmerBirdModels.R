@@ -22,8 +22,8 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
-  ),
+    defineParameter(".useCache", "logical", c("init", "birdModels"), NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+  ), # Caching events
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension", 
@@ -116,6 +116,9 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                           combinations = sim$combinations,
                           outputPath = outputPath(sim))
       
+      sim$scaleModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
+                                      prmt = sim@params,
+                                      models = sim$models)
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -138,7 +141,7 @@ Init <- function(sim) {
     sim$studyArea <- loadStudyArea(data = "testArea.shp")
     sim$birdData <- loadCroppedData(sim = sim, dataName = "Final_points_2010.csv")
   }
-   if (!suppliedElsewhere(sim$birdSpecies)){
+   if (!suppliedElsewhere("birdSpecies", sim)){
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
@@ -148,7 +151,7 @@ Init <- function(sim) {
     sim$typeDisturbance = c("Transitional", "Permanent", "Both")
   }
 
-  if (!suppliedElsewhere(sim$disturbanceDimension)){
+  if (!suppliedElsewhere("disturbanceDimension", sim)){
     sim$disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
   }
   
