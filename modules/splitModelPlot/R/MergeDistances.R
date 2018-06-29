@@ -23,7 +23,7 @@ MergeDistances <- function(inList, times, abund, passedModel){
   
   #Stack rasters in the list
   predictedStack <- raster::stack(out)
-  
+  browser()
   #Use model predictions to predict slope over time
   modPredict <- raster::calc(predictedStack, fun = function(predictedStack, years = times){
     
