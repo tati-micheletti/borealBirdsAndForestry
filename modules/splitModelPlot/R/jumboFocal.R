@@ -1,12 +1,7 @@
 jumboFocal <- function(inList = distStack, inWeight = focalMatrices, denomRas = LCFocals){
   
-  a <- lapply(inList, FUN = raster::focal, w = inWeight, na.rm = TRUE)
+  b <- lapply(inList, FUN = individualFocal, inWeight = inWeight, denomRas = denomRas)
   
-  b <- lapply(a, FUN = function(x, y = denomRas){
-    
-    out <- overlay(x, y, fun = function(x,y) {return(x/y)})
-    
-    return(out)
-  })
   return(b)
 }
+
