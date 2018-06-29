@@ -1,34 +1,56 @@
-groupSplitRaster <- function(spec, mod, abund, sim) {
-  rasterList <- list("distType" = sim$disturbanceType, "distYear" = sim$disturbanceYear, "land" = sim$landCover) 
-  rasterList[["inputAbundances"]] <- abund
-  newlist <- Cache(Map, rasterList, path = file.path(dataPath(sim), names(rasterList)), f =  splitRaster, 
-                 MoreArgs = list(nx = P(sim)$nx, ny = P(sim)$ny, buffer = P(sim)$buffer, rType = P(sim)$rType))
- 
-  lengthvect <- 1:(P(sim)$nx*P(sim)$ny)
-  outList <- lapply(lengthvect, FUN = tileReorder, inList = newlist, origList = rasterList, sim = sim, passedModel = mod)
+groupSplitRaster <- function(models = models,
+                             birdDensityRasters = birdDensityRasters,
+                             disturbanceType = disturbanceType,
+                             disturbanceYear = disturbanceYear,
+                             landCover = landCover,
+                             pathData = pathData,
+                             nx = nx,
+                             ny = ny,
+                             buffer = buffer,
+                             rType = rType,
+                             start = start,
+                             end = end,
+                             forestClass = forestClass,
+                             focalDistance = focalDistance,
+                             disturbanceClass = disturbanceClass,
+                             intermPath = intermPath) {
   
-  #Merge will not work if the list is named. Investigate why one day. 
-  rasList <- lapply(outList, function(s) s[[1]])
-  mergePlot <- mergeRaster(rasList) #recombine tiles into single raster layer
+  rasterList <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover) 
+  rasterList[["birdDensityRasters"]] <- birdDensityRasters
+  newlist <- Cache(Map, rasterList, path = file.path(pathData, names(rasterList)), f =  splitRaster,
+                   MoreArgs = list(nx = nx, ny = ny, buffer = buffer, rType = rType))
   
-  #Make time series from sum
-  timeSums <- lapply(outList, function(s) s[[2]]) %>%
-    list.stack(.) %>%
-    apply(., MARGIN = 2, FUN = sum)
-  sumTS <- ts(timeSums, start = start(sim) + 1900, end = end(sim) + 1900, frequency = 1)
-  timePlot <- ggplot2::autoplot(sumTS)+
-    ggplot2::theme_bw() +
-    ggplot2::labs(title = paste(spec, "population"),
-                  y = "Predicted population",
-                  x = "year") +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5),
-                   panel.grid.minor = ggplot2::element_blank())
-    
-    
-    
-           
-  #Return time series and raster as list
-  outList <- list("trendRas" = mergePlot, "timePlot" = timePlot, "population" = sumTS)
+  lengthvect <- 1:(nx * ny)
+  outList <- lapply(lengthvect, FUN = tileReorder, 
+                    inList = newlist, 
+                    origList = rasterList, 
+                    start = start,
+                    end = end,
+                    forestClass = forestClass,
+                    focalDistance = focalDistance,
+                    disturbanceClass = disturbanceClass, 
+                    passedModel = models,
+                    pathData = pathData,
+                    intermPath = intermPath)
   
-  return(outList)
+  lengthResultRasters <- 1:length(outList[[1]])
+  finalRasList <- lapply(lengthResultRasters, function(nRas){
+    rasList <- lapply(X = outList, `[[`, nRas)
+    rasName <- names(outList[[1]])[nRas]
+    browser()
+    dir.create(file.path(intermPath, "outputRasters"), showWarnings = FALSE)
+    finalRasPath <- file.path(intermPath, "outputRasters", paste0(rasName, ".tif"))
+    tempTilesPath <- file.path("/mnt/storage/", "borealBirdsAndForestry", paste0(rasName))
+    gdalUtils::mosaic_rasters(gdalfile = unlist(rasList),
+                                dst_dataset = finalRasPath)
+      
+    return(finalRasPath)
+      
+  })
+  
+  browser()
+  
+  names(finalRasPath) <- names(outList[[1]])
+  return(finalRasList)
+  
 }

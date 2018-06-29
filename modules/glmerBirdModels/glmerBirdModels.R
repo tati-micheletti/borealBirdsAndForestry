@@ -22,8 +22,8 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
-  ),
+    defineParameter(".useCache", "logical", c("init", "birdModels"), NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+  ), # Caching events
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension", 
@@ -71,57 +71,54 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "save")
     },
     
-    #REVIEW ARGUMENTS TO FUNCTIONS!!
-    
     dataUploading = {
       
-      ifelse (params(sim)$glmerBirdModels$cropForModel==TRUE,{
+      if (params(sim)$glmerBirdModels$cropForModel == TRUE) {
         sim$data <- sim$birdData
-      },{
+      } else {
         sim$data <- dataUploading(data = sim$dataName, 
-                                  combinations =  sim$combinations)})
+                                  combinations =  sim$combinations)}
     },
     birdModels = {
       
-      sim$models <- Cache(birdModelsFunctionUpdated, combinations = sim$combinations, 
-                                       dataset = sim$data,
-                                       birdSp = sim$birdSpecies)
+      sim$models <- Cache(birdModelsFunction,
+                          combinations = sim$combinations,
+                          dataset = sim$dataName,
+                          birdSp = sim$birdSpecies)
       
     },
     plots = {
 
-      sim$plotDistSec <- plotDisturbanceSector2(sim = sim, 
-                                               dataset = sim$data, 
-                                               types = sim$typeDisturbance,
-                                               outputPath = outputPath(sim))
+       sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data,
+                                                types = sim$typeDisturbance,
+                                                outputPath = outputPath(sim))
+
+       sim$plotList <- plotList(dataset = sim$models,
+                                combinations = sim$combinations,
+                                birdSp = sim$birdSpecies,
+                                outputPath = outputPath(sim))
       
-      sim$plotList <- plotList(dataset = sim$models, 
-                               combinations = sim$combinations, 
-                               birdSp = sim$birdSpecies,
-                               outputPath = outputPath(sim))
+       sim$plotCoeff <- plotCoefficients(plotList = sim$plotList,
+                                         outputPath = outputPath(sim))
       
-      sim$plotCoeff <- plotCoefficients3(sim = sim, 
-                                        plotList = sim$plotList,
-                                        outputPath = outputPath(sim))
-      
-      sim$plotAbundDist <- plotAbundanceDisturbance3(sim = sim, 
-                                                    plotList = sim$plotList,
-                                                    outputPath = outputPath(sim))
+       sim$plotAbundDist <- plotAbundanceDisturbance(plotList = sim$plotList,
+                                                     outputPath = outputPath(sim))
       
     },
     save = {
       
-      sim$tableSampling <- tableSampling(sim = sim, 
-                                         dataName = sim$dataName, 
+      sim$tableSampling <- tableSampling(dataName = sim$dataName,
                                          dataset = sim$data,
                                          outputPath = outputPath(sim))
-      
-      sim$AIC <- tableAIC(sim = sim, 
-                          models = sim$models, 
-                          birdSp = sim$birdSpecies, 
+
+      sim$AIC <- tableAIC(models = sim$models,
+                          birdSp = sim$birdSpecies,
                           combinations = sim$combinations,
                           outputPath = outputPath(sim))
       
+      sim$scaleModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
+                                      prmt = sim@params,
+                                      models = sim$models)
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -140,11 +137,11 @@ Init <- function(sim) {
 }
 
 .inputObjects = function(sim) {
-  if (params(sim)$glmerBirdModels$cropForModel==TRUE){
+  if (params(sim)$glmerBirdModels$cropForModel == TRUE){
     sim$studyArea <- loadStudyArea(data = "testArea.shp")
-    sim$birdData <- loadCroppedData(sim = sim, dataName = "Final_points_BEAD_final.csv")
+    sim$birdData <- loadCroppedData(sim = sim, dataName = "Final_points_2010.csv")
   }
-   if (!suppliedElsewhere(sim$birdSpecies)){
+   if (!suppliedElsewhere("birdSpecies", sim)){
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
@@ -154,7 +151,7 @@ Init <- function(sim) {
     sim$typeDisturbance = c("Transitional", "Permanent", "Both")
   }
 
-  if (!suppliedElsewhere(sim$disturbanceDimension)){
+  if (!suppliedElsewhere("disturbanceDimension", sim)){
     sim$disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
   }
   

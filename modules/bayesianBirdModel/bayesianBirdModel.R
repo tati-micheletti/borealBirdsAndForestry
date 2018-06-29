@@ -13,7 +13,8 @@ defineModule(sim, list(
   documentation = list("README.txt", "bayesianBirdModel.Rmd"),
   reqdPkgs = list("googledrive", "data.table", "raster", "stats", "gstat"),
   parameters = rbind(
-    defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant"),
+    defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
   ),
   inputObjects = bind_rows(
     expectsInput(objectName = "dataName", objectClass = "character", desc = "File name of used dataset", sourceURL = NA),

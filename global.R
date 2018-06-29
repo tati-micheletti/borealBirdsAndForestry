@@ -1,8 +1,8 @@
 # Global script for the glmerBirdModels
 
 #devtools::install(local = FALSE)
-#try(detach("package:SpaDES.core", unload = TRUE)); devtools::load_all("~/Documents/GitHub/SpaDES.tools"); devtools::load_all("~/Documents/GitHub/SpaDES.core")
- library(SpaDES)
+library(SpaDES.core)
+library(SpaDES.tools)
 
 #debug(fixErrors)
 
@@ -13,7 +13,9 @@
 #debug(cropInputs)
 
 paths <- list(
-  cachePath = file.path(workDirectory, "cache"),
+  # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
+  cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
+  # while the other folders are in the working directory
   modulePath = file.path(workDirectory, "modules"),
   inputPath = file.path(workDirectory, "inputs"),
   outputPath = file.path(workDirectory, "outputs")
@@ -21,19 +23,33 @@ paths <- list(
 
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
+# if (dir.exists(file.path(paths$cachePath, "intermediateRasters"))){ # Delete all previous tiles so we have only the most updated ones
+#   unlink(file.path(paths$cachePath, "intermediateRasters"), recursive = TRUE)
+# }
+
 ## list the modules to use
-modules <- list("glmerBirdModels") # #bayesianBirdModel
+modules <- list("birdDensityBCR_Prov_LCC", "glmerBirdModels", "splitModelPlot") # #bayesianBirdModel
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 1985, timeunit = "year")
+times <- list(start = 1985, end = 1986, timeunit = "year")
 parameters <- list(
     bayesianBirdModel = list(testArea = TRUE),
-    glmerBirdModels = list(cropping = TRUE, cropForModel = FALSE)
+    glmerBirdModels = list(cropping = TRUE, 
+                           cropForModel = FALSE),
+    splitModelPlot = list(testArea = TRUE,
+                          focalDistance = 100, 
+                          disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
+                          nx = 10,
+                          ny = 10,
+                          rType = "FLT4S",
+                          buffer = c(18,18),
+                          forestClass = 1:6,
+                          .useCache = TRUE)
 )
 
 objects <- list(
-    dataName = "Final_points_BEAD_final.csv",
-    birdSpecies = c("BBWA", 
+    dataName = "Final_points_2010.csv",
+    birdSpecies = c("BBWA",
                     # "BLPW", 
                     # "BOCH", "BRCR",
                     # "BTNW", "CAWA", 
@@ -41,20 +57,23 @@ objects <- list(
                     # "OVEN", "PISI",
                     # "RBNU", "SWTH",
                     # "TEWA", "WETA", 
-                    "YRWA"),
-    typeDisturbance = c("Transitional", "Permanent", "Both"),
-    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
+                     "YRWA"
+                    ),
+    typeDisturbance = c("Transitional", "Permanent"), #, "Permanent", "Both"
+    disturbanceDimension = c("local", "neighborhood"), #, "neighborhood", "LocalUndisturbed"
+    disturbancePredict = c("Transitional") # Needs to match disturbanceClass from prediction module
 )
 
 ## Using external viewer
-# dev.useRSGD(FALSE) # do not use Rstudio graphics device
+# dev.useRSGD(FALSE) # do not use sRstudio graphics device
 # dev() # opens external (non-RStudio) device, which is faster
 
 # clearPlot()
 
+# debug(postProcess)
 ## Simulation setup
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
-system.time(mySimOut <- spades(mySim, debug = TRUE))
+mySimOut <- spades(mySim, debug = TRUE)
 
 # To save the outputs
 # mySimList <- as(mySimOut, "simList_")

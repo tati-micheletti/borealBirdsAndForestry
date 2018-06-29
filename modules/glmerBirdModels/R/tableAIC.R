@@ -1,6 +1,6 @@
 # Extracting Table S1: tableS1-1 considers LOCAL UNDISTURBED, while tableS1-2 doesn't  
 
-tableAIC <- function(outputPath = outputPath(sim), sim = sim, models = sim$models, birdSp = sim$birdSpecies, combinations = sim$combinations){
+tableAIC <- function(outputPath = outputPath(sim), models = sim$models, birdSp = sim$birdSpecies, combinations = sim$combinations){
 
   require(reshape2)
   require(tibble)

@@ -45,11 +45,11 @@ Temporary Items
 ## Output files
 .png
 ## Folders with Data
-data
+#data
 output
-/data
+#/data
 /output
-data/
+#data/
 output/
 cache/
 backpack.db
@@ -63,10 +63,9 @@ cache/backpack.db
 *.csv
 .csv
 *.txt
-.txt
+!CHECKSUMS.txt
 *.mxd
 .mxd
-*.txt
 *.cpg
 *.dbf
 *.lyr
@@ -88,6 +87,19 @@ cache/backpack.db
 *.rda
 *.asc
 *.rds
+*.odt
+*.rar
+*.CPG
+*.grd
+*.gri
+!Final_points_2010.csv
+!plotAbundanceDisturbance.png 
+!plotCoefficients.png
+!plotDisturbanceSector.png
+!plotList.csv
+!TableS1-1.csv
+!TableS1-2.csv               
+!TableS2.csv                 
 # Keygens
 *sshkeygen.*
 *.pub
