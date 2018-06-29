@@ -38,9 +38,9 @@ parameters <- list(
                            cropForModel = FALSE),
     splitModelPlot = list(testArea = TRUE,
                           focalDistance = 100, 
-                          disturbanceClass = 2,
-                          nx = 2,
-                          ny = 2,
+                          disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
+                          nx = 10,
+                          ny = 10,
                           rType = "FLT4S",
                           buffer = c(18,18),
                           forestClass = 1:6,
@@ -59,8 +59,9 @@ objects <- list(
                     # "TEWA", "WETA", 
                      "YRWA"
                     ),
-    typeDisturbance = c("Transitional"), #, "Permanent", "Both"
-    disturbanceDimension = c("local") #, "neighborhood", "LocalUndisturbed"
+    typeDisturbance = c("Transitional", "Permanent"), #, "Permanent", "Both"
+    disturbanceDimension = c("local", "neighborhood"), #, "neighborhood", "LocalUndisturbed"
+    disturbancePredict = c("Transitional") # Needs to match disturbanceClass from prediction module
 )
 
 ## Using external viewer
