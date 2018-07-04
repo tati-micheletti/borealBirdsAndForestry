@@ -27,6 +27,11 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 #   unlink(file.path(paths$cachePath, "intermediateRasters"), recursive = TRUE)
 # }
 
+# if (dir.exists("/mnt/storage/borealBirdsAndForestry/cache/outputRasters")){ # Delete all previous tiles so we have only the most updated ones
+#   unlink(file.path(paths$cachePath, "outputRasters"), recursive = TRUE)
+# }
+
+
 ## list the modules to use
 modules <- list("birdDensityBCR_Prov_LCC", "glmerBirdModels", "splitModelPlot") # #bayesianBirdModel
 

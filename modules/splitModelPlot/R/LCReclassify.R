@@ -42,7 +42,7 @@ LCReclassify <- function(inputTiles = tilelist,
                              times = times,
                              birdDensityRasters = inputTiles$birdDensityRasters,
                              intermPath = intermPath, ...)
-  
+
   return(newPlots)
   
 }
