@@ -39,9 +39,9 @@ parameters <- list(
     splitModelPlot = list(testArea = TRUE,
                           focalDistance = 100, 
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                          nx = 10,
-                          ny = 10,
-                          rType = "FLT4S",
+                          nx = 2,
+                          ny = 2,
+                          rType = "INT1U",
                           buffer = c(18,18),
                           forestClass = 1:6,
                           .useCache = TRUE)

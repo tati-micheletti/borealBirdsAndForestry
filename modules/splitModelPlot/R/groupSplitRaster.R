@@ -16,14 +16,21 @@ groupSplitRaster <- function(models = models,
                              intermPath = intermPath) {
   
   rasterList <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover) 
-  rasterList[["birdDensityRasters"]] <- birdDensityRasters
+  
+  #split abundance separately as Float
+  birdDensityRasters <- splitRaster(r = birdDensityRasters, nx = nx, ny = ny, buffer = buffer, rType = "FLT4S")
+  
   newlist <- Cache(Map, rasterList, path = file.path(pathData, names(rasterList)), f =  splitRaster,
                    MoreArgs = list(nx = nx, ny = ny, buffer = buffer, rType = rType))
+  newlist[["birdDensityRasters"]] <- birdDensityRasters
+  
+  origNames <- names(rasterList)
+  origNames[4] <- "birdDensityRasters"
   
   lengthvect <- 1:(nx * ny)
   outList <- lapply(lengthvect, FUN = tileReorder, 
                     inList = newlist, 
-                    origList = rasterList, 
+                    origList = origNames, 
                     start = start,
                     end = end,
                     forestClass = forestClass,
@@ -47,8 +54,6 @@ groupSplitRaster <- function(models = models,
     return(finalRasPath)
       
   })
-  
-  browser()
   
   names(finalRasPath) <- names(outList[[1]])
   return(finalRasList)

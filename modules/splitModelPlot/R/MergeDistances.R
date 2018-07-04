@@ -13,6 +13,7 @@ MergeDistances <- function(inList = fDistanceLists,
   #for each raster in stackDistances (ie focal/year combo) fit model 
     #Make a stack of the disturbed area in a single year and the expected abundance. Use to predict with fitModel   
   out <- lapply(stackDistances, function(q, abundRas = birdDensityRasters){
+    browser()
     names(birdDensityRasters) <- 'abundance'
     tempStack <- stack(q, abundRas)
     p <- fitModel(inRas = tempStack, inputModel = passedModel)
