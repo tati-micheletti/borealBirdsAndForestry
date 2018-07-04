@@ -15,7 +15,7 @@ splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
                                   focalDistance = P(sim)$focalDistance,
                                   disturbanceClass = P(sim)$disturbanceClass,
                                   intermPath = cachePath(sim)){
-
+  
   populationTrends <- Map(models = models,
                               birdDensityRasters = birdDensityRasters,
                               f = groupSplitRaster,
@@ -36,8 +36,6 @@ splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
                                   intermPath = intermPath))
   
   names(populationTrends) <- inputSpecies
-  
-  browser()
   
   return(populationTrends)
   
