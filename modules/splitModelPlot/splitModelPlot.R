@@ -83,18 +83,21 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
           return(maskedRasRes)
         })
       }
-      
+
       sim$landCover <- prepInputs(targetFile = file.path(dataPath(sim), "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"), 
                                   destinationPath = dataPath(sim), 
                                   rasterToMatch = sim$birdDensityRasters[[1]],
                                   studyArea = sim$rP)
+      sim$landCover[] <- round(sim$landCover[], 0)
+      raster::dataType(sim$landCover) <- "INT1U"
       
       sim$disturbanceType <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_type.tif"),
                                         destinationPath = dataPath(sim),
                                         rasterToMatch = sim$birdDensityRasters[[1]],
                                         studyArea = sim$rP,
-                                        length = Inf)
+                                        quick = TRUE)
       sim$disturbanceType[] <- round(sim$disturbanceType[], 0)
+      raster::dataType(sim$landCover) <- "INT1U"
 
       sim$disturbanceYear <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_year.tif"),
                                         destinationPath = dataPath(sim),
@@ -102,6 +105,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                         studyArea = sim$rP,
                                         quick = TRUE) # Keep the file in memory only if the file is small enough. 
       sim$disturbanceYear[] <- round(sim$disturbanceYear[], 0)
+      raster::dataType(sim$landCover) <- "INT1U"
 
     },
     prediction = {
@@ -169,7 +173,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
   
   if(!is.null(P(sim)$testArea) & P(sim)$testArea == TRUE){
     sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
-    sim$areaSize <- 5000000
+    sim$areaSize <- 50000
     set.seed(1234)
     sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize)
     message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
