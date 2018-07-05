@@ -1,4 +1,4 @@
-groupSplitRaster <- function(models = models,
+groupSplitRaster <- function(models = models, # This is already lapplying though each species
                              birdDensityRasters = birdDensityRasters,
                              disturbanceType = disturbanceType,
                              disturbanceYear = disturbanceYear,
@@ -13,19 +13,42 @@ groupSplitRaster <- function(models = models,
                              forestClass = forestClass,
                              focalDistance = focalDistance,
                              disturbanceClass = disturbanceClass,
-                             intermPath = intermPath) {
+                             intermPath = intermPath,
+                             rP = rP) {
   
   rasterList <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover) # Original rasters' list
-  rasterList[["birdDensityRasters"]] <- birdDensityRasters
   newlist <- Cache(Map, rasterList, path = file.path(pathData, names(rasterList)), f =  splitRaster, # Splitted rasters' list
                    MoreArgs = list(nx = nx, ny = ny, buffer = buffer, rType = rType))
+  
+  #split abundance separately as Float
+  # HERE: Resample to 30m, mask to sA, and then split and then delete (rm and gc).
+
+    if (!all(raster::res(birdDensityRasters) == c(30, 30))){
+      templateRaster <- raster(resolution = c(30, 30), 
+                               crs = raster::crs(birdDensityRasters), 
+                               ext = extent(birdDensityRasters))
+      birdDensityRasters <- raster::resample(birdDensityRasters, templateRaster, method = "bilinear")
+    }
+  
+  birdDensityRasters[] <- birdDensityRasters[]*1000
+  birdDensityRasters <- splitRaster(r = birdDensityRasters, nx = nx, ny = ny, buffer = buffer, rType = "INT2S") # Splitting abundance Raster
+
+  # Add abundance rasters to list
+  newlist[["birdDensityRasters"]] <- birdDensityRasters
+  
+  # Get rasters Names
+  origNames <- c(names(rasterList), "birdDensityRasters") # Fixed names. Were adding separately before
+  
+  # Remove old big rasters from memory
+  # rm(rasterList, disturbanceType, disturbanceYear, landCover, birdDensityRasters) 
+  #This is only removing the pointers... [ FIX ] once someone answers the question
 
   lengthvect <- 1:(nx * ny)
   
   # Outlist is a list of all the tiles after running the predictions
   outList <- lapply(lengthvect, FUN = tileReorder, 
                     inList = newlist, 
-                    origList = rasterList, 
+                    origList = origNames,
                     start = start,
                     end = end,
                     forestClass = forestClass,
@@ -57,7 +80,7 @@ groupSplitRaster <- function(models = models,
     # gdalUtils::mosaic_rasters(gdalfile = unlist(tempRasNames),
     #                             dst_dataset = finalRasPath)
     
-    # rm(rasName) # Remove raster from memory
+    # rm(get(rasName)) # Remove raster from memory
     # gc() # Clean their memory # Check the package for arguments. Don't forget to parelell: idea: paralell the tiles' lapply.  
     # return(finalRasPath)
       
