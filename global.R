@@ -46,7 +46,7 @@ parameters <- list(
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                           nx = 2,
                           ny = 2,
-                          rType = "FLT4S",
+                          rType = "INT1U",
                           buffer = c(18,18),
                           forestClass = 1:6,
                           .useCache = TRUE)
