@@ -12,12 +12,14 @@ MergeDistances <- function(inList = fDistanceLists,
   
   #for each raster in stackDistances (ie focal/year combo) fit model 
     #Make a stack of the disturbed area in a single year and the expected abundance. Use to predict with fitModel   
-  out <- lapply(stackDistances, function(q, abundRas = birdDensityRasters){
+  out <- lapply(stackDistances, function(q, abundRas = birdDensityRasters){ # Single tile with all years
     names(birdDensityRasters) <- 'abundance'
     tempStack <- stack(q, abundRas)
     p <- fitModel(inRas = tempStack, inputModel = passedModel)
     return(p)
   })
+  
+  # HERE WE DELETE THE OLD TILES: SEE TestsOfMemory.R script
   
   # Define a directory for the intermediate rasters
   # dir.create(file.path(intermPath, "intermediateRasters"), showWarnings = FALSE)
@@ -92,5 +94,10 @@ MergeDistances <- function(inList = fDistanceLists,
   
   names(modPredict2) <- c("firstYear", "lastYear", "slopeSignificancy", "slopeCoefficient")
   
+  # here we DELETE the out
+  # Check if all objects were actually removed
+  library(pryr) # REMOVE AFTER TESTING
+  where("out") # REMOVE AFTER TESTING
+
   return(suppressWarnings(modPredict2))
 }
