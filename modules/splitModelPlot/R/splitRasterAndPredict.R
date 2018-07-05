@@ -14,12 +14,14 @@ splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
                                   forestClass = P(sim)$forestClass,
                                   focalDistance = P(sim)$focalDistance,
                                   disturbanceClass = P(sim)$disturbanceClass,
-                                  intermPath = cachePath(sim)){
+                                  intermPath = cachePath(sim),
+                                  rP = sim$rP){
   
   populationTrends <- Map(models = models,
                               birdDensityRasters = birdDensityRasters,
                               f = groupSplitRaster,
                               MoreArgs = list(
+                                  rP = rP,
                                   disturbanceType = disturbanceType,
                                   disturbanceYear = disturbanceYear,
                                   landCover = landCover,
