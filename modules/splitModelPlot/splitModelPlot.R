@@ -15,7 +15,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "splitModelPlot.Rmd"),
-  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify", "trend"),
+  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify", "trend", "pryr"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("focalDistance", "numeric", 100, NA, NA, 
@@ -46,7 +46,7 @@ defineModule(sim, list(
     expectsInput(objectName = "models", objectClass = "list", 
                  desc = "a list of models corresponding to bird species", sourceURL = NA),
     expectsInput(objectName = "birdDensityRasters", objectClass = "list",
-    desc = "a list of rasters representing abundance and corresponding to species"),
+                 desc = "a list of rasters representing abundance and corresponding to species"),
     expectsInput(objectName = "models", objectClass = "list", 
                  desc = "a list of models corresponding to bird species", sourceURL = NA),
     expectsInput(objectName = "landCoverDS", objectClass = "character",
@@ -68,49 +68,45 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "fetchGIS")
       sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "prediction")
 
-      
     },
     fetchGIS = {
 
-      if (!all(raster::res(sim$birdDensityRasters[[1]]) == c(30, 30))){
-        templateRaster <- raster(resolution = c(30, 30), 
-                                 crs = raster::crs(sim$birdDensityRasters[[1]]), 
+       if (!all(raster::res(sim$birdDensityRasters[[1]]) == c(30, 30))){
+        templateRaster <- raster(resolution = c(30, 30),  
+                                 crs = raster::crs(sim$birdDensityRasters[[1]]),  
                                  ext = extent(sim$birdDensityRasters[[1]]))
-        sim$birdDensityRasters <- lapply(sim$birdDensityRasters, FUN = function(x){
-          rasRes <- Cache(resample, x, templateRaster, method = "bilinear", filename = file.path(dataPath(sim), x@data@names), overwrite = TRUE)
-          sim$rP <- sp::spTransform(sim$rP, CRSobj = raster::crs(x))
-          maskedRasRes <- Cache(raster::mask, rasRes, sim$rP)
-          return(maskedRasRes)
-        })
+          rasRes <- Cache(resample, sim$birdDensityRasters[[1]], templateRaster, method = "bilinear")
+          sim$rP <- sp::spTransform(sim$rP, CRSobj = raster::crs(sim$birdDensityRasters[[1]]))
+          birdDensityTemplate <- Cache(raster::mask, rasRes, sim$rP)
       }
-
+      
       sim$landCover <- prepInputs(targetFile = file.path(dataPath(sim), "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"), 
                                   destinationPath = dataPath(sim), 
-                                  rasterToMatch = sim$birdDensityRasters[[1]],
+                                  rasterToMatch = birdDensityTemplate,
                                   studyArea = sim$rP)
       sim$landCover[] <- round(sim$landCover[], 0)
       raster::dataType(sim$landCover) <- "INT1U"
       
-      sim$disturbanceType <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_type.tif"),
+      sim$disturbanceType <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_type.tif"), # If this is not wrking, might be becuse these objects were in sim and now they are not
                                         destinationPath = dataPath(sim),
-                                        rasterToMatch = sim$birdDensityRasters[[1]],
+                                        rasterToMatch = birdDensityTemplate,
                                         studyArea = sim$rP,
-                                        quick = TRUE)
+                                        length = TRUE)
       sim$disturbanceType[] <- round(sim$disturbanceType[], 0)
-      raster::dataType(sim$landCover) <- "INT1U"
+      raster::dataType(sim$disturbanceType) <- "INT1U"
 
       sim$disturbanceYear <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_year.tif"),
                                         destinationPath = dataPath(sim),
-                                        rasterToMatch = sim$birdDensityRasters[[1]],
+                                        rasterToMatch = birdDensityTemplate,
                                         studyArea = sim$rP,
                                         quick = TRUE) # Keep the file in memory only if the file is small enough. 
       sim$disturbanceYear[] <- round(sim$disturbanceYear[], 0)
-      raster::dataType(sim$landCover) <- "INT1U"
+      raster::dataType(sim$disturbanceYear) <- "INT1U"
 
     },
     prediction = {
 
-      sim$populationTrends <- splitRasterAndPredict(inputSpecies = sim$inputSpecies,
+      sim$populationTrends <- splitRasterAndPredict(inputSpecies = sim$inputSpecies, # Add studyArea and 
                                                     models = sim$scaleModels,
                                                     birdDensityRasters = sim$birdDensityRasters,
                                                     disturbanceType = sim$disturbanceType,
@@ -126,7 +122,8 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                                     forestClass = P(sim)$forestClass,
                                                     focalDistance = P(sim)$focalDistance,
                                                     disturbanceClass = P(sim)$disturbanceClass,
-                                                    intermPath = cachePath(sim))
+                                                    intermPath = cachePath(sim),
+                                                    rP = sim$rP)
     },
 
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -146,13 +143,6 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                       "RBNU", "SWTH",
                       "TEWA", "WETA",
                       "YRWA")
-  }
-  
-  if (!suppliedElsewhere('birdSpecies', sim)) {
-    sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
-                         "BTNW", "CAWA", "CMWA", "CONW", 
-                         "OVEN", "PISI", "RBNU", "SWTH", 
-                         "TEWA", "WETA", "YRWA")
   }
   
   if (suppliedElsewhere("birdSpecies", sim) & !is(sim$birdSpecies, "list")){
