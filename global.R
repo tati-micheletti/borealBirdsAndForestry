@@ -1,7 +1,8 @@
 # Global script for the glmerBirdModels
 
 #devtools::install(local = FALSE)
-library(SpaDES)
+library(SpaDES.core)
+library(SpaDES.tools)
 
 #debug(fixErrors)
 
@@ -26,6 +27,11 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 #   unlink(file.path(paths$cachePath, "intermediateRasters"), recursive = TRUE)
 # }
 
+# if (dir.exists("/mnt/storage/borealBirdsAndForestry/cache/outputRasters")){ # Delete all previous tiles so we have only the most updated ones
+#   unlink(file.path(paths$cachePath, "outputRasters"), recursive = TRUE)
+# }
+
+
 ## list the modules to use
 modules <- list("birdDensityBCR_Prov_LCC", "glmerBirdModels", "splitModelPlot") # #bayesianBirdModel
 
@@ -37,10 +43,10 @@ parameters <- list(
                            cropForModel = FALSE),
     splitModelPlot = list(testArea = TRUE,
                           focalDistance = 100, 
-                          disturbanceClass = 2,
+                          disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                           nx = 2,
                           ny = 2,
-                          rType = "FLT4S",
+                          rType = "INT1U",
                           buffer = c(18,18),
                           forestClass = 1:6,
                           .useCache = TRUE)
@@ -58,8 +64,9 @@ objects <- list(
                     # "TEWA", "WETA", 
                      "YRWA"
                     ),
-    typeDisturbance = c("Transitional"), #, "Permanent", "Both"
-    disturbanceDimension = c("local") #, "neighborhood", "LocalUndisturbed"
+    typeDisturbance = c("Transitional", "Permanent"), #, "Permanent", "Both"
+    disturbanceDimension = c("local", "neighborhood"), #, "neighborhood", "LocalUndisturbed"
+    disturbancePredict = c("Transitional") # Needs to match disturbanceClass from prediction module
 )
 
 ## Using external viewer

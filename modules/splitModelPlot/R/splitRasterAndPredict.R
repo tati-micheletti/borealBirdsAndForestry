@@ -1,5 +1,5 @@
 splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
-                                  models = sim$models,
+                                  models = sim$scaleModels,
                                   birdDensityRasters = sim$birdDensityRasters,
                                   disturbanceType = sim$disturbanceType,
                                   disturbanceYear = sim$disturbanceYear,
@@ -13,24 +13,29 @@ splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
                                   end = end(sim),
                                   forestClass = P(sim)$forestClass,
                                   focalDistance = P(sim)$focalDistance,
-                                  disturbanceClass = P(sim)$disturbanceClass){
+                                  disturbanceClass = P(sim)$disturbanceClass,
+                                  intermPath = cachePath(sim),
+                                  rP = sim$rP){
   
-  populationTrends <- Map(f = groupSplitRaster,
-                              models = models,
+  populationTrends <- Map(models = models,
                               birdDensityRasters = birdDensityRasters,
-                              disturbanceType = disturbanceType,
-                              disturbanceYear = disturbanceYear,
-                              landCover = landCover,
-                              pathData = pathData,
-                              nx = nx,
-                              ny = ny,
-                              buffer = buffer,
-                              rType = rType,
-                              start = start,
-                              end = end,
-                              forestClass = forestClass,
-                              focalDistance = focalDistance,
-                              disturbanceClass = disturbanceClass)
+                              f = groupSplitRaster,
+                              MoreArgs = list(
+                                  rP = rP,
+                                  disturbanceType = disturbanceType,
+                                  disturbanceYear = disturbanceYear,
+                                  landCover = landCover,
+                                  pathData = pathData,
+                                  nx = nx,
+                                  ny = ny,
+                                  buffer = buffer,
+                                  rType = rType,
+                                  start = start,
+                                  end = end,
+                                  forestClass = forestClass,
+                                  focalDistance = focalDistance,
+                                  disturbanceClass = disturbanceClass,
+                                  intermPath = intermPath))
   
   names(populationTrends) <- inputSpecies
   

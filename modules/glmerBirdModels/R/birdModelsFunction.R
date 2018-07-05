@@ -1,10 +1,10 @@
 # Bird model functions version 2 - TO BE USED WHEN PREDICTING
 
-birdModelsFunction <- function(combinations = sim$combinations, 
-                                      dataName = sim$dataName, 
-                                      birdSp = sim$birdSpecies){
+birdModelsFunction <- function(combinations = sim$combinations,
+                               birdSp = sim$birdSpecies,
+                               dataset = sim$dataName){
   
-  dataset <- dataUploading(dataset = dataName,
+  dataset <- dataUploading(dataset = dataset,
                            combinations = combinations)
   require(lme4)
   
