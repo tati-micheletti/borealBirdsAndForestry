@@ -1,5 +1,5 @@
 jumboMask <- function(inputRas = binaryDisturb, 
-                      inputMask = inputTiles$distYear, 
+                      inputMask = inputTiles$disturbanceYear, 
                       updateValue = 0, 
                       inverseLogic = TRUE,
                       mskVal = x){

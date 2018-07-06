@@ -1,94 +1,139 @@
 groupSplitRaster <- function(models = models, # This is already lapplying though each species
-                             birdDensityRasters = birdDensityRasters,
-                             disturbanceType = disturbanceType,
-                             disturbanceYear = disturbanceYear,
-                             landCover = landCover,
+                             birdDensityRasters = birdDensityRasters, #Single Raster inherited from models at 4000m resolution for the specific species
+                             disturbanceType = disturbanceType, # File path
+                             disturbanceYear = disturbanceYear, # File path
+                             landCover = landCover, # File path
                              pathData = pathData,
                              nx = nx,
                              ny = ny,
                              buffer = buffer,
                              rType = rType,
-                             start = start,
-                             end = end,
+                             startTime = startTime,
+                             endTime = endTime,
                              forestClass = forestClass,
                              focalDistance = focalDistance,
                              disturbanceClass = disturbanceClass,
                              intermPath = intermPath,
                              rP = rP) {
   
-  rasterList <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover) # Original rasters' list
-  newlist <- Cache(Map, rasterList, path = file.path(pathData, names(rasterList)), f =  splitRaster, # Splitted rasters' list
-                   MoreArgs = list(nx = nx, ny = ny, buffer = buffer, rType = rType))
+  # ======================== STARTED GIS ===================================
   
-  #split abundance separately as Float
-  # HERE: Resample to 30m, mask to sA, and then split and then delete (rm and gc).
+  spName <- substr(birdDensityRasters@data@names, 6, 9) # SPECIES NAME
+  
+  message(crayon::green(paste0("Initializing GIS operations for ", spName)))
+  
+  # Resample 4000m abundance rasters 
+  
+  message(crayon::yellow(paste0("Resampling density rasters to 30m resolution for ", spName)))
+  if (!all(raster::res(birdDensityRasters) == c(30, 30))){
+    templateRaster <- raster(resolution = c(30, 30), 
+                             crs = raster::crs(birdDensityRasters), 
+                             ext = extent(birdDensityRasters))
+    birdDensityRasters <- raster::resample(birdDensityRasters, templateRaster, method = "bilinear")
+  }
+  birdDensityRasters[] <- round(birdDensityRasters[]*1000, 0)
+  
+  # ~~~~~~~~~ LANDCOVER ~~~~~~~~~~~~
+  
+  # Load landCover
+  landCover <- prepInputs(targetFile = file.path(pathData, "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"),
+                              destinationPath = pathData,
+                              rasterToMatch = birdDensityRasters,
+                              studyArea = rP)
+  landCover[] <- round(landCover[], 0)
+  raster::dataType(landCover) <- "INT1U"
+  
+  # Split landCover
+  message(crayon::yellow(paste0("Splitting lanCover tiles for ", spName)))
+  landCover <- Cache(splitRaster, r = landCover, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
+                           rType = rType, path = file.path(intermPath, "land")) # override the original in memory
+  
+  # ~~~~~~~~~ DISTURBANCE TYPE ~~~~~~~~~~~~
+  
+  # Load disturbanceType
+  disturbanceType <- prepInputs(targetFile = file.path(pathData, "C2C_change_type.tif"), # If this is not wrking, might be becuse these objects were in sim and now they are not
+                                    destinationPath = pathData,
+                                    rasterToMatch = birdDensityRasters,
+                                    studyArea = rP,
+                                    length = TRUE)
+  disturbanceType[] <- round(disturbanceType[], 0)
+  raster::dataType(disturbanceType) <- "INT1U"
+  
+  # Split disturbanceType
+  message(crayon::yellow(paste0("Splitting disturbanceType tiles for ", spName)))
+  disturbanceType <- Cache(splitRaster, r = disturbanceType, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
+                           rType = rType, path = file.path(intermPath, "distType")) # override the original in memory
 
-    if (!all(raster::res(birdDensityRasters) == c(30, 30))){
-      templateRaster <- raster(resolution = c(30, 30), 
-                               crs = raster::crs(birdDensityRasters), 
-                               ext = extent(birdDensityRasters))
-      birdDensityRasters <- raster::resample(birdDensityRasters, templateRaster, method = "bilinear")
-    }
+  # ~~~~~~~~~ DISTURBANCE YEAR ~~~~~~~~~~~~
   
-  birdDensityRasters[] <- birdDensityRasters[]*1000
-  birdDensityRasters <- splitRaster(r = birdDensityRasters, nx = nx, ny = ny, buffer = buffer, rType = "INT2S") # Splitting abundance Raster
+  # Load disturbanceYear
+  disturbanceYear <- prepInputs(targetFile = file.path(pathData, "C2C_change_year.tif"),
+                                    destinationPath = pathData,
+                                    rasterToMatch = birdDensityRasters,
+                                    studyArea = rP,
+                                    quick = TRUE) # Keep the file in memory only if the file is small enough.
+  disturbanceYear[] <- round(disturbanceYear[], 0)
+  raster::dataType(disturbanceYear) <- "INT1U"
+  
+  # Split disturbanceYear
+  message(crayon::yellow(paste0("Splitting disturbanceYear tiles for ", spName)))
+  disturbanceYear <- Cache(splitRaster, r = disturbanceYear, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
+                                 rType = rType, path = file.path(intermPath, "distYear")) # override the original in memory
+  
+  # ============ SPLIT ABUNDANCE ================
+  # Split abundance raster
+  message(crayon::yellow(paste0("Splitting abundance tiles for ", spName)))
+  birdDensityRasters <- splitRaster(r = birdDensityRasters, nx = nx, ny = ny, buffer = buffer, rType = "INT2S") # Splitting abundance Raster, stays in memory, override the original
+  
+  # Tile's list
+  newlist <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover, "birdDensityRasters" = birdDensityRasters) # Splitted rasters' list
+  origNames <- c("disturbanceType", "disturbanceYear",
+                 "landCover", "birdDensityRasters")
+  
+  message(crayon::green(paste0("GIS operations finalized for ", spName, "! :D")))
 
-  # Add abundance rasters to list
-  newlist[["birdDensityRasters"]] <- birdDensityRasters
+  # ======================== FINISHED GIS ===================================
   
-  # Get rasters Names
-  origNames <- c(names(rasterList), "birdDensityRasters") # Fixed names. Were adding separately before
-  
-  # Remove old big rasters from memory
-  # rm(rasterList, disturbanceType, disturbanceYear, landCover, birdDensityRasters) 
-  #This is only removing the pointers... [ FIX ] once someone answers the question
-
   lengthvect <- 1:(nx * ny)
   
   # Outlist is a list of all the tiles after running the predictions
-  outList <- lapply(lengthvect, FUN = tileReorder, 
-                    inList = newlist, 
-                    origList = origNames,
-                    start = start,
-                    end = end,
-                    forestClass = forestClass,
-                    focalDistance = focalDistance,
-                    disturbanceClass = disturbanceClass, 
-                    passedModel = models,
-                    pathData = pathData,
-                    intermPath = intermPath)
+  
+#  To parallelize:
+# 1a. SAME MACHINE: Make a fork cluster: cl <- parallel::makeForkCluster(10, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
+# 1b. MORE MACHINES: Make a psock cluster:
+  # hosts <- c(rep("132.156.148.172", 10), rep("132.156.148.171", 10), rep("localhost", 10))
+  # cl <- parallel::makeForkCluster(hosts, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
+# 2. On putty:  tail -f /mnt/storage/borealBirdsAndForestry/cache/logParallel
+# 3. parallel::clusterApplyLB(x = lengthvect, fun = tileReorder,  cl = cl, ...)
+  outList <- lapply(lengthvect,
+                      FUN = tileReorder,
+                      spName = spName,
+                      inList = newlist,
+                      origList = origNames,
+                      startTime = startTime,
+                      endTime = endTime,
+                      forestClass = forestClass,
+                      focalDistance = focalDistance,
+                      disturbanceClass = disturbanceClass,
+                      passedModel = models,
+                      pathData = pathData,
+                      intermPath = intermPath)
+
+  parallel::stopCluster(cl)
 
   lengthResultRasters <- 1:length(outList[[1]])
   finalRasList <- lapply(lengthResultRasters, function(nRas){
-    browser()
     rasList <- lapply(X = outList, `[[`, nRas)
     rasName <- names(outList[[1]])[nRas]
     dir.create(file.path(intermPath, "outputRasters"), showWarnings = FALSE)
-    finalRasPath <- file.path(intermPath, "outputRasters", paste0(rasName, ".tif"))
-
-    # IF USING gdalUtils::mosaic_rasters()
-      # Define a directory for the intermediate rasters, as gdalUtils needs them from disk
-    # dir.create(file.path(intermPath, "intermediateRasters"), showWarnings = FALSE)
-    # intermPathFull <- file.path(intermPath, "intermediateRasters")
-    # tempRasNames <- lapply(X = rasList, FUN = function(x){
-    #   # Write to disk tiles to be put together
-    #   tmpFile <- tempfile(pattern = rasName, tmpdir = intermPathFull, fileext = ".tif")
-    #   writeRaster(x = x, filename = tmpFile)
-    #   return(tmpFile)
-    # })
-    
-    # gdalUtils::mosaic_rasters(gdalfile = unlist(tempRasNames),
-    #                             dst_dataset = finalRasPath)
-    
-    # rm(get(rasName)) # Remove raster from memory
-    # gc() # Clean their memory # Check the package for arguments. Don't forget to parelell: idea: paralell the tiles' lapply.  
-    # return(finalRasPath)
-      
+    finalRasPath <- file.path(intermPath, "outputRasters", paste0(spName, "_", rasName, ".tif"))
+    ras <- SpaDES.tools::mergeRaster(x = rasList) # If at some point mergeRaster writes to disk, delete next 3 lines below.
+    raster::writeRaster(x = ras, filename = finalRasPath, overwrite = TRUE)
+    rm(ras) # Remove raster from memory
+    invisible(gc()) # Free up more space?
+    return(finalRasPath)
   })
   
-  browser()
-  
-  names(finalRasPath) <- names(outList[[1]])
+  names(finalRasList) <- names(outList[[1]])
   return(finalRasList)
-  
 }

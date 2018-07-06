@@ -1,48 +1,51 @@
 MergeDistances <- function(inList = fDistanceLists, 
                            times = times, 
                            birdDensityRasters = inputTiles$birdDensityRasters,
-                           passedModel = models,
-                           intermPath = intermPath){
+                           passedModel = passedModel,
+                           intermPath = intermPath,
+                           spName = spName){
   
   mergeList <- rlist::list.cbind(inList) %>%
     list.parse(.)
   
-  #Make raster stack with focal distance rasters for every year. 
+  #Make raster stack with focal distance rasters for every year.
+  message(crayon::yellow("Stacking rasters for ", spName , " prediction"))
   stackDistances <- lapply(mergeList, FUN = stack)
   
   #for each raster in stackDistances (ie focal/year combo) fit model 
     #Make a stack of the disturbed area in a single year and the expected abundance. Use to predict with fitModel   
-  out <- lapply(stackDistances, function(q, abundRas = birdDensityRasters){ # Single tile with all years
+
+  out <- lapply(names(stackDistances), function(x){ # Single tile with all years
+    tileYear <- x
+    q <- stackDistances[[x]]
     names(birdDensityRasters) <- 'abundance'
-    tempStack <- stack(q, abundRas)
-    p <- fitModel(inRas = tempStack, inputModel = passedModel)
+    tempStack <- stack(q, birdDensityRasters)
+    p <- fitModel(inRas = tempStack, inputModel = passedModel, spName = spName, tileYear = tileYear)
     return(p)
   })
   
-  # HERE WE DELETE THE OLD TILES: SEE TestsOfMemory.R script
+  # Remove old tiles
+  names(out) <- names(stackDistances)
+  rm(birdDensityRasters, stackDistances, mergeList)
   
-  # Define a directory for the intermediate rasters
-  # dir.create(file.path(intermPath, "intermediateRasters"), showWarnings = FALSE)
-  # intermPathFull <- file.path(intermPath, "intermediateRasters")
-
+  message(crayon::yellow(paste0("Extracting results from predictions for ", spName)))
+  
   # Save first (years) raster tiles to disk with a randomly generated name
   first <- names(out)[1]
-  firstYear <- out[[first]]
-  # dir.create(file.path(intermPathFull, "firstYear"), showWarnings = FALSE)
-  # tmpFile <- tempfile(pattern = "firstYear", tmpdir = file.path(intermPathFull, "firstYear"), fileext = ".tif")
-  # writeRaster(x = firstYear, filename = tmpFile)
+  firstYear <- out[[first]] # left the code like this because it is easier to name the rasters in case I need to save them to disk
+  firstYear[] <- round(firstYear[], 0)
+  dataType(firstYear) <- "INT2S"
   
   # Save last (years) raster tiles to disk with a randomly generated name
   last <- names(out)[length(out)]
-  lastYear <- out[[last]]
-  # dir.create(file.path(intermPathFull, "lastYear"), showWarnings = FALSE)
-  # tmpFile <- tempfile(pattern = "lastYear", tmpdir = file.path(intermPathFull, "lastYear"), fileext = ".tif")
-  # writeRaster(x = lastYear, filename = tmpFile)
-  
+  lastYear <- out[[last]] # left the code like this because it is easier to name the rasters in case I need to save them to disk
+  lastYear[] <- round(lastYear[], 0)
+  dataType(lastYear) <- "INT2S"
+
   #Stack rasters in the list
   predictedStack <- raster::stack(out)
   arrayStack <- raster::as.array(predictedStack)
-
+ 
   # Slope coefficient's raster
   slopeCoefficientVal <- apply(X = arrayStack, MARGIN = c(1,2), FUN = function(x){
     dfX <- data.frame(x, times)
@@ -58,11 +61,10 @@ MergeDistances <- function(inList = fDistanceLists,
   
   slopeCoefficient <- predictedStack[[1]] %>%
     raster::setValues(slopeCoefficientVal)
-  
-  # dir.create(file.path(intermPathFull, "slopeCoefficient"), showWarnings = FALSE)
-  # tmpFile <- tempfile(pattern = "slopeCoefficient", tmpdir = file.path(intermPathFull, "slopeCoefficient"), fileext = ".tif")
-#  writeRaster(x = slopeCoefficient, filename = tmpFile) # Writing to disk shouldn't happen here yet!
-  # slopeCoefficient <- tmpFile
+  names(slopeCoefficient) <- "slopeCoefficient"
+  slopeCoefficient[] <- slopeCoefficient[]*1000
+  slopeCoefficient[] <- round(slopeCoefficient[], 0)
+  dataType(slopeCoefficient) <- "INT2S"
   
   # Signifficancy of coefficient's raster
   slopeSignificancyVal <- apply(X = arrayStack, MARGIN = c(1,2), FUN = function(x){
@@ -76,28 +78,19 @@ MergeDistances <- function(inList = fDistanceLists,
     })
     return(mod)
   })
-  
+
   slopeSignificancy <- predictedStack[[1]] %>%
     raster::setValues(slopeSignificancyVal)
-  # dir.create(file.path(intermPathFull, "slopeSignificancy"), showWarnings = FALSE)
-  # tmpFile <- tempfile(pattern = "slopeSignificancy", tmpdir = file.path(intermPathFull, "slopeSignificancy"), fileext = ".tif")
-  # writeRaster(x = slopeSignificancy, filename = tmpFile)
-  # slopeSignificancy <- tmpFile
+  names(slopeSignificancy) <- "slopeSignificancy"
+  slopeSignificancy[] <- slopeSignificancy[]*1000
+  slopeSignificancy[] <- round(slopeSignificancy[], 0)
+  dataType(slopeSignificancy) <- "INT2S"
 
   modPredict <- list(firstYear, lastYear, slopeSignificancy, slopeCoefficient)
-  modPredict2 <- lapply(X = modPredict, FUN = function(x){
-    expValues <- round(x[]*1000, 0) # Here is where we multiply to convert all to integer. 
-    x <- raster::setValues(x, expValues) # And convert all to intger "INT2S" (-32.000 to 32.000)
-    dataType(x) <- "INT2S"
-    return(x)
-  })
-  
-  names(modPredict2) <- c("firstYear", "lastYear", "slopeSignificancy", "slopeCoefficient")
-  
-  # here we DELETE the out
-  # Check if all objects were actually removed
-  library(pryr) # REMOVE AFTER TESTING
-  where("out") # REMOVE AFTER TESTING
+  names(modPredict) <- c("firstYear", "lastYear", "slopeSignificancy", "slopeCoefficient")
 
-  return(suppressWarnings(modPredict2))
+  rm(out, firstYear, lastYear, slopeSignificancy, slopeCoefficient)
+  invisible(gc())
+
+  return(suppressWarnings(modPredict))
 }
