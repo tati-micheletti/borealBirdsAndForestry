@@ -97,15 +97,16 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                         studyArea = sim$rP,
                                         quick = TRUE)
       sim$disturbanceType[] <- round(sim$disturbanceType[], 0)
-      raster::dataType(sim$landCover) <- "INT1U"
+      raster::dataType(sim$disturbanceType) <- "INT1U"
 
       sim$disturbanceYear <- prepInputs(targetFile = file.path(dataPath(sim), "C2C_change_year.tif"),
                                         destinationPath = dataPath(sim),
                                         rasterToMatch = sim$birdDensityRasters[[1]],
                                         studyArea = sim$rP,
                                         quick = TRUE) # Keep the file in memory only if the file is small enough. 
+      browser()
       sim$disturbanceYear[] <- round(sim$disturbanceYear[], 0)
-      raster::dataType(sim$landCover) <- "INT1U"
+      raster::dataType(sim$disturbanceYear) <- "INT1U"
 
     },
     prediction = {
