@@ -23,10 +23,6 @@ paths <- list(
 
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
-# if (dir.exists(file.path(paths$cachePath, "intermediateRasters"))){ # Delete all previous tiles so we have only the most updated ones
-#   unlink(file.path(paths$cachePath, "intermediateRasters"), recursive = TRUE)
-# }
-
 # if (dir.exists("/mnt/storage/borealBirdsAndForestry/cache/outputRasters")){ # Delete all previous tiles so we have only the most updated ones
 #   unlink(file.path(paths$cachePath, "outputRasters"), recursive = TRUE)
 # }
@@ -36,15 +32,15 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 modules <- list("birdDensityBCR_Prov_LCC", "glmerBirdModels", "splitModelPlot") # #bayesianBirdModel
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 1986, timeunit = "year")
+times <- list(start = 1985, end = 1987, timeunit = "year")
 parameters <- list(
     bayesianBirdModel = list(testArea = TRUE),
     glmerBirdModels = list(cropping = TRUE, 
                            cropForModel = FALSE),
     splitModelPlot = list(testArea = TRUE,
-                          focalDistance = 100, 
+                          focalDistance = 100, # To run for neighborhood, change to 500
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                          nx = 2,
+                          nx = 3,
                           ny = 2,
                           rType = "INT1U",
                           buffer = c(18,18),
@@ -55,9 +51,9 @@ parameters <- list(
 objects <- list(
     dataName = "Final_points_2010.csv",
     birdSpecies = c("BBWA",
-                    # "BLPW", 
+                     "BLPW", 
                     # "BOCH", "BRCR",
-                    # "BTNW", "CAWA", 
+                     # "BTNW", "CAWA", 
                     # "CMWA","CONW",
                     # "OVEN", "PISI",
                     # "RBNU", "SWTH",
