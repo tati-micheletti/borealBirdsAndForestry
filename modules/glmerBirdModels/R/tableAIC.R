@@ -14,7 +14,7 @@ tableAIC <- function(outputPath = outputPath(sim), models = sim$models, birdSp =
       typeDisturbance <- ifelse(grepl("Permanent", x),"PERMANENT",
                                      ifelse(grepl("Transitional", x),"TRANSITIONAL","BOTH"))
       isolatedModel <- eval(parse(text = paste0("models[[x]]$",bird)))
-      aic <- data.frame(Species = bird, 
+      aic <- data.frame(Species = bird,
                         TypeDisturbance = typeDisturbance, 
                         DisturbanceDimension = disturbanceDimension,
                         AIC = AIC(isolatedModel))
