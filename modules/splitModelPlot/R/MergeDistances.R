@@ -49,13 +49,13 @@ MergeDistances <- function(inList = fDistanceLists,
   message(crayon::yellow(paste0("Extracting results from slope of predictions for ", spName)))
   
   # Slope rasters
-  slopeCoefficientVal <- lapply(X = arrayStack, FUN = function(x){
-browser()
+  slopeCoefficientVal <- apply(X = arrayStack, MARGIN = c(1, 2), FUN = function(x){ # Need to extract 2 values from this lapply... think about how to do it!
       slpCoef <- RcppArmadillo::fastLmPure(X = cbind(1, times), y = x) # Original formula was way slower: lm(x ~ times, data = dfX,  na.action = na.omit)
        coef <- slpCoef$coefficients[2]
        pVal <- 2*pt(abs(slpCoef$coefficients/slpCoef$stderr), slpCoef$df.residual, lower.tail=FALSE)[2]
-      mod <- list(slopeCoefficient = coef, slopeSignificancy = pVal)
-  return(mod)
+      pValList <- list()
+      pValList <- pVal
+  return(coef)
   })
   
   browser() # Just need to fix mod to become 2 rasters coef and sig
