@@ -28,7 +28,7 @@ MergeDistances <- function(inList = fDistanceLists,
   names(out) <- names(stackDistances)
   rm(birdDensityRasters, stackDistances, mergeList)
   
-  message(crayon::yellow(paste0("Extracting results from predictions for ", spName)))
+  message(crayon::yellow(paste0("Extracting results from first and last years of predictions for ", spName)))
   
   # Save first (years) raster tiles to disk with a randomly generated name
   first <- names(out)[1]
@@ -46,45 +46,46 @@ MergeDistances <- function(inList = fDistanceLists,
   predictedStack <- raster::stack(out)
   arrayStack <- raster::as.array(predictedStack)
  
-  # Slope coefficient's raster
-  slopeCoefficientVal <- apply(X = arrayStack, MARGIN = c(1,2), FUN = function(x){
-    dfX <- data.frame(x, times)
-    mod <- tryCatch({
-      slpCoef <- lm(x ~ times, data = dfX,  na.action = na.omit)
-      coef <- coef(summary(slpCoef))["times","Estimate"]
-      },
-      error = function(e) {
-       NA
-      })
-    return(mod)
+  message(crayon::yellow(paste0("Extracting results from slope of predictions for ", spName)))
+  
+  # Slope rasters
+  slopeCoefficientVal <- lapply(X = arrayStack, FUN = function(x){
+browser()
+      slpCoef <- RcppArmadillo::fastLmPure(X = cbind(1, times), y = x) # Original formula was way slower: lm(x ~ times, data = dfX,  na.action = na.omit)
+       coef <- slpCoef$coefficients[2]
+       pVal <- 2*pt(abs(slpCoef$coefficients/slpCoef$stderr), slpCoef$df.residual, lower.tail=FALSE)[2]
+      mod <- list(slopeCoefficient = coef, slopeSignificancy = pVal)
+  return(mod)
   })
   
+  browser() # Just need to fix mod to become 2 rasters coef and sig
+  
   slopeCoefficient <- predictedStack[[1]] %>%
-    raster::setValues(slopeCoefficientVal)
+    raster::setValues(slopeCoefficientVal) # restart Here!!
   names(slopeCoefficient) <- "slopeCoefficient"
   slopeCoefficient[] <- slopeCoefficient[]*1000
   slopeCoefficient[] <- round(slopeCoefficient[], 0)
   dataType(slopeCoefficient) <- "INT2S"
-  
-  # Signifficancy of coefficient's raster
-  slopeSignificancyVal <- apply(X = arrayStack, MARGIN = c(1,2), FUN = function(x){
-    dfX <- data.frame(x, times)
-    mod <- tryCatch({
-      slpCoef <- lm(x ~ times, data = dfX,  na.action = na.omit)
-      coef <- coef(summary(slpCoef))["times","Pr(>|t|)"]
-    },
-    error = function(e) {
-      NA
-    })
-    return(mod)
-  })
-
-  slopeSignificancy <- predictedStack[[1]] %>%
-    raster::setValues(slopeSignificancyVal)
-  names(slopeSignificancy) <- "slopeSignificancy"
-  slopeSignificancy[] <- slopeSignificancy[]*1000
-  slopeSignificancy[] <- round(slopeSignificancy[], 0)
-  dataType(slopeSignificancy) <- "INT2S"
+  # 
+  # # Signifficancy of coefficient's raster
+  # slopeSignificancyVal <- apply(X = arrayStack, MARGIN = c(1,2), FUN = function(x){
+  #   dfX <- data.frame(x, times)
+  #   mod <- tryCatch({
+  #     slpCoef <- lm(x ~ times, data = dfX,  na.action = na.omit)
+  #     coef <- coef(summary(slpCoef))["times","Pr(>|t|)"]
+  #   },
+  #   error = function(e) {
+  #     NA
+  #   })
+  #   return(mod)
+  # })
+  # 
+  # slopeSignificancy <- predictedStack[[1]] %>%
+  #   raster::setValues(slopeSignificancyVal)
+  # names(slopeSignificancy) <- "slopeSignificancy"
+  # slopeSignificancy[] <- slopeSignificancy[]*1000
+  # slopeSignificancy[] <- round(slopeSignificancy[], 0)
+  # dataType(slopeSignificancy) <- "INT2S"
 
   modPredict <- list(firstYear, lastYear, slopeSignificancy, slopeCoefficient)
   names(modPredict) <- c("firstYear", "lastYear", "slopeSignificancy", "slopeCoefficient")

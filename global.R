@@ -27,38 +27,37 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 #   unlink(file.path(paths$cachePath, "outputRasters"), recursive = TRUE)
 # }
 
-
 ## list the modules to use
 modules <- list("birdDensityBCR_Prov_LCC", "glmerBirdModels", "splitModelPlot") # #bayesianBirdModel
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 1987, timeunit = "year")
+times <- list(start = 1997, end = 1998, timeunit = "year") # [ FIX ] Make an if statement the first time you set time: if any(times > 1000) times - 1900 to make it flexible to both YY or YYYY.
 parameters <- list(
     bayesianBirdModel = list(testArea = TRUE),
-    glmerBirdModels = list(cropping = TRUE, 
-                           cropForModel = FALSE),
+    glmerBirdModels = list(cropForModel = FALSE),
     splitModelPlot = list(testArea = TRUE,
                           focalDistance = 100, # To run for neighborhood, change to 500
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                          nx = 3,
-                          ny = 2,
+                          nx = 1, # mult 7
+                          ny = 10, # mult 3
                           rType = "INT1U",
                           buffer = c(18,18),
                           forestClass = 1:6,
-                          .useCache = TRUE)
+                          .useCache = FALSE,
+                          useParallel = NULL) # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
 )
 
 objects <- list(
     dataName = "Final_points_2010.csv",
-    birdSpecies = c("BBWA",
-                     "BLPW", 
+    birdSpecies = c("BBWA" #,
+                     # "BLPW", 
                     # "BOCH", "BRCR",
                      # "BTNW", "CAWA", 
                     # "CMWA","CONW",
                     # "OVEN", "PISI",
                     # "RBNU", "SWTH",
                     # "TEWA", "WETA", 
-                     "YRWA"
+                     # "YRWA"
                     ),
     typeDisturbance = c("Transitional", "Permanent"), #, "Permanent", "Both"
     disturbanceDimension = c("local", "neighborhood"), #, "neighborhood", "LocalUndisturbed"
