@@ -11,24 +11,31 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Why this file?
 
-Talking to Nicole and Alberto to understand where the data from Alberto's "Final_points_2010.csv" 
+Talking to Nicole and Alberto to understand where the data from Alberto's `Final_points_2010.csv` 
 table come from in order to be able to predict correctly using the same abundances, I came across
 a situation where Alberto used a file named `DDB_BCR_PROV_LCC_Apr4-2012.csv` while Nicole suggested 
 that the right densities should come from a file named `Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv`.
 
 Therefore, to analyze/understand how much the manuscript was affected by using a different file, I 
-started the following check-up. First thing is to place both files in folder `~/inputs/`.
+started the following check-up. First thing is to place both files in folder `~/inputs/`, as well as a copy of 
+Alberto's `Final_points_2010.csv`.
 
-### Loading the tables
+### Loading the tables (run this using the borealBirdsAndForestry.Rproj)
 ```{r load_tables}
 usedDens <- data.table::fread(file.path(getwd(), "inputs", "DDB_BCR_PROV_LCC_Apr4-2012.csv"))
 corrDens <- data.table::fread(file.path(getwd(), "inputs", "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv"))
+Final_table <- data.table::fread(file.path(getwd(), "inputs", "Final_points_2010.csv"))
 usedDens
 corrDens
 ```
 
-### Testing for unique LCC and BCR values
+### Testing for unique LCC and BCR values: reduced the table to the important columns: D (hopefullu stands for densiy!), LCC, BCR, PROV
+```{r test_unique}
+usedDens_reduced <- usedDens[,c("D", "LCC", "BCR", "PROV"), with = FALSE]
+corrDens_reduced <- corrDens[,c("D", "LCC", "BCR", "PROV"), with = FALSE]
 
-
+unique(sort(usedDens_reduced$LCC)) # Alberto's data only lacks LCC cover 
+unique(sort(corrDens_reduced$LCC))
+```
 
 
