@@ -1,0 +1,34 @@
+---
+title: "Checking density values for Suarez et al 2018"
+author: "Tati Micheletti"
+date: "7/13/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Why this file?
+
+Talking to Nicole and Alberto to understand where the data from Alberto's "Final_points_2010.csv" 
+table come from in order to be able to predict correctly using the same abundances, I came across
+a situation where Alberto used a file named `DDB_BCR_PROV_LCC_Apr4-2012.csv` while Nicole suggested 
+that the right densities should come from a file named `Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv`.
+
+Therefore, to analyze/understand how much the manuscript was affected by using a different file, I 
+started the following check-up. First thing is to place both files in folder `~/inputs/`.
+
+### Loading the tables
+```{r load_tables}
+usedDens <- data.table::fread(file.path(getwd(), "inputs", "DDB_BCR_PROV_LCC_Apr4-2012.csv"))
+corrDens <- data.table::fread(file.path(getwd(), "inputs", "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv"))
+usedDens
+corrDens
+```
+
+### Testing for unique LCC and BCR values
+
+
+
+
