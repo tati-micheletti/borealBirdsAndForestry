@@ -21,16 +21,6 @@ fetchData <- function(pathData = dataPath(sim),
     # Need to create a raster with the densities based on LCC, PROV and BCR
     # 1. Download data
     
-    # ras <- Cache(prepInputs, targetFile = paste0(birdSp[[1]], "_currmean.asc"),
-    #              archive = paste0(birdSp[[1]], "_current.zip"),
-    #              url = paste0("https://s3-us-west-2.amazonaws.com/bam-databasin-climatechangepredictions/climatepredictions-ascii/",
-    #                           birdSp[[1]], "_current.zip"),
-    #              destinationPath = pathData,
-    #              studyArea = studyArea)
-    # templateRaster <- raster::raster(resolution = c(250, 250),
-    #                                  crs = raster::crs(ras), 
-    #                                  ext = extent(ras))
-
     if (!file.exists(file.path(pathData, "LandCoverOfCanada2005_V1_4.zip"))){
       
       invisible(readline(prompt=paste("Make dure you have the dataset 'LandCoverOfCanada2005_V1_4.zip' in Google Drives folder", 
@@ -86,24 +76,7 @@ fetchData <- function(pathData = dataPath(sim),
     PROVsf$PROV <- as.numeric(PROVsf$PRUID)
     rasPROV <- fasterize::fasterize(sf = PROVsf, raster = LCC05, field = "PROV") # [ FIX ] Is rasterizing using something that not the BCR number!
     
-    # provTable <- data.frame(ID = c("59", "24", "62", "11", "47", "60", "46", "35", "13", "61", "48", "10", "12"),
-    #                         PRENAME = c("British Columbia", "Quebec", "Nunavut", "Prince Edward Island", 
-    #                                      "Saskatchewan", "Yukon", "Manitoba", "Ontario", "New Brunswick", 
-    #                                      "Northwest Territories", "Alberta","Newfoundland and Labrador", "Nova Scotia"))
-    # 
-    # browser() # To provTable, add a column with the Abbreviation; use this in PRO_BCR_LCC to pull the values for _D
-    # provinces <- c("Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
-    #                 "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
-    #                 "Quebec", "Saskatchewan", "Yukon")
-    # 
-    #  provincesAcronyms <- sort(unique(densityEstimates$PROV))
-    #  provincesAcronyms[6:7] <- c("NT", "NS")
-    #  provTable2 <- data.frame(PROV = as.character(provincesAcronyms), PRENAME = as.character(provinces))
-    #  PROVabb <- merge(provTable, provTable2)
-    #  
-    # PROVabb <- as.character(plyr::join(provTable, provTable2)[["PRENAME"]])
-    
-    # 3. Create a lookout table
+     # 3. Create a lookout table
     PROVabb <- structure(list(PRENAME = structure(1:13, .Label = c("Alberta", 
                                                         "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", 
                                                         "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", 
@@ -137,14 +110,6 @@ fetchData <- function(pathData = dataPath(sim),
     names(densityRasList) <- birdSp
     
    }
-
-    # Make some magic with the density tables to transform it to a dataRaster
- 
-  # For log values in the raster # Steve said to do the logging of variables in the formula
-  # logDataRaster <- lapply(X = dataRaster, FUN = function(x){
-  #   raster::values(x) <- log(raster::values(x))
-  #   return(x)
-  # })
 
   return(densityRasList) # Return one raster per species in a names list
 }
