@@ -11,8 +11,8 @@ retrieveSQLData <- function(SQLtableVersion = sim$SQLtableVersion,
                         Server   = SQLServer, # Connect to BAM Server
                         # Note: even though the address is set up in Windows as boreal.biology.ualberta.ca\boreal, in R I need to exclude the \boreal
                         Database = SQLDatabase, # Got the names from the Windows ODBC connection
-                        UID      = "michelet",#rstudioapi::askForPassword("Database User"),
-                        PWD      = "Univ3rs!ty",#rstudioapi::askForPassword("Database Password"),
+                        UID      = rstudioapi::askForPassword("Database User"),
+                        PWD      = studioapi::askForPassword("Database Password"),
                         Port     = 1433)
   
   colXY <- c("PCODE", "SS", "X", "Y") #, "BOR_LOC"
@@ -46,18 +46,5 @@ retrieveSQLData <- function(SQLtableVersion = sim$SQLtableVersion,
     data.table::data.table() %>%
     .[, ..colPKEY]
 
-  # Cleaning as per Alberto ("Steps to create database.docx" located in his Dropbox folder called )
-  # 2. Merging counts and XY
-  Count_XY <- merge(PtCount, XY, by = "SS", all.x = TRUE, all.y = FALSE) # Obs.: we have several PCODE in XY that are NA's. However, PtCount has the info. 
-  names(Count_XY)[names(Count_XY) == "PCODE.x"] <- "PCODE"
-  Count_XY <- Count_XY[,!"PCODE.y"]
-  
-  # 2. Exclude rows without X or Y from Count-XY (n = 80); from  entriees we should end up with . All other columns have all info except BEH (which we don't use now).
-  Count_XY <- Count_XY[!is.na(X),]
-  
-  # There are several cols that have NA (but none matter right now to us): ROUND = 7184; JULIAN = 62194; SITE = 2875; STN = 2877
-  # 3. Merge it with PKEY
-  Count_XY_PKEY <- merge(Count_XY, PKEY, by = c("PKEY", "SS", "PCODE"), all.x = TRUE, all.y = FALSE) # 2 values are inconsistent in PKEY (PKEY = "CL:F-100-1:4-3:14:0650", "CL:F-100-3:1-1:12:c") Seems as typos
-  
-  return(Count_XY_PKEY)
+  return(list(PKEY = PKEY, PtCount = PtCount, XY = XY))
 }
