@@ -26,7 +26,7 @@ LCReclassify <- function(inputTiles = tilelist,
   #Generate new raster for each year, where only values disturbed in a given year are 1
   times <- c(startTime:endTime)
   
-  browser()
+ 
   message(crayon::yellow(paste0("Masking tiles per year for ", spName)))
   distStack <- lapply(X = times, FUN = function(x){
     jumbMasked <- jumboMask(inputRas = binaryDisturb, 

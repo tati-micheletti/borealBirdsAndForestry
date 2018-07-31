@@ -14,7 +14,6 @@ tileReorder <- function(inList = newlist,
   #Subset corresponding tiles 
   tilelist <- lapply(inList, '[[', c)
   names(tilelist) <- origList
-
   #reclassify and mask them (and run focal distances)
   processed <- LCReclassify(inputTiles = tilelist, 
                             pathData = pathData, 

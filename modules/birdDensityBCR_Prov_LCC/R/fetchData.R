@@ -10,13 +10,14 @@ fetchData <- function(pathData = dataPath(sim),
                         destinationPath = pathData,
                         studyArea = studyArea)
     })
+
  
   # For log values in the raster
   logDataRaster <- lapply(X = dataRaster, FUN = function(x){
     raster::values(x) <- log(raster::values(x))
     return(x)
   })
-
+  
   return(logDataRaster)
   
 }

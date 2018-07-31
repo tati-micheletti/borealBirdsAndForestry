@@ -74,7 +74,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
   
   if(!is.null(P(sim)$testArea) & P(sim)$testArea==TRUE){
     sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
-    sim$areaSize <- 5000000
+    sim$areaSize <- 500000
     set.seed(1234)
     sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon    
     message("Test area is TRUE. Cropping and masking to an area in south Ontario.")

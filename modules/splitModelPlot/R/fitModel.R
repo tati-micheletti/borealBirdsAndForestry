@@ -8,7 +8,7 @@ fitModel <- function(inRas = tempStack,
   names(inRas)[1] <- names(inputModel@frame)[2] #Make this P(sim)$focalDistance
   names(inRas)[2] <- names(inputModel@frame)[3]
   
-  browser() # We need to divide Abundance by 1000 here before predicting
+  # We need to divide Abundance by 1000 here before predicting
   #Raster predict will work with any model that works with 'predict'
   tryCatch({
     prediction <- predict(object = inRas,
