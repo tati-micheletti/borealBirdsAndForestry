@@ -14,7 +14,8 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                              focalDistance = focalDistance,
                              disturbanceClass = disturbanceClass,
                              intermPath = intermPath,
-                             rP = rP) {
+                             rP = rP,
+                             useParallel = useParallel) {
   
   # ======================== STARTED GIS ===================================
   
@@ -32,6 +33,8 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
     birdDensityRasters <- raster::resample(birdDensityRasters, templateRaster, method = "bilinear")
   }
   birdDensityRasters[] <- round(birdDensityRasters[]*1000, 0)
+  storage.mode(birdDensityRasters[]) = "integer"
+  # birdDensityRasters <- reproducible::fastMask(birdDensityRasters, y = rP)
   
   # ~~~~~~~~~ LANDCOVER ~~~~~~~~~~~~
   browser()
@@ -41,7 +44,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                               rasterToMatch = birdDensityRasters,
                               studyArea = rP)
   landCover[] <- round(landCover[], 0)
-  raster::dataType(landCover) <- "INT1U"
+  storage.mode(landCover[]) = "integer"
   
   # Split landCover
   message(crayon::yellow(paste0("Splitting lanCover tiles for ", spName)))
@@ -57,7 +60,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                                     studyArea = rP,
                                     length = TRUE)
   disturbanceType[] <- round(disturbanceType[], 0)
-  raster::dataType(disturbanceType) <- "INT1U"
+  storage.mode(disturbanceType[]) = "integer"
   
   # Split disturbanceType
   message(crayon::yellow(paste0("Splitting disturbanceType tiles for ", spName)))
@@ -73,7 +76,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                                     studyArea = rP,
                                     quick = TRUE) # Keep the file in memory only if the file is small enough.
   disturbanceYear[] <- round(disturbanceYear[], 0)
-  raster::dataType(disturbanceYear) <- "INT1U"
+  storage.mode(disturbanceYear[]) = "integer"
   
   # Split disturbanceYear
   message(crayon::yellow(paste0("Splitting disturbanceYear tiles for ", spName)))
@@ -98,14 +101,58 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   
   # Outlist is a list of all the tiles after running the predictions
   
-#  To parallelize:
-# 1a. SAME MACHINE: Make a fork cluster: cl <- parallel::makeForkCluster(10, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
-# 1b. MORE MACHINES: Make a psock cluster:
-  # hosts <- c(rep("132.156.148.172", 10), rep("132.156.148.171", 10), rep("localhost", 10))
-  # cl <- parallel::makeForkCluster(hosts, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
-# 2. On putty:  tail -f /mnt/storage/borealBirdsAndForestry/cache/logParallel
-# 3. parallel::clusterApplyLB(x = lengthvect, fun = tileReorder,  cl = cl, ...)
-  outList <- lapply(lengthvect,
+  # Using parallel
+
+if (!length(useParallel) == 0){
+  if (useParallel == "across"){ # then do "local" then NULL
+    hosts <- c(rep("132.156.148.172", 10), rep("132.156.148.171", 10), rep("localhost", 10))
+    cl <- parallel::makePSOCKcluster(hosts, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
+    outList <- parallel::clusterApplyLB(x = lengthvect,
+                                        fun = tileReorder,
+                                        cl = cl,
+                                        spName = spName,
+                                        inList = newlist,
+                                        origList = origNames,
+                                        startTime = startTime,
+                                        endTime = endTime,
+                                        forestClass = forestClass,
+                                        focalDistance = focalDistance,
+                                        disturbanceClass = disturbanceClass,
+                                        passedModel = models,
+                                        pathData = pathData,
+                                        intermPath = intermPath,
+                                        maxTile = length(lengthvect))
+    parallel::stopCluster(cl)
+    
+  } else {
+    if (useParallel == "local"){
+      cl <- parallel::makeForkCluster(10, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
+      outList <- parallel::clusterApplyLB(x = lengthvect, 
+                                          fun = tileReorder,
+                                          cl = cl,
+                                          spName = spName,
+                                          inList = newlist,
+                                          origList = origNames,
+                                          startTime = startTime,
+                                          endTime = endTime,
+                                          forestClass = forestClass,
+                                          focalDistance = focalDistance,
+                                          disturbanceClass = disturbanceClass,
+                                          passedModel = models,
+                                          pathData = pathData,
+                                          intermPath = intermPath,
+                                          maxTile = length(lengthvect))
+      parallel::stopCluster(cl)
+      
+    } else {
+      stop("Provide argument to useParallel: 'across', 'local' or NULL")
+    }
+  }
+} else {
+    
+  # Not using parallel
+  
+  outList <- lapply(X = lengthvect,
                       FUN = tileReorder,
                       spName = spName,
                       inList = newlist,
@@ -117,9 +164,9 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                       disturbanceClass = disturbanceClass,
                       passedModel = models,
                       pathData = pathData,
-                      intermPath = intermPath)
-
-  parallel::stopCluster(cl)
+                      intermPath = intermPath,
+                      maxTile = length(lengthvect))
+    }
 
   lengthResultRasters <- 1:length(outList[[1]])
   finalRasList <- lapply(lengthResultRasters, function(nRas){

@@ -16,7 +16,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "splitModelPlot.Rmd"),
-  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify", "trend", "pryr", "crayon", "parallel"),
+  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify", "trend", "pryr", "crayon", "parallel", "RcppArmadillo"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("focalDistance", "numeric", 100, NA, NA, 
@@ -97,7 +97,8 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                                     focalDistance = P(sim)$focalDistance,
                                                     disturbanceClass = P(sim)$disturbanceClass,
                                                     intermPath = cachePath(sim),
-                                                    rP = sim$rP)
+                                                    rP = sim$rP,
+                                                    useParallel = sim$useParallel)
     },
 
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
