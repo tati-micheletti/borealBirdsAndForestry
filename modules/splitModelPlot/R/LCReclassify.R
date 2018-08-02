@@ -36,7 +36,7 @@ LCReclassify <- function(inputTiles = tilelist,
     #Merge the two matrices
     outMat[(outerDim-innerDim):(outerDim+innerDim),(outerDim-innerDim):(outerDim+innerDim)] <- inMat
     #Recalculate the matrix value as 1/sum of non-zero values
-    outMat[outMat>0] <- 1/length(outmat[outmat>0])
+    outMat[outMat>0] <- 1/length(outMat[outMat>0])
     focalMatrices <- list(outMat)
   }else{
     focalMatrices <- lapply(focalDistance, FUN = focalWeight, x = binaryLC)
