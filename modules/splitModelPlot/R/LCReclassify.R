@@ -20,9 +20,27 @@ LCReclassify <- function(inputTiles = tilelist,
   binaryLC <- binaryReclassify(inFile = inputTiles$land, inValues = forestClass)
   storage.mode(binaryLC[]) <- "integer" # Reducing size of raster by converting it to a real binary
   
-  #2. create focal matrix (for each distance parameter)
-  focalMatrices <- lapply(focalDistance, FUN = focalWeight, x = binaryLC)
-  
+  #2. create focal matrix (for each distance parameter). 
+  #if annulus = TRUE, it will use the largest and smallest distances to make the annulus (you should only have 2). One day we will adapt this to work with multiple buffers concurrently 
+  if(length(focalDistance)> 1){
+    browser()
+    #make inner matrix
+    inMat <- raster::focalWeight(x = binaryLC, d = min(focalDistance))
+    outMat <- raster::focalWeight(x = binaryLC, d = max(focalDistance))
+    #inverse the inner matrix
+    inMat[inMat == 0] <- 1
+    inMat[inMat < 1] <- 0
+    #Get dimensions for matrix
+    innerDim <- floor(dim(inMat)[1]/2)
+    outerDim <- ceiling(dim(outMat)[1]/2)
+    #Merge the two matrices
+    outMat[(outerDim-innerDim):(outerDim+innerDim),(outerDim-innerDim):(outerDim+innerDim)] <- inMat
+    #Recalculate the matrix value as 1/sum of non-zero values
+    outMat[outMat>0] <- 1/length(outmat[outmat>0])
+    focalMatrices <- list(outMat)
+  }else{
+    focalMatrices <- lapply(focalDistance, FUN = focalWeight, x = binaryLC)
+  }
   #3. calculee focal statistics with each matrix
   LCFocals <- lapply(focalMatrices, FUN = focal, x = binaryLC, na.rm = TRUE)
   
