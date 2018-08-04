@@ -13,7 +13,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "glmerBirdModels.Rmd"),
-  reqdPkgs = list("data.table", "rgdal", "raster", "sf", "lme4", "googledrive"),
+  reqdPkgs = list("data.table", "rgdal", "raster", "sf", "lme4", "googledrive", "DBI", "odbc"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("cropForModel", "logical", FALSE, NA, NA, "If the bird data should be cropped to a study area or not for fitting the model"),
@@ -26,16 +26,18 @@ defineModule(sim, list(
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     expectsInput(objectName = c("birdData", "studyArea", "typeDisturbance", "disturbanceDimension", 
-                                "birdSpecies", "dataName", "studyAreaName"), 
-                 objectClass = c("data.table","character", "character", "character", "character", "character", "character"), 
+                                "birdSpecies", "dataName", "studyAreaName", "SQLtableVersion", "SQLServer", "SQLDatabase"), 
+                 objectClass = c("data.table","character", "character", "character", "character", "character", "character",
+                                 "character", "character", "character"), 
                  desc = c("Bird data assembled by the BAM (Boreal Avian Modelling Project)",
                           "Character to define the are to crop",
                           "Might be Transitional, Permanent, Undisturbed, and/or Both",
                           "Might be local and/or neighborhood",
                           "List of bird species to be modeled",
                           "File name and extension of original data file",
-                          "Name of the file and extension to crop for study area"),
-                 sourceURL = c(NA,NA,NA,NA,NA,NA, NA))
+                          "Name of the file and extension to crop for study area",
+                          "Table version of the BAM data in the SQL for which to filter tables", "path for SQL sever", "Name of SQL database"),
+                 sourceURL = c(NA,NA,NA,NA,NA,NA, NA, NA, NA, NA))
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
@@ -47,7 +49,7 @@ defineModule(sim, list(
                            "Plot of coefficients of bird models",
                            paste0("Data table of all models estimates, and std.error",
                                   " of % of disturbance per species, type and dimension of disturbance"),
-                           "Plot of relative abundance per disturbance type, dimension and species on varying disturbance proportions",
+                           "Plot of relative density per disturbance type, dimension and species on varying disturbance proportions",
                            "Table with the number of samples for each type and dimension",
                            "Table with all AIC values for all models",
                            "total combination of type and dimension of disturbances"))
@@ -64,10 +66,19 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       sim <- Init(sim)
       
       # schedule future event(s)
+      sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "retrievingSQLData")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "dataUploading")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "birdModels")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "plots")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "save")
+    },
+    
+    retrievingSQLData = {
+      
+      sim$SQLData <- Cache(retrieveSQLData, SQLtableVersion = sim$SQLtableVersion,
+                           SQLServer = sim$SQLServer,
+                           SQLDatabase = sim$SQLDatabase,
+                           birdSpecies = sim$birdSpecies)
     },
     
     dataUploading = {
@@ -75,8 +86,13 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       if (params(sim)$glmerBirdModels$cropForModel == TRUE) {
         sim$data <- sim$birdData
       } else {
+
         sim$data <- dataUploading(data = sim$dataName, 
-                                  combinations =  sim$combinations)}
+                                  combinations =  sim$combinations,
+                                  birdDensityRasters = sim$birdDensityRasters,
+                                  SQLTableName = "SQLData",
+                                  envirSim = envir(sim))
+      }
     },
     birdModels = {
       
@@ -87,10 +103,10 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       
     },
     plots = {
-
-       sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data,
-                                                types = sim$typeDisturbance,
-                                                outputPath = outputPath(sim))
+      
+      sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data,
+                                               types = sim$typeDisturbance,
+                                               outputPath = outputPath(sim))
 
        sim$plotList <- plotList(dataset = sim$models,
                                 combinations = sim$combinations,
@@ -144,7 +160,8 @@ Init <- function(sim) {
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
-                         "TEWA", "WETA", "YRWA")}
+                         "TEWA", "WETA", "YRWA")
+    }
   
   if (!suppliedElsewhere(sim$typeDisturbance)){
     sim$typeDisturbance = c("Transitional", "Permanent", "Both")
@@ -152,6 +169,16 @@ Init <- function(sim) {
 
   if (!suppliedElsewhere("disturbanceDimension", sim)){
     sim$disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
+  }
+  
+  if (!suppliedElsewhere("SQLtableVersion", sim)){
+    sim$SQLtableVersion <- "V4_2015"
+  }
+  if (!suppliedElsewhere("SQLServer", sim)){
+    sim$SQLServer = "boreal.biology.ualberta.ca"
+  }
+  if (!suppliedElsewhere("SQLDatabase", sim)){
+    sim$SQLDatabase = "BAM_National_V4_2015_0206"
   }
   
 return(invisible(sim))

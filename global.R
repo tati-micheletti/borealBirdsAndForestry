@@ -16,7 +16,7 @@ library(SpaDES.core)
 library(SpaDES.tools)
 
 # set the directories
- workDirectory <- getwd()
+workDirectory <- getwd()
 
 paths <- list(
   # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
@@ -39,44 +39,44 @@ modules <- list("glmerBirdModels") # "birdDensityBCR_Prov_LCC", #bayesianBirdMod
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 2011, timeunit = "year")
 parameters <- list(
-    birdDensityBCR_Prov_LCC = list(extractFrom4kRasters = TRUE),
-    bayesianBirdModel = list(testArea = TRUE), # FALSE means using boral shapefile to crop and mask
-    glmerBirdModels = list(cropForModel = FALSE),
-    splitModelPlot = list(recoverTime = 30,
-                          testArea = TRUE,
-                          focalDistance = 100, # To run for neighborhood, change to 500
-                          disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                          nx = 3, # mult 7
-                          ny = 4, # mult 3
-                          rType = "INT1U",
-                          buffer = c(18,18),
-                          forestClass = 1:6,
-                          .useCache = FALSE,
-                          useParallel = "across") # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
-    # As of 12th July, 'across' is not working... See notes above
+  birdDensityBCR_Prov_LCC = list(extractFrom4kRasters = TRUE),
+  bayesianBirdModel = list(testArea = TRUE), # FALSE means using boral shapefile to crop and mask
+  glmerBirdModels = list(cropForModel = FALSE),
+  splitModelPlot = list(recoverTime = 30,
+                        testArea = TRUE,
+                        focalDistance = 100, # To run for neighborhood, change to 500
+                        disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
+                        nx = 3, # mult 7
+                        ny = 4, # mult 3
+                        rType = "INT1U",
+                        buffer = c(18,18),
+                        forestClass = 1:6,
+                        .useCache = FALSE,
+                        useParallel = "across") # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
+  # As of 12th July, 'across' is not working... See notes above
 )
 
 objects <- list(
-    dataName = "Final_points_2010.csv", #Manuscript file was Final_points_2010.csv; testing to compare with Final_points_2010_updatedDensity.csv
-    birdSpecies = c("BBWA",
-                    "BLPW", 
-                    "BOCH", 
-                    "BRCR",
-                    "BTNW", 
-                    "CAWA", 
-                    "CMWA",
-                    "CONW",
-                    "OVEN", 
-                    "PISI",
-                    "RBNU", 
-                    "SWTH",
-                    "TEWA",
-                    "WETA", 
-                    "YRWA"
-                    ),
-    typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
-    disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
-    disturbancePredict = c("Transitional") # Needs to match disturbanceClass from prediction module
+  dataName = "Final_points_2010.csv", #Manuscript file was Final_points_2010.csv; testing to compare with Final_points_2010_updatedDensity.csv
+  birdSpecies = c("BBWA",
+                  "BLPW", 
+                  "BOCH", 
+                  "BRCR",
+                  "BTNW", 
+                  "CAWA", 
+                  "CMWA",
+                  "CONW",
+                  "OVEN", 
+                  "PISI",
+                  "RBNU", 
+                  "SWTH",
+                  "TEWA",
+                  "WETA", 
+                  "YRWA"
+  ),
+  typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
+  disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
+  disturbancePredict = c("Transitional") # Needs to match disturbanceClass from prediction module
 )
 
 clearPlot()
