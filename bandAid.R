@@ -1,5 +1,7 @@
 # This script fixes graphs and tables for the paper as a quick fix, but the whole analysis needs to be run again!
 
+# Whole analysis was redone in June 2018. This file is obsolete [ 13th June 2018 ]
+
 # Load Results_List.rds as "MySimOutOld"
 
 # Data that needs updating:
