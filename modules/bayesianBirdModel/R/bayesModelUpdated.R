@@ -1,6 +1,6 @@
 # model {
 #   
-#   #N is abundance, i is site, j is year of survey
+#   #N is density, i is site, j is year of survey
 #   
 #   # Priors
 #   ## Suitability and abundance
@@ -29,7 +29,7 @@
 #   ## State process
 #   for (i in 1:siteData){
 #     omega[i] ~ dbern(phi) # ZI part (?suitability? of the site). Phi = 0, habitat is not suitable; phi = 1, is suitable
-#     Cluster[i] ~ dnorm(0, tau.cluster) # random cluster effects in log(abundance)
+#     Cluster[i] ~ dnorm(0, tau.cluster) # random cluster effects in log(density)
 #     Year ~ dnorm(0, tau.year) # random year effects in logit(probability of observation)
 #     NN[i]  ~ dpois(mu.poisson[i])
 #     lambda1[i] <- exp(log.lambda1[i])
@@ -75,7 +75,7 @@
 #       fit.sim <- sum(chi2.sim[,]) # Fit statistic for a fitting model
 #       bpv <- step(fit.sim-fit.actual) # Bayesian p-value
 #       c.hat <- fit.actual/fit.sim # c-hat estimate
-#       # Derived parameters: Total abundance at all sampled sites
+#       # Derived parameters: Total abundance at all sampled sites # NOT SURE. NEEDS TO BE FIXED, AS EVERYTHING IS ABOUT DENSITY, NOT ABUNDANCE!
 #       Ntotal <- sum(N[])
 #   
 # } # end of model
