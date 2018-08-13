@@ -1,6 +1,6 @@
 model {
   # Specify priors
-  # abundance
+  # density
   beta0 ~ dnorm(0, 0.1) # log(lambda) intercept
   for(k in 1:7){ # Regression params in lambda
     beta[k] ~ dnorm(0, 1)
@@ -23,9 +23,9 @@ model {
   }
   tau.p.survey <- pow(sd.p.survey, -2)
   sd.p.survey ~ dunif(0, 1) # site-survey heterogeneity in p
-  # Poisson-lognormal model for abundance
+  # Poisson-lognormal model for density
   for (i in 1:nsite){
-    eps.lam[i] ~ dnorm(0, tau.lam[i]) # Random site effects in log(abundance)
+    eps.lam[i] ~ dnorm(0, tau.lam[i]) # Random site effects in log(density)
     loglam[i] <- beta0 + inprod(beta[], lamDM[i,]) + eps.lam[i]
     loglam.lim[i] <- min(250, max(-250, loglam[i])) # 'Stabilize' log
     mu.poisson[i] <- exp(loglam.lim[i])

@@ -1,8 +1,4 @@
 
-# Everything in this file gets sourced during simInit, and all functions and objects
-# are put into the simList. To use objects, use sim$xxx, and are thus globally available
-# to all modules. Functions can be used without sim$ as they are namespaced, like functions
-# in R packages. If exact location is required, functions will be: sim$<moduleName>$FunctionName
 defineModule(sim, list(
   name = "splitModelPlot",
   description = NA, #"insert module description here",
@@ -16,7 +12,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "splitModelPlot.Rmd"),
-  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify", "trend", "pryr", "crayon", "parallel", "RcppArmadillo"),
+  reqdPkgs = list("raster", "rlist", "ggplot2", "ggfortify", "trend", "pryr", "crayon", "parallel", "RcppArmadillo", "plyr"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter("focalDistance", "numeric", 100, NA, NA, 
@@ -29,10 +25,14 @@ defineModule(sim, list(
     defineParameter("rType", "character", "FLT4S", NA, NA, "pixel data type for splitRaster"),
     defineParameter("buffer", "numeric", 3, 0, NA, "the number of cells to buffer tiles during splitRaster. Measured in cells, not distance"),
     defineParameter("forestClass", "numeric", 1:6, NA, NA, "Relevant forest classes in land cover map"),
-    defineParameter(".useCache", "logical", c("init", "fetchGIS"), NA, NA,"Should this entire module be run with caching activated?"),
-    defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
+    defineParameter(".useCache", "logical", FALSE, NA, NA,"Should this entire module be run with caching activated?"),
+    defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?"),
+    defineParameter("useParallel", "character", NULL, NA, NA, "Should we parallelize tile processing?")
   ),
   inputObjects = bind_rows(
+    expectsInput(objectName = "recoverTime", objectClass = "numeric", 
+                 desc = "How long should trees grow to provide enough habitat for the species after a disturbance", 
+                 sourceURL = NA),
     expectsInput(objectName = "disturbanceType", objectClass = "character", 
                  desc = "Name of disturbanceType product", 
                  sourceURL = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Type.zip"),
@@ -47,16 +47,16 @@ defineModule(sim, list(
     expectsInput(objectName = "models", objectClass = "list", 
                  desc = "a list of models corresponding to bird species", sourceURL = NA),
     expectsInput(objectName = "birdDensityRasters", objectClass = "list",
-                 desc = "a list of rasters representing abundance and corresponding to species"),
+                 desc = "a list of rasters representing density and corresponding to species"),
     expectsInput(objectName = "models", objectClass = "list", 
                  desc = "a list of models corresponding to bird species", sourceURL = NA),
-    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", 
-                 desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA)
+    expectsInput(objectName = "specificTestArea", objectClass = "character", desc = "Specific test area to crop to: 'boreal', or a province english name", sourceURL = NA),
+    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA)
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "populationTrends", objectClass = "list", 
                   desc = paste0("a list predicted trends in species, including rasters",
-                                "representing trend in abundance over study period, a list of", 
+                                "representing trend in density over study period, a list of", 
                                 "time series plots and the time series themselves")))
 ))
 
@@ -67,6 +67,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
       
       sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "fetchGIS")
       sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "prediction")
+      sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "plot")
 
     },
     fetchGIS = {
@@ -80,7 +81,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
     },
     prediction = {
 
-      sim$populationTrends <- splitRasterAndPredict(inputSpecies = sim$inputSpecies,
+      sim$populationTrends <- Cache(splitRasterAndPredict, inputSpecies = sim$inputSpecies,
                                                     models = sim$scaleModels,
                                                     birdDensityRasters = sim$birdDensityRasters, #List of rasters inherited from models at 4000m resolution
                                                     disturbanceType = sim$disturbanceType, # File path
@@ -98,7 +99,14 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                                     disturbanceClass = P(sim)$disturbanceClass,
                                                     intermPath = cachePath(sim),
                                                     rP = sim$rP,
-                                                    useParallel = sim$useParallel)
+                                                    recoverTime = P(sim)$recoverTime,
+                                                    useParallel = P(sim)$useParallel,
+                                                    extractFrom4kRasters = P(sim)$extractFrom4kRasters)
+    },
+    plot = {
+
+      sim$finalPlots <- plottingBigRasters(rasters = sim$populationTrends)
+      
     },
 
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -135,16 +143,63 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
   if (!suppliedElsewhere("models", sim)){
     stop("Models not supplied. Please supply these.")
   }
-  
-  if(!is.null(P(sim)$testArea) & P(sim)$testArea == TRUE){
-    sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
-    sim$areaSize <- 60000
-    set.seed(1234)
-    sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize)
-    message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
-  } else {
-    sim$rP <- NULL
+
+  if (is.null(P(sim)$recoverTime)){
+    sim$recoverTime <- 10
+    message("recoverTime was not provided. Default value is 10 years.")
   }
   
+  if (!suppliedElsewhere("rP", sim)) {
+    if (any(is.null(P(sim)$testArea), (!is.null(P(sim)$testArea) &
+                                       P(sim)$testArea == FALSE))) {
+      if (!is.null(sim$specificTestArea)) {
+        sim$rP <- NULL
+        message(crayon::yellow(paste0(
+          "Test area is FALSE or NULL, but specificTestArea is not. Ignoring 'specificTestArea' and running the analysis for the whole country. ",
+          "To set a study area, use testArea == TRUE.")))
+      } else {
+        sim$rP <- NULL
+        message(crayon::yellow("Test area is FALSE or NULL. Running the analysis for the whole country."))
+      }
+    } else {
+      if (is.null(sim$specificTestArea)) {
+        sim$polyMatrix <- matrix(c(-79.471273, 48.393518), ncol = 2) 
+        sim$areaSize <- 10000000
+        set.seed(1234)
+        sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon
+        message(crayon::yellow("Test area is TRUE, specificTestArea is 'NULL'. Cropping and masking to an area in south Ontario."))
+      } else {
+        if (sim$specificTestArea == "boreal") {
+          message(crayon::yellow("Test area is TRUE. Cropping and masking to the Canadian Boreal."))
+          sim$rP <- prepInputs(url = "http://cfs.nrcan.gc.ca/common/boreal.zip",
+                                alsoExtract = "similar",
+                                targetFile = file.path(dataPath(sim), "NABoreal.shp"),
+                                #Boreal Shapefile
+                                destinationPath = dataPath(sim)
+            )
+        } else {
+          if (!is.null(sim$specificTestArea)) {
+            sim$rP <- Cache(prepInputs,
+                            url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
+                            targetFile = "gpr_000b11a_e.shp",
+                            # Subsetting to a specific Province
+                            archive = "gpr_000b11a_e.zip",
+                            destinationPath = dataPath(sim)) %>%
+              raster::subset(PRENAME == sim$specificTestArea)
+            if (nrow(sim$rP@data) == 0) {
+              stop(paste0("There is no Canadian Province called ",
+                  sim$specificTestArea,
+                  ". Please provide a Canadian province name in English for specificTestArea, ",
+                  "use 'boreal', or use 'NULL' (creates a random area in South Ontario)."))
+            } else {
+              message(crayon::yellow(paste0("Test area is TRUE. Cropped and masked to ",
+                  sim$specificTestArea)))
+              
+            }
+          }
+        }
+      }
+    }
+  }
   return(invisible(sim))
 }

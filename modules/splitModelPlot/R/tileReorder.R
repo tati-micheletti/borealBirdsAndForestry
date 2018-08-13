@@ -10,6 +10,7 @@ tileReorder <- function(x,
                         disturbanceClass = disturbanceClass,
                         spName = spName,
                         passedModel = models,
+                        recoverTime = recoverTime,
                         maxTile = length(lengthvect)){
 
     tileNumber <- x 
@@ -17,7 +18,7 @@ tileReorder <- function(x,
   #Subset corresponding tiles 
   tilelist <- lapply(inList, '[[', x)
   names(tilelist) <- origList
-
+  
   if (!all(is.na(tilelist$birdDensityRasters[])) == TRUE){
     
     #reclassify and mask them (and run focal distances)
@@ -32,21 +33,16 @@ tileReorder <- function(x,
                               spName = spName,
                               passedModel = passedModel,
                               tileNumber = tileNumber,
+                              recoverTime = recoverTime,
                               maxTile = maxTile)
 
     return(processed)
     
   } else {
     
-    browser()
-    
-    # If we merge them and all is good we don't need the code below. Otherwise, we can uncomment it and it should be good
-  # processed <- lapply(X = tilelist, FUN = function(x){
-  #   x[] <- NA
-  #  return(x)
-  # })
-  # names(tilelist) <- c("firstYear","lastYear","slopeSignificancy","slopeCoefficient")
-  # return(processed)
+    message(crayon::red(paste0("Tile ",  tileNumber, " of ",
+                               maxTile, " tiles for ", spName,
+                               " was skipped as it has only NA values (Time: ", Sys.time(), ")")))
 
   }
 }

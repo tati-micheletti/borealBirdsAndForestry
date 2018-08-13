@@ -5,14 +5,9 @@ defineModule(sim, list(
   name = "birdDensityBCR_Prov_LCC",
   description = paste0("This module accesses bird density estimates for undisturbed",
                        "areas based on lancover class, BCR (Bird Conservation Regions)",
-                       "and ecoprovince (Boreal Avian Modelling Product:	BAM.Density1.03-current)",
-                       "citation: Stralberg, D., S. M. Matsuoka, A. Hamann, E. M. Bayne, P. Sólymos,", 
-                       "F. K. A. Schmiegelow, et al. 2015. Projecting boreal bird responses to climate", 
-                       "change: the signal exceeds the noise. Ecological Applications 25:52–69.", 
-                       "http://dx.doi.org/10.1890/13-2289.1"),
+                       "and ecoprovince (Boreal Avian Modelling Product:	BAM.Density1.03-current)"),
   keywords = c("boreal birds","density","geographic strata", "BCR-Prov/Terr","LCC","habitat class"),
-  authors = c(person("Tati", "Micheletti", email = "tati.micheletti@gmail.com", role = c("aut", "cre")),
-            person("Diana", "Stralberg", email = "stralber@ualberta.ca", role = c("aut"))),
+  authors = c(person("Tati", "Micheletti", email = "tati.micheletti@gmail.com", role = c("aut", "cre"))),
   childModules = character(0),
   version = list(SpaDES.core = "0.1.0.9000", birdDensityBCR_Prov_LCC = "0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
@@ -20,21 +15,30 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "birdDensityBCR_Prov_LCC.Rmd"),
-  reqdPkgs = list("data.table", "raster"),
+  reqdPkgs = list("data.table", "raster", "plyr", "crayon"),
   parameters = rbind(
     defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
+    defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?"),
+    defineParameter("avoidAlbertosData", "logical", TRUE, NA, NA, "Should we use the most updated version of the BAM densities? Then TRUE"),
+    defineParameter("extractFrom4kRasters", "logical", FALSE, NA, NA, 
+                    paste0("Should the analysis extract data from the 4k bird density rasters", 
+                           "publicly available? If FALSE, needs access to table providing", 
+                           "density per species per province per BCR per landcover class")),
     defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
   ),
   inputObjects = bind_rows(
+    expectsInput(objectName = "specificTestArea", objectClass = "character", desc = "Specific test area to crop to: 'boreal', or a province english name", sourceURL = NA),
+    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA),
+    expectsInput(objectName = "densityEstimatesURL", objectClass = "character", desc = "density values calculated by BAM - Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv", sourceURL = "https://drive.google.com/open?id=1Gd9VsKIXX_384UxQsJnwzsSZFuyQyscw"),
     expectsInput(objectName = "birdSpecies", objectClass = "character", desc = "list of species to download density information based on LCC and BCR/Prov", sourceURL = NA),
-    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA)
+    expectsInput(objectName = "densityEstimatesFileName", objectClass = "character", desc = "density file name", sourceURL = NA)
   ),
   outputObjects = bind_rows(
-    createsOutput(objectName = c("birdDensityRasters","birdDensityTables"), 
-                  objectClass = c("list","list"),
-                  desc = c("list of rasters with information on species densities based on LCC and BCR/Prov",
-                           "list of data.table with information on species densities based on LCC and BCR/Prov"))
-  )
+    createsOutput(objectName = "birdDensityRasters", objectClass = "list", desc = paste0("list of rasters with information", 
+                                                                                         " on species densities based on LCC and BCR/Prov")),
+    createsOutput(objectName = "birdDensityDS", objectClass = "data.table", desc = paste0("list of data.table with information on species",
+                                                                                         " densities based on LCC and BCR/Prov"))
+)
 ))
 
 ## event types
@@ -46,22 +50,23 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
 
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "birdDensityBCR_Prov_LCC", "fetchData")
-      sim <- scheduleEvent(sim, start(sim), "birdDensityBCR_Prov_LCC", "extractData")
       },
 
     fetchData = {
 
-      sim$birdDensityRasters <- fetchData(pathData = dataPath(sim), birdSp = sim$birdSpecies, studyArea = sim$rP)
+      sim$birdDensityRasters <- fetchData(pathData = dataPath(sim), 
+                                          birdSp = sim$birdSpecies, 
+                                          studyArea = sim$rP, 
+                                          extractFrom4kRasters = P(sim)$extractFrom4kRasters,
+                                          densityEstimatesURL = sim$densityEstimatesURL,
+                                          densityEstimatesFileName = sim$densityEstimatesFileName,
+                                          avoidAlbertosData = P(sim)$avoidAlbertosData,
+                                          simEnv = envir(sim))
+
+      sim$birdDensityDS <- birdDensityDS # Being created in the previous function and assigned to sim. Here just for a matter of transparency.
       
     },
-    
-    extractData = {
-      
-      # sim$birdDensityTables <- extractData(datasetRaster = sim$birdDensityRasters, 
-      #                                      typeData = "list", 
-      #                                      list = sim$birdSpecies) # Revise function and name
-      
-    },
+
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
@@ -70,23 +75,73 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
 
 .inputObjects = function(sim) {
   
+  if (!suppliedElsewhere('densityEstimatesURL', sim)) {
+    sim$densityEstimatesURL <- extractURL("densityEstimatesURL")
+  }
+  
+  if (!suppliedElsewhere('densityEstimatesFileName', sim)) {
+    sim$densityEstimatesFileName <- "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv"
+  }
+  
   if (!suppliedElsewhere('birdSpecies', sim)) {
     sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR", 
                          "BTNW", "CAWA", "CMWA", "CONW", 
                          "OVEN", "PISI", "RBNU", "SWTH", 
                          "TEWA", "WETA", "YRWA")
   }
-  
-  if(!is.null(P(sim)$testArea) & P(sim)$testArea == TRUE){
-    sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
-    sim$areaSize <- 5000000
-    set.seed(1234)
-    sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon    
-    message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
-  } else {
-    sim$rP <- NULL
+
+  if (!suppliedElsewhere("rP", sim)) {
+    if (any(is.null(P(sim)$testArea), (!is.null(P(sim)$testArea) &
+                                       P(sim)$testArea == FALSE))) {
+      if (!is.null(sim$specificTestArea)) {
+        sim$rP <- NULL
+        message(crayon::yellow(paste0(
+          "Test area is FALSE or NULL, but specificTestArea is not. Ignoring 'specificTestArea' and running the analysis for the whole country. ",
+          "To set a study area, use testArea == TRUE.")))
+      } else {
+        sim$rP <- NULL
+        message(crayon::yellow("Test area is FALSE or NULL. Running the analysis for the whole country."))
+      }
+    } else {
+      if (is.null(sim$specificTestArea)) {
+        sim$polyMatrix <- matrix(c(-79.471273, 48.393518), ncol = 2) 
+        sim$areaSize <- 10000000
+        set.seed(1234)
+        sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon
+        message(crayon::yellow("Test area is TRUE, specificTestArea is 'NULL'. Cropping and masking to an area in south Ontario."))
+      } else {
+        if (sim$specificTestArea == "boreal") {
+          message(crayon::yellow("Test area is TRUE. Cropping and masking to the Canadian Boreal."))
+          sim$rP <- prepInputs(url = "http://cfs.nrcan.gc.ca/common/boreal.zip",
+                               alsoExtract = "similar",
+                               targetFile = file.path(dataPath(sim), "NABoreal.shp"),
+                               #Boreal Shapefile
+                               destinationPath = dataPath(sim)
+          )
+        } else {
+          if (!is.null(sim$specificTestArea)) {
+            sim$rP <- Cache(prepInputs,
+                            url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
+                            targetFile = "gpr_000b11a_e.shp",
+                            # Subsetting to a specific Province
+                            archive = "gpr_000b11a_e.zip",
+                            destinationPath = dataPath(sim)) %>%
+              raster::subset(PRENAME == sim$specificTestArea)
+            if (nrow(sim$rP@data) == 0) {
+              stop(paste0("There is no Canadian Province called ",
+                          sim$specificTestArea,
+                          ". Please provide a Canadian province name in English for specificTestArea, ",
+                          "use 'boreal', or use 'NULL' (creates a random area in South Ontario)."))
+            } else {
+              message(crayon::yellow(paste0("Test area is TRUE. Cropped and masked to ",
+                                            sim$specificTestArea)))
+              
+            }
+          }
+        }
+      }
+    }
   }
-  
   return(invisible(sim))
 }
 
