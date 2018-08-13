@@ -43,7 +43,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   # birdDensityRasters <- reproducible::fastMask(birdDensityRasters, y = rP)
   
   # ~~~~~~~~~ LANDCOVER ~~~~~~~~~~~~
-  
+  browser()
   # Load landCover
   landCover <- prepInputs(targetFile = file.path(pathData, "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"),
                           destinationPath = pathData,

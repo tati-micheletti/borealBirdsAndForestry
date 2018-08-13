@@ -5,4 +5,5 @@ individualFocal <- function(inList, inWeight, denomRas) {
   b[is.infinite(b)] <- 0 #some inf values returned from dividing by 0 (non-forest in LCC)
 
   return(b)
+
 }
