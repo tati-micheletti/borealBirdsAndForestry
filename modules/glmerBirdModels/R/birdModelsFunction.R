@@ -1,11 +1,8 @@
-# Bird model functions version 2 - TO BE USED WHEN PREDICTING
+# Bird model functions version 3 - TO be used with both Alberto's data and updated versions of offsets and densities: TO BE USED WHEN PREDICTING
 
 birdModelsFunction <- function(combinations = sim$combinations,
                                birdSp = sim$birdSpecies,
-                               dataset = sim$dataName){
-  
-  dataset <- dataUploading(dataset = dataset,
-                           combinations = combinations)
+                               dataset = sim$data){
   require(lme4)
   
   models <- list()
@@ -18,32 +15,32 @@ birdModelsFunction <- function(combinations = sim$combinations,
       birds <- lapply(X = birdSp, FUN = function(name){
         
         tryCatch({
-          
-          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+          message(crayon::yellow(paste0("Running ", x," models for ", name)))
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(", name, " ~ State_P_100 + logDENSITY_", name, " + ",
                                                                  "(1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), ",
-                                                                 "offset = OF_", name,
+                                                                 "offset = OFFSET_", name,
                                                                  ", family = 'poisson', data = data)")))))
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
-            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(", name, " ~ State_P_100 + logDENSITY_", name, " + ",
                                                                    "(1|ClusterSP) + (1|YYYY), ",
-                                                                   "offset = OF_", name,
+                                                                   "offset = OFFSET_", name,
                                                                    ", family = 'poisson', data = data)")))))
           }
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
-            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(", name, " ~ State_P_100 + logDENSITY_", name, " + ",
                                                                    "(1|ClusterSP), ",
-                                                                   "offset = OF_", name,
+                                                                   "offset = OFFSET_", name,
                                                                    ", family = 'poisson', data = data)")))))
           }
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
-            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_100 + LOG_BCR_", name, " + ",
-                                                                   "offset = OF_", name,
+            suppressMessages(assign(name, eval(parse(text = paste0("glm(", name, " ~ State_P_100 + logDENSITY_", name, ", ",
+                                                                   "offset = OFFSET_", name,
                                                                    ", family = 'poisson', data = data)")))))
           }
           
@@ -52,8 +49,8 @@ birdModelsFunction <- function(combinations = sim$combinations,
           
         }, error = function(e){
           
-          assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed.", 
-                                         "Try re-running the model with less random effects."), sep = " "))
+          assign(name, paste(as.character("Bad, bad model. No donut for you! Convergence failed.")))
+          
           modelsList <- get(name)
           return(modelsList)
         }
@@ -65,32 +62,32 @@ birdModelsFunction <- function(combinations = sim$combinations,
       birds <- lapply(X = birdSp, FUN = function(name){
         
         tryCatch({
-          
-          suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ", 
+          message(crayon::yellow(paste0("Running ", x," models for ", name)))
+          suppressMessages(assign(name, eval(parse(text = paste0("glmer(", name, " ~ State_P_500 + logDENSITY_", name, " + ",
                                                                  "(1|ClusterSP) + (1|YYYY) + (1|ClusterSP:YYYY), ",
-                                                                 "offset = OF_", name,
-                                                                 ", family='poisson', data=data)")))))
+                                                                 "offset = OFFSET_", name,
+                                                                 ", family = 'poisson', data = data)")))))
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
-            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ",
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(", name, " ~ State_P_500 + logDENSITY_", name, " + ",
                                                                    "(1|ClusterSP) + (1|YYYY), ",
-                                                                   "offset = OF_", name,
-                                                                   ", family='poisson', data=data)")))))
-          }
-          
-          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
-            
-            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ",
-                                                                   "(1|ClusterSP), ",
-                                                                   "offset = OF_", name,
+                                                                   "offset = OFFSET_", name,
                                                                    ", family = 'poisson', data = data)")))))
           }
           
           if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
             
-            suppressMessages(assign(name, eval(parse(text = paste0("glmer(AB_", name, " ~ State_P_500 + LOG_BCR_", name, " + ",
-                                                                   "offset = OF_", name,
+            suppressMessages(assign(name, eval(parse(text = paste0("glmer(", name, " ~ State_P_500 + logDENSITY_", name, " + ",
+                                                                   "(1|ClusterSP), ",
+                                                                   "offset = OFFSET_", name,
+                                                                   ", family = 'poisson', data = data)")))))
+          }
+          
+          if (!is.null(eval(parse(text = paste0(name,'@optinfo$conv$lme4$messages'))))){
+            
+            suppressMessages(assign(name, eval(parse(text = paste0("glm(", name, " ~ State_P_500 + logDENSITY_", name, ", ",
+                                                                   "offset = OFFSET_", name,
                                                                    ", family = 'poisson', data = data)")))))
           }
           
@@ -99,8 +96,7 @@ birdModelsFunction <- function(combinations = sim$combinations,
           
         }, error = function(e){
           
-          assign(name,paste(as.character("Bad, bad model. No donut for you! Convergence failed.", 
-                                         "Try re-running the model with less random effects."), sep = " "))
+          assign(name, paste(as.character("Bad, bad model. No donut for you! Convergence failed.")))
           
           modelsList <- get(name)
           return(modelsList)

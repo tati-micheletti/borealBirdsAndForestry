@@ -11,8 +11,8 @@
 #   NN > NL
 
 #   # Assumptions
-# 1. Bird abundance might vary depending on cluster (RE)
-# 2. Bird abundance might vary depending on the year (RE)
+# 1. Bird density might vary depending on cluster (RE)
+# 2. Bird density might vary depending on the year (RE)
 
 
 bayesModel <- function(birdData = sim$birdData, 
@@ -46,7 +46,7 @@ bayesModel <- function(birdData = sim$birdData,
     ageMasked <- mask(croppedAgeMap, mask = rP)
     ageMasked[is.na(ageMasked)] <- -5555
     ageMasked[ageMasked<(-7777)] <- NA
-    matrixAge <- focalWeight(ageMasked, 3000, type = 'circle')
+    matrixAge <- raster::focalWeight(ageMasked, 3000, type = 'circle')
     
     anyNA <- any(is.na(ageMasked[]))
     
@@ -81,7 +81,7 @@ bayesModel <- function(birdData = sim$birdData,
     ageMasked <- mask(croppedAgeMap, mask = borealShape)
     ageMasked[is.na(ageMasked)] <- -5555
     ageMasked[ageMasked<(-7777)] <- NA
-    matrixAge <- focalWeight(ageMasked, 3000, type = 'circle')
+    matrixAge <- raster::focalWeight(ageMasked, 3000, type = 'circle')
     
     anyNA <- any(is.na(ageMasked[]))
     
@@ -152,7 +152,7 @@ bayesModel <- function(birdData = sim$birdData,
   ys <- sort(unique(ageMapDF$Year))
   # site <- paste(ageMapDF["X"], ageMapDF["Y"], sep = ":")
 
-  # Design matrix for abundance model (no intercept)
+  # Design matrix for density model (no intercept)
 #   modelDF <- lapply(birdSpecies, function(x) {
 # 
 #     spDF <- eval(parse(text = paste0("dfModel$", x)))

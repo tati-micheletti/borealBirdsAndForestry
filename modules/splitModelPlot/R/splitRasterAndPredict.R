@@ -16,9 +16,11 @@ splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
                                   disturbanceClass = P(sim)$disturbanceClass,
                                   intermPath = cachePath(sim),
                                   rP = sim$rP,
-                                  useParallel = P(sim)$useParallel){
-  
-   populationTrends <- Map(models = models,
+                                  recoverTime = P(sim)$recoverTime,
+                                  useParallel = P(sim)$useParallel,
+                                  extractFrom4kRasters = P(sim)$extractFrom4kRasters){
+
+   populationTrends <- Cache(Map, models = models,
                               birdDensityRasters = birdDensityRasters,
                               f = groupSplitRaster,
                               MoreArgs = list(
@@ -37,7 +39,9 @@ splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
                                   focalDistance = focalDistance,
                                   disturbanceClass = disturbanceClass,
                                   intermPath = intermPath,
-                                  useParallel = useParallel))
+                                  recoverTime = recoverTime,
+                                  useParallel = useParallel,
+                                  extractFrom4kRasters = extractFrom4kRasters))
   
   names(populationTrends) <- inputSpecies
   
