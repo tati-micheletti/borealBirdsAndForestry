@@ -20,7 +20,7 @@ splitRasterAndPredict <- function(inputSpecies = sim$inputSpecies,
                                   useParallel = P(sim)$useParallel,
                                   extractFrom4kRasters = P(sim)$extractFrom4kRasters){
 
-   populationTrends <- Cache(Map, models = models,
+   populationTrends <- Map(models = models, # Put cache back again
                               birdDensityRasters = birdDensityRasters,
                               f = groupSplitRaster,
                               MoreArgs = list(
