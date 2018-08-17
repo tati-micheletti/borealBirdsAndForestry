@@ -43,7 +43,6 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   # birdDensityRasters <- reproducible::fastMask(birdDensityRasters, y = rP)
   
   # ~~~~~~~~~ LANDCOVER ~~~~~~~~~~~~
-  browser()
   # Load landCover
   landCover <- prepInputs(targetFile = file.path(pathData, "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"),
                           destinationPath = pathData,
@@ -191,14 +190,15 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
     rasList <- lapply(X = outList, `[[`, nRas)
     rasName <- names(outList[[1]])[nRas]
     dir.create(file.path(intermPath, "outputRasters"), showWarnings = FALSE)
-    finalRasPath <- file.path(intermPath, "outputRasters", paste0(spName, "_", rasName, ".tif"))
+    finalRasPath <- file.path(intermPath, "outputRasters", paste0(spName, "_", rasName, "_", max(focalDistance), ".tif"))
     ras <- SpaDES.tools::mergeRaster(x = rasList) # If at some point mergeRaster writes to disk, delete next 3 lines below.
-    raster::writeRaster(x = ras, filename = finalRasPath, overwrite = TRUE)
+    raster::writeRaster(x = ras, filename = finalRasPath, overwrite = FALSE)
     rm(ras) # Remove raster from memory
     invisible(gc()) # Free up more space?
     return(finalRasPath)
   })
   
   names(finalRasList) <- names(outList[[1]])
+  
   return(finalRasList)
 }
