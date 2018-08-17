@@ -24,7 +24,6 @@ LCReclassify <- function(inputTiles = tilelist,
   #2. create focal matrix (for each distance parameter). 
   #if annulus = TRUE, it will use the largest and smallest distances to make the annulus (you should only have 2). One day we will adapt this to work with multiple buffers concurrently 
   if(length(focalDistance)> 1){
-    browser()
     #make inner matrix
     inMat <- raster::focalWeight(x = binaryLC, d = min(focalDistance))
     outMat <- raster::focalWeight(x = binaryLC, d = max(focalDistance))
@@ -73,7 +72,7 @@ LCReclassify <- function(inputTiles = tilelist,
   
   fDistanceLists <- Map(inWeight = focalMatrices, denomRas = LCFocals, f = jumboFocal, MoreArgs = list(inList = distStack))
   
-  names(fDistanceLists) <- paste("focal", focalDistance) # Unnecessary but left it in for browser transparency
+  names(fDistanceLists) <- paste("focal", max(focalDistance)) # Unnecessary but left it in for browser transparency
   
   #Combine distance rasters by year
   newPlots <- MergeDistances(inList = fDistanceLists, 
