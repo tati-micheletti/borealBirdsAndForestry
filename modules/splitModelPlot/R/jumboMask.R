@@ -1,12 +1,17 @@
-jumboMask <- function(inputRas = binaryDisturb, 
-                      inputMask = inputTiles$disturbanceYear, 
-                      updateValue = 0, 
+jumboMask <- function(inputRas = binaryDisturb, #Disturbances that area due to the Disturbance Class (log or fire or whatever)
+                      inputMask = inputTiles$disturbanceYear, # All disturbances in every year
+                      updateValue = 0,
                       inverseLogic = TRUE,
-                      mskVal = x,
-                      spName = spName){
+                      mskVal = maskValue,
+                      spName = spName,
+                      x = x){
+
+  yearValue <- getValues(inputMask)
+  yearValue[yearValue %in% mskVal] <- 500
+  inputMask <- setValues(inputMask, yearValue)
   
-  message(crayon::yellow(paste0("Masking 19", mskVal, " tiles for ", spName)))
-  a <- mask(x = inputRas, mask = inputMask, maskvalue = mskVal, inverse = inverseLogic, updatevalue = updateValue)
+  message(crayon::yellow(paste0("Masking year ", x, " tiles for ", spName)))
+  a <- mask(x = inputRas, mask = inputMask, maskvalue = 500, inverse = inverseLogic, updatevalue = updateValue)
   
   return(a)
 }

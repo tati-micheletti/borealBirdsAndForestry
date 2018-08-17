@@ -72,14 +72,57 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
     sim$dataName <- "Final_points_BEAD_final.csv"
   }
   
-  if(!is.null(P(sim)$testArea) & P(sim)$testArea==TRUE){
-    sim$polyMatrix <- matrix(c(-93.028935, 50.271979), ncol = 2)
-    sim$areaSize <- 5000000
-    set.seed(1234)
-    sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon    
-    message("Test area is TRUE. Cropping and masking to an area in south Ontario.")
+  
+  if (any(is.null(P(sim)$testArea), (!is.null(P(sim)$testArea) & P(sim)$testArea == FALSE))) {
+    if (!is.null(sim$specificTestArea)){
+      sim$rP <- NULL
+      message(crayon::yellow(paste0(
+        "Test area is FALSE or NULL, but specificTestArea is not. Ignoring 'specificTestArea' and running the analysis for the whole country. ", 
+        "To set a study area, use testArea == TRUE.")))
+    } else {
+      sim$rP <- NULL
+      message(crayon::yellow(
+        "Test area is FALSE or NULL. Running the analysis for the whole country."))
+    }
   } else {
-    sim$rP <- NULL
+    if (!suppliedElsewhere("rP", sim) &
+        is.null(sim$specificTestArea)) {
+      sim$polyMatrix <- matrix(c(-79.471273, 48.393518), ncol = 2) 
+      sim$areaSize <- 10000000
+      set.seed(1234)
+      sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon
+      message(crayon::yellow(
+        "Test area is TRUE, specificTestArea is 'NULL'. Cropping and masking to an area in south Ontario."))
+    } else {
+      if (!suppliedElsewhere("rP", sim) & 
+          sim$specificTestArea == "boreal") {
+        message(crayon::yellow(
+          "Test area is TRUE. Cropping and masking to the Canadian Boreal."))
+        sim$rP <- prepInputs(url = "http://cfs.nrcan.gc.ca/common/boreal.zip",
+                             alsoExtract = "similar",
+                             targetFile = file.path(dataPath(sim), "NABoreal.shp"), #Boreal Shapefile
+                             destinationPath = dataPath(sim))
+      } else {
+        if (!suppliedElsewhere("rP", sim) &
+            !is.null(sim$specificTestArea)){
+          sim$rP <- Cache(prepInputs, url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip", 
+                          targetFile = "gpr_000b11a_e.shp", # Subsetting to a specific Province
+                          archive = "gpr_000b11a_e.zip",
+                          destinationPath = dataPath(sim)) %>%
+            raster::subset(PRENAME == sim$specificTestArea)
+          if (nrow(sim$rP@data) == 0) {
+            stop(paste0(
+              "There is no Canadian Province called ", sim$specificTestArea, 
+              ". Please provide a Canadian province name in English for specificTestArea, ", 
+              "use 'boreal', or use 'NULL' (creates a random area in South Ontario)."))
+          } else {
+            message(crayon::yellow(paste0(
+              "Test area is TRUE. Cropped and masked to ", sim$specificTestArea)))
+            
+          }
+        }
+      }
+    }
   }
   
   return(invisible(sim))

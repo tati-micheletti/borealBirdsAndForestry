@@ -3,7 +3,9 @@ fetchData <- function(pathData = dataPath(sim),
                       studyArea = sim$rP,
                       extractFrom4kRasters = P(sim)$extractFrom4kRasters,
                       densityEstimatesURL = sim$densityEstimatesURL,
-                      densityEstimatesFileName = sim$densityEstimatesFileName) {
+                      densityEstimatesFileName = sim$densityEstimatesFileName,
+                      avoidAlbertosData = P(sim)$avoidAlbertosData,
+                      simEnv = envir(sim)) {
   require(raster)
   require(data.table)
   
@@ -14,10 +16,10 @@ fetchData <- function(pathData = dataPath(sim),
                         url = paste0("https://s3-us-west-2.amazonaws.com/bam-databasin-climatechangepredictions/climatepredictions-ascii/",
                                      x, "_current.zip"),
                         destinationPath = pathData,
-                        studyArea = studyArea)
+                        studyArea = studyArea, fun = "raster::raster")
     })
   } else {
-    
+
     # Need to create a raster with the densities based on LCC, PROV and BCR
     # 1. Download data
     
@@ -34,11 +36,13 @@ fetchData <- function(pathData = dataPath(sim),
                      overwrite = FALSE,
                      verbose = FALSE)
     }
-    
+
     LCC05 <- Cache(prepInputs, targetFile = "LCC2005_V1_4a.tif",
                    archive = "LandCoverOfCanada2005_V1_4.zip",
                    destinationPath = pathData,
                    studyArea = studyArea)
+    LCC05 <- projectInputs(LCC05, targetCRS = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    LCC05[] <- LCC05[]
     
     
     BCR <- Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
@@ -59,22 +63,30 @@ fetchData <- function(pathData = dataPath(sim),
       stop(paste0("To date, the prepInputs() can't automatically download the density file needed for the analysis from Google Drive. Please manually download it at ",
                   densityEstimatesURL, " and place it in ", pathData))
     }
-    
+
     # [ FIX ] Works if you have the file. Need to be fixed to be able to download the file
-    densityEstimates <- Cache(prepInputs, targetFile = densityEstimatesFileName,
-                              destinationPath = pathData, fun = "data.table::fread") %>%
-      .[SPECIES %in% birdSp,]
+    densityEstimates <- Cache(prepInputs, targetFile = densityEstimatesFileName, # OBS. Not all species have densities for all combinations of LCC_PROV_BCR
+                              destinationPath = pathData, fun = "data.table::fread") %>% # Also checked if it was pooled with other BCR, but not.
+     .[SPECIES %in% birdSp,]
+    
+    if (avoidAlbertosData == TRUE){
+      assign(x = "birdDensityDS", value = densityEstimates, envir = simEnv)
+    }
     
     # 2. Rasterize (fasterize) both PROV and BCR.
     
     # =========== BCR 
     BCRsf <- sf::st_as_sf(BCR)
-    rasBCR <- fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "BCR")
+    message(crayon::yellow(paste0("Fasterizing BCRsf")))
+    rasBCR <- Cache(fasterize::fasterize, sf = BCRsf, raster = LCC05, field = "BCR")
+    rasBCR[] <- rasBCR[]
     
     # ==========+ PROV
     PROVsf <- sf::st_as_sf(PROV)
     PROVsf$PROV <- as.numeric(PROVsf$PRUID)
-    rasPROV <- fasterize::fasterize(sf = PROVsf, raster = LCC05, field = "PROV") # [ FIX ] Is rasterizing using something that not the BCR number!
+    message(crayon::yellow(paste0("Fasterizing PROVsf")))
+    rasPROV <- Cache(fasterize::fasterize, sf = PROVsf, raster = LCC05, field = "PROV")
+    rasPROV[] <- rasPROV[]
     
      # 3. Create a lookout table
     PROVabb <- structure(list(PRENAME = structure(1:13, .Label = c("Alberta", 
@@ -97,19 +109,22 @@ fetchData <- function(pathData = dataPath(sim),
     
     # 5. Lapply through the species and create a density raster at 250m for each species, returning as a names list of rasters
     densityRasList <- lapply(X = birdSp, FUN = function(x) {
+      message(crayon::yellow(paste0("Creating density rasters for ", x)))
       cols <- c("LCC", "ID", "BCR", "D")
       densityEstimatesRed <- densityEstimates[SPECIES == x, ..cols]
-      vals <- plyr::join(PROV_BCR_LCC, densityEstimatesRed)
+      vals <- Cache(plyr::join, PROV_BCR_LCC, densityEstimatesRed)
       # Create raster
       spRas <- raster::raster(resolution = res(LCC05), crs = raster::crs(LCC05), ext = extent(LCC05)) %>%
         raster::setValues(vals$D)
+        spRas@data@names <- x
         return(spRas)
       }
     )
     
     names(densityRasList) <- birdSp
     
-   }
+  }
+
 
   return(densityRasList) # Return one raster per species in a names list
 }

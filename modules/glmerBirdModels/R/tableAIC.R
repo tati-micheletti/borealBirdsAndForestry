@@ -1,39 +1,53 @@
 # Extracting Table S1: tableS1-1 considers LOCAL UNDISTURBED, while tableS1-2 doesn't  
 
-tableAIC <- function(outputPath = outputPath(sim), models = sim$models, birdSp = sim$birdSpecies, combinations = sim$combinations){
+tableAIC <- function(outputPath = outputPath(sim), 
+                     models = sim$models, 
+                     birdSp = sim$birdSpecies, 
+                     combinations = sim$combinations){
 
   require(reshape2)
   require(tibble)
   require(reproducible)
-  
+
   tableForAIC <- lapply(X = combinations, FUN = function(x){
     birds <- lapply(X = birdSp, FUN = function(bird){
-      
+
       disturbanceDimension <- ifelse(grepl("local", x),"LOCAL",
                                 ifelse(grepl("Local", x),"LOCAL_UNDISTURBED","NEIGHBORHOOD"))
       typeDisturbance <- ifelse(grepl("Permanent", x),"PERMANENT",
                                      ifelse(grepl("Transitional", x),"TRANSITIONAL","BOTH"))
       isolatedModel <- eval(parse(text = paste0("models[[x]]$",bird)))
-      aic <- data.frame(Species = bird,
-                        TypeDisturbance = typeDisturbance, 
-                        DisturbanceDimension = disturbanceDimension,
-                        AIC = AIC(isolatedModel))
-      
-      return(aic)
+      if (any(class(isolatedModel) == "character")){
+        
+        return(NA)
+        
+      } else {
+        aic <- data.frame(Species = bird,
+                          TypeDisturbance = typeDisturbance, 
+                          DisturbanceDimension = disturbanceDimension,
+                          AIC = AIC(isolatedModel))
+        return(aic)
+      }
     })
     
     names(birds) <- birdSp
     return(birds)
     
   })
-  
+
   names(tableForAIC) <- combinations
   list <- unlist(tableForAIC, recursive = FALSE)
   tableAIC <- do.call("rbind", unname(list))
+  remove <- which(is.na(tableAIC$Species))
+  if (length(remove) > 0) {
+    tableAIC <- tableAIC[-remove,]
+  }
+  
   tableAIC$Cols <- paste(tableAIC$DisturbanceDimension,tableAIC$TypeDisturbance, sep = "_")
-  tableAIC <- tableAIC[,-c(2:3)]
+  remove <- c("TypeDisturbance", "DisturbanceDimension")
+  tableAIC <- tableAIC[, !names(tableAIC) %in% remove]
   finalTable <- reshape2::dcast(tableAIC, Species ~ Cols, value.var="AIC")
-  colNames <- colnames(finalTable)[-1]
+  colNames <- colnames(finalTable)[!colnames(finalTable) == "Species"]
 
   for (nameColumn in colNames){
     finalTable <- eval(parse(text = paste0("add_column(.data = finalTable, d.", nameColumn, " = NA, .after = c(nameColumn))")))

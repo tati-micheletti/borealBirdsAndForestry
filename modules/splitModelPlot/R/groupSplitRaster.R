@@ -15,15 +15,21 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                              disturbanceClass = disturbanceClass,
                              intermPath = intermPath,
                              rP = rP,
-                             useParallel = useParallel) {
+                             recoverTime = recoverTime,
+                             useParallel = useParallel,
+                             extractFrom4kRasters = extractFrom4kRasters) {
   
   # ======================== STARTED GIS ===================================
-  
-  spName <- substr(birdDensityRasters@data@names, 6, 9) # SPECIES NAME
+
+  if (extractFrom4kRasters == TRUE){
+    spName <- substr(birdDensityRasters@data@names, 6, 9) # SPECIES NAME
+  } else {
+    spName <- birdDensityRasters@data@names
+  }
   
   message(crayon::green(paste0("Initializing GIS operations for ", spName)))
   
-  # Resample 4000m abundance rasters 
+  # Resample 4000m density rasters 
   
   message(crayon::yellow(paste0("Resampling density rasters to 30m resolution for ", spName)))
   if (!all(raster::res(birdDensityRasters) == c(30, 30))){
@@ -37,56 +43,55 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   # birdDensityRasters <- reproducible::fastMask(birdDensityRasters, y = rP)
   
   # ~~~~~~~~~ LANDCOVER ~~~~~~~~~~~~
-  
+  browser()
   # Load landCover
   landCover <- prepInputs(targetFile = file.path(pathData, "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"),
-                              destinationPath = pathData,
-                              rasterToMatch = birdDensityRasters,
-                              studyArea = rP)
+                          destinationPath = pathData,
+                          rasterToMatch = birdDensityRasters,
+                          studyArea = rP)
   landCover[] <- round(landCover[], 0)
   storage.mode(landCover[]) = "integer"
   
   # Split landCover
   message(crayon::yellow(paste0("Splitting lanCover tiles for ", spName)))
   landCover <- Cache(splitRaster, r = landCover, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
-                           rType = rType, path = file.path(intermPath, "land")) # override the original in memory
+                     rType = rType, path = file.path(intermPath, "land")) # override the original in memory
   
   # ~~~~~~~~~ DISTURBANCE TYPE ~~~~~~~~~~~~
   
   # Load disturbanceType
   disturbanceType <- prepInputs(targetFile = file.path(pathData, "C2C_change_type.tif"), # If this is not wrking, might be becuse these objects were in sim and now they are not
-                                    destinationPath = pathData,
-                                    rasterToMatch = birdDensityRasters,
-                                    studyArea = rP,
-                                    length = TRUE)
+                                destinationPath = pathData,
+                                rasterToMatch = birdDensityRasters,
+                                studyArea = rP,
+                                length = TRUE)
   disturbanceType[] <- round(disturbanceType[], 0)
   storage.mode(disturbanceType[]) = "integer"
-  
   # Split disturbanceType
   message(crayon::yellow(paste0("Splitting disturbanceType tiles for ", spName)))
   disturbanceType <- Cache(splitRaster, r = disturbanceType, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
                            rType = rType, path = file.path(intermPath, "distType")) # override the original in memory
-
+  
   # ~~~~~~~~~ DISTURBANCE YEAR ~~~~~~~~~~~~
   
   # Load disturbanceYear
   disturbanceYear <- prepInputs(targetFile = file.path(pathData, "C2C_change_year.tif"),
-                                    destinationPath = pathData,
-                                    rasterToMatch = birdDensityRasters,
-                                    studyArea = rP,
-                                    quick = TRUE) # Keep the file in memory only if the file is small enough.
+                                destinationPath = pathData,
+                                rasterToMatch = birdDensityRasters,
+                                studyArea = rP,
+                                quick = TRUE) # Keep the file in memory only if the file is small enough.
   disturbanceYear[] <- round(disturbanceYear[], 0)
   storage.mode(disturbanceYear[]) = "integer"
   
   # Split disturbanceYear
   message(crayon::yellow(paste0("Splitting disturbanceYear tiles for ", spName)))
   disturbanceYear <- Cache(splitRaster, r = disturbanceYear, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
-                                 rType = rType, path = file.path(intermPath, "distYear")) # override the original in memory
+                           rType = rType, path = file.path(intermPath, "distYear")) # override the original in memory
   
   # ============ SPLIT ABUNDANCE ================
   # Split abundance raster
-  message(crayon::yellow(paste0("Splitting abundance tiles for ", spName)))
-  birdDensityRasters <- splitRaster(r = birdDensityRasters, nx = nx, ny = ny, buffer = buffer, rType = "INT2S") # Splitting abundance Raster, stays in memory, override the original
+  message(crayon::yellow(paste0("Splitting density tiles for ", spName)))
+  birdDensityRasters <- splitRaster(r = birdDensityRasters, nx = nx, ny = ny, buffer = buffer, rType = "INT2S") # Splitting density Raster, stays in memory, override the original
   
   # Tile's list
   newlist <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover, "birdDensityRasters" = birdDensityRasters) # Splitted rasters' list
@@ -98,15 +103,23 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   # ======================== FINISHED GIS ===================================
   
   lengthvect <- 1:(nx * ny)
-  
-  # Outlist is a list of all the tiles after running the predictions
-  
-  # Using parallel
 
-if (!length(useParallel) == 0){
-  if (useParallel == "across"){ # then do "local" then NULL
-    hosts <- c(rep("132.156.148.172", 10), rep("132.156.148.171", 10), rep("localhost", 10))
-    cl <- parallel::makePSOCKcluster(hosts, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
+  # Using parallel: Outlist is a list of all the tiles after running the predictions
+  if (!length(useParallel) == 0){
+    if (useParallel == "across"){ # then do "local" then NULL
+      message(crayon::red(paste0("Paralellizing tiles ACROSS MACHINES Messages will be suppressed until operation is complete")))
+      hosts <- c(rep("132.156.148.172", 10), rep("132.156.148.171", 10), rep("localhost", 10))
+      cl <- parallel::makePSOCKcluster(hosts, 
+                                       # outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel", 
+                                       master = "132.156.149.44")
+      pkg <- (.packages())
+      clusterExport(cl = cl, varlist = ls(), envir = environment())
+      loadAllPackagesInCluster <- function(reproducible = "reproducible", pakages = pkg){
+        tryCatch(require(reproducible), error = devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development"))
+        reproducible::Require(pkg)
+      }
+      clusterCall(cl = cl, fun = loadAllPackagesInCluster)
+      
     outList <- parallel::clusterApplyLB(x = lengthvect,
                                         fun = tileReorder,
                                         cl = cl,
@@ -121,11 +134,13 @@ if (!length(useParallel) == 0){
                                         passedModel = models,
                                         pathData = pathData,
                                         intermPath = intermPath,
+                                        recoverTime = recoverTime,
                                         maxTile = length(lengthvect))
     parallel::stopCluster(cl)
     
-  } else {
+  } else { # Outlist is a list of all the tiles after running the predictions
     if (useParallel == "local"){
+      message(crayon::red(paste0("Paralellizing tiles LOCALLY. Messages will be suppressed until operation is complete")))
       cl <- parallel::makeForkCluster(10, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
       outList <- parallel::clusterApplyLB(x = lengthvect, 
                                           fun = tileReorder,
@@ -141,6 +156,7 @@ if (!length(useParallel) == 0){
                                           passedModel = models,
                                           pathData = pathData,
                                           intermPath = intermPath,
+                                          recoverTime = recoverTime,
                                           maxTile = length(lengthvect))
       parallel::stopCluster(cl)
       
@@ -150,8 +166,7 @@ if (!length(useParallel) == 0){
   }
 } else {
     
-  # Not using parallel
-  
+  # Not using parallel: Outlist is a list of all the tiles after running the predictions
   outList <- lapply(X = lengthvect,
                       FUN = tileReorder,
                       spName = spName,
@@ -165,8 +180,11 @@ if (!length(useParallel) == 0){
                       passedModel = models,
                       pathData = pathData,
                       intermPath = intermPath,
+                      recoverTime = recoverTime,
                       maxTile = length(lengthvect))
-    }
+}
+ 
+  outList <- plyr::compact(outList)
 
   lengthResultRasters <- 1:length(outList[[1]])
   finalRasList <- lapply(lengthResultRasters, function(nRas){
