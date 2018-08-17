@@ -53,12 +53,12 @@ doEvent.finalRasterPlots = function(sim, eventTime, eventType) {
                                       pathData = dataPath(sim),
                                       outputPath = outputPath(sim))
       
-# TAKES TOO LONG! WILL RUN IT SEPARATELY AND INCORPORATE IN THE MODEL ONLY WHEN I HAVE SOMETHING FOR THE POSTER!
-      # sim$negativeTrendPercentage <- createBarGraph(percDensityChange = sim$percDensityChange, 
-      #                                               populationTrends = sim$populationTrends,
-      #                                               studyArea = sim$rP,
-      #                                               pathData = dataPath(sim),
-      #                                               outputPath = outputPath(sim))
+      sim$BarGraphTable <- createBarGraphTable(percDensityChange = sim$percDensityChange,
+                                                    populationTrends = sim$populationTrends,
+                                                    studyArea = sim$rP,
+                                                    pathData = dataPath(sim),
+                                                    outputPath = outputPath(sim),
+                                                    focalDistance = max(sim$focalDistance))
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
