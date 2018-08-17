@@ -41,7 +41,7 @@ fetchData <- function(pathData = dataPath(sim),
                    archive = "LandCoverOfCanada2005_V1_4.zip",
                    destinationPath = pathData,
                    studyArea = studyArea)
-    LCC05 <- projectInputs(LCC05, targetCRS = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+#    LCC05 <- projectInputs(LCC05, targetCRS = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
     LCC05[] <- LCC05[]
     
     
