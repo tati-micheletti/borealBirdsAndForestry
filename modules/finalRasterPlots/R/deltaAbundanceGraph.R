@@ -20,30 +20,19 @@ deltaAbundanceGraph <- function(populationTrends = sim$populationTrends,
     names(percentChange) <- "percentChange"
     rm(slopeCoef, firstYear)
     
-    BCR <- Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
+    BCR <- reproducible::Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
                  targetFile = "BCR_Terrestrial_master.shp",
                  archive = "bcr_terrestrial_shape.zip",
                  destinationPath = pathData,
                  studyArea = studyArea,
                  rasterToMatch = percentChange)
     
-    PROV <- Cache(prepInputs, url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip", 
-                  targetFile = "gpr_000b11a_e.shp",
-                  archive = "gpr_000b11a_e.zip",
-                  destinationPath = pathData,
-                  studyArea = studyArea,
-                  rasterToMatch = percentChange)
-    
-    BCR_PROV <- raster::intersect(BCR, PROV)
-    
-    fortBCR_PROV <- fortify(BCR_PROV)
-    library(dplyr)
-    BCR_PROV$id <- row.names(BCR_PROV)
-    plottingBCR <- merge(BCR_PROV, fortBCR_PROV, by = "id")
-    plottingBCR$BCR_Province <- paste(plottingBCR$BCR,"_", plottingBCR$PROVINCE_S)
+    BCR$id <- paste0(BCR$BCR, "_", BCR$PROVINCE_S)
+    # plottingBCR$BCR_Province <- paste(plottingBCR$BCR,"_", plottingBCR$PROVINCE_S)
     
     library(viridis)
     library(ggthemes)
+    library(ggplot2)
     
     speciesData <- as(percentChange, "SpatialPixelsDataFrame") %>%
       as.data.frame()
@@ -51,7 +40,7 @@ deltaAbundanceGraph <- function(populationTrends = sim$populationTrends,
     finalPlot <- ggplot2::ggplot() +  
       geom_raster(data = speciesData, aes(x = x, y = y, fill = percentChange)) +
       coord_equal() +
-      geom_polygon(data = plottingBCR, aes(x = long, y = lat, group = group, colour = BCR_Province), 
+      geom_polygon(data = BCR, aes(x = long, y = lat, group = group, colour = id), 
                    size = 1, alpha = 0) + # Colour brewer for the polygons's colours
       scale_fill_gradientn(colours = c(viridisLite::viridis(256,
                                                             alpha = 0, 
@@ -60,6 +49,7 @@ deltaAbundanceGraph <- function(populationTrends = sim$populationTrends,
                                                             option = "inferno"), "grey95")) +
       theme_map()
     
+    browser()
     png(file.path(outputPath,paste0("densChange", species, ".png")), width = 1500, height = 863)
     finalPlot
     dev.off()
