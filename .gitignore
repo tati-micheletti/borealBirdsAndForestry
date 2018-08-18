@@ -43,7 +43,7 @@ Temporary Items
 *.Rproj.user
 /.Rproj.user
 ## Output files
-.png
+#.png
 ## Folders with Data
 #data
 output
