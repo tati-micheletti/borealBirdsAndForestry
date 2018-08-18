@@ -48,11 +48,12 @@ slopeDensityGraph <- function(populationTrends = sim$populationTrends,
       theme_map() +
       theme(legend.position = 'none')
     
-    browser() # ALWAYS CHECK WHICH SCALE THIS SHOULD BE SAVED ON (_500.png or _100.png). 
+# ALWAYS CHECK WHICH SCALE THIS SHOULD BE SAVED ON (_500.png or _100.png). 
     #Make it automatic once incorporated in the original module!
     png(file.path(outputPath, paste0("densChange", species, "_500.png")), width = 3000, height = 1700)
     finalPlot
     dev.off()
+    browser() # RE-RUN THE LINES ABOVE AND PRESS c 
     
     return(list(plot = finalPlot, raster = slopeCoef))
     
