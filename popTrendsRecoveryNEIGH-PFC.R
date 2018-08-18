@@ -1,5 +1,4 @@
 
-
 library(SpaDES.core)
 library(SpaDES.tools)
 
@@ -43,4 +42,4 @@ rP <- SpaDES.tools::randomPolygon(x = polyMatrix, hectares = areaSize) # Create 
 
 pathData <- file.path(getwd(), "modules", "finalRasterPlots", "data")
 
-outputPath <- "/home/tmichele/Documents/GitHub/borealBirdsAndForestry/outputs"
+outputPath <- paths$outputPath
