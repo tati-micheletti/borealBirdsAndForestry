@@ -48,7 +48,7 @@ doEvent.finalRasterPlots = function(sim, eventTime, eventType) {
     },
     plot = {
 
-      sim$percDensityChange <- deltaAbundanceGraph(populationTrends = sim$populationTrends,
+      sim$slopeAbundance <- slopeDensityGraph(populationTrends = sim$populationTrends,
                                       studyArea = sim$rP,
                                       pathData = dataPath(sim),
                                       outputPath = outputPath(sim))
