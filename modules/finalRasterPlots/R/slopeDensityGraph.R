@@ -9,7 +9,6 @@ slopeDensityGraph <- function(populationTrends = sim$populationTrends,
   finalPlotsSpecies <- lapply(X = names(populationTrends), FUN = function(species){
     
     message(crayon::yellow(paste0("Creating plot with % of density change for ", species)))
-    
     slopeSig <- raster::raster(populationTrends[[species]]$slopeSignificancy)/1000
     slopeCoef <- raster::raster(populationTrends[[species]]$slopeCoefficient)/1000
     slopeCoef[slopeSig > 0.05] <- 0
@@ -19,8 +18,7 @@ slopeDensityGraph <- function(populationTrends = sim$populationTrends,
     names(slopeCoef) <- "slopeCoefficients"
     rm(firstYear)
     gc()
-    
-    BCR <- reproducible::Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
+    BCR <- reproducible::Cache(reproducible::prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
                                targetFile = "BCR_Terrestrial_master.shp",
                                archive = "bcr_terrestrial_shape.zip",
                                destinationPath = pathData,
@@ -36,21 +34,23 @@ slopeDensityGraph <- function(populationTrends = sim$populationTrends,
     
     speciesData <- as(slopeCoef, "SpatialPixelsDataFrame") %>%
       as.data.frame()
-    
+
     finalPlot <- ggplot2::ggplot() +  
-      geom_raster(data = speciesData, aes(x = x, y = y, fill = slopeCoef)) +
+      geom_raster(data = speciesData, aes(x = x, y = y, fill = slopeCoefficients)) +
       coord_equal() +
       geom_polygon(data = BCR, aes(x = long, y = lat, group = group, colour = id), 
-                   size = 1, alpha = 0) + # Colour brewer for the polygons's colours
+                   size = 3, alpha = 0) + # Colour brewer for the polygons's colours
       scale_fill_gradientn(colours = c(viridisLite::viridis(256,
                                                             alpha = 0, 
                                                             begin = 0, end = 1, 
                                                             direction = 1, 
                                                             option = "inferno"), "grey95")) +
-      theme_map()
+      theme_map() +
+      theme(legend.position = 'none')
     
-    browser()
-    png(file.path(outputPath,paste0("densChange", species, ".png")), width = 1500, height = 863)
+    browser() # ALWAYS CHECK WHICH SCALE THIS SHOULD BE SAVED ON (_500.png or _100.png). 
+    #Make it automatic once incorporated in the original module!
+    png(file.path(outputPath, paste0("densChange", species, "_500.png")), width = 3000, height = 1700)
     finalPlot
     dev.off()
     
