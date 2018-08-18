@@ -109,3 +109,8 @@ sshkeygen
 borealBirdsAndForestryManuscripts
 
 \.gitmodules
+
+!densChangeCMWA_100.png
+!densChangeBBWA_100.png
+!densChangeBTNW_100.png
+!densChangeCAWA_100.png
