@@ -11,8 +11,8 @@ retrieveSQLData <- function(SQLtableVersion = sim$SQLtableVersion,
                         Server   = SQLServer, # Connect to BAM Server
                         # Note: even though the address is set up in Windows as boreal.biology.ualberta.ca\boreal, in R I need to exclude the \boreal
                         Database = SQLDatabase, # Got the names from the Windows ODBC connection
-                        UID      = rstudioapi::askForPassword("Database User"),
-                        PWD      = studioapi::askForPassword("Database Password"),
+                        UID      = "michelet", #rstudioapi::askForPassword("Database User"),
+                        PWD      = "Univ3rs!ty",#studioapi::askForPassword("Database Password"),
                         Port     = 1433)
   
   colXY <- c("PCODE", "SS", "X", "Y") #, "BOR_LOC"

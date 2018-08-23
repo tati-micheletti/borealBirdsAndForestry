@@ -98,11 +98,9 @@ clearPlot()
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
 system.time(mySimOut <- spades(mySim, debug = TRUE))
 
-
-
 # To save the outputs
-# mySimList <- as(mySimOut, "simList_")
-# saveRDS(mySimList, file.path(outputPath(mySimOut), "ON_500000ha_07AUG18.rds"))
+ localAUG16 <- as(mySimOut, "simList_")
+ saveRDS(localAUG16, file.path(outputPath(mySimOut), "localAUG16.rds"))
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "backcast_10July2018.rds"))

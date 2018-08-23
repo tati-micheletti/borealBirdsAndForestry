@@ -1,6 +1,6 @@
 createBarGraph <- function(BarGraphTableLocal = "/home/tmichele/Documents/GitHub/borealBirdsAndForestry/outputs/tableNegatives100.csv",
                            BarGraphTableNeighborhood = "/home/tmichele/Documents/GitHub/borealBirdsAndForestry/outputs/tableNegatives500.csv",
-                           zoneBCR = mySimOut$BarGraphTable$zoneBCR){
+                           zoneBCR = bar$zoneBCR){
   
   neighborhood <- data.table::fread(file = BarGraphTableNeighborhood)
   local <- data.table::fread(file = BarGraphTableLocal)
@@ -41,11 +41,11 @@ createBarGraph <- function(BarGraphTableLocal = "/home/tmichele/Documents/GitHub
     geom_bar(stat = "identity", position = position_dodge())+
     scale_fill_viridis(discrete = TRUE, option = "D") + 
     theme(legend.position = "none",
-          strip.text.y = element_text(size = 28, face = "bold"),
-          axis.title.x = element_text(size = 30), 
-          axis.title.y = element_text(size = 30),
-          axis.text.x = element_text(size = 28), 
-          axis.text.y = element_text(size = 28)) +
+          strip.text.y = element_text(size = 66, face = "bold"),
+          axis.title.x = element_text(size = 70, margin = unit(c(30, 0, 0, 0), "mm")), 
+          axis.title.y = element_text(size = 70, margin = unit(c(0, 30, 0, 0), "mm")),
+          axis.text.x = element_text(size = 68), 
+          axis.text.y = element_text(size = 68)) +
     scale_x_discrete(name = "Combination BCR and Province") +
     scale_y_continuous(name = "% of pixels showing negative trends") +
     labs(fill = "Bird species")
@@ -53,7 +53,7 @@ createBarGraph <- function(BarGraphTableLocal = "/home/tmichele/Documents/GitHub
   browser()
   # png(file.path("C:/Users/tmichele/GitHub/borealBirdsAndForestry/borealBirdsAndForestryManuscripts/IOC 2018 Poster", 
   #               paste0("barGraph.png")), width = 2500, height = 1500) # FOR TESTING ON LOCAL MACHINE ONLY
-  png(file.path(outputPath, paste0("barGraph.png")), width = 2500, height = 1500)
+  png(file.path(outputPath, paste0("barGraph.png")), width = 3100, height = 1200)
   plot
   dev.off()
   

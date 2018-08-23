@@ -1,11 +1,20 @@
 # TO DO
 
-# Run for Ontario: Crashing at reprojecting 
-# Ideas: Divide into tiles before, reproject, put back together? Maybe prepInputs could do it (new argument?)
+# Run for Ontario: Crashing at reprojecting
+# Ideas: fix prepInputs to work with gdalUtils gdalwarp() Ian on it on 13th Aug
+# Double check all code workflow : delete all plotting and all return of rasters (only paths)
+
+# after finishing, uncomment line 44 in fetchData() to use as template the projection from the disturbance product (hardcoded...)
+# When Ian finished and this running finishes, we can try again running for Ontario. If it works, we can run for the country.
 
 # Area of 500 000 was fairly fast to run (@2-3hs)
-# Area of 10000000 was .... to run (@ hs) @25Gb of RAM to reproject CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif
-# We should be able to run it in an area that is at least 5x bigger...
+
+# Area of 10 000 000 was ok to run (30 hs) @80Gb of RAM once finished and trying to save. how much takes for 600 000 000
+# We should avoid making final plots 
+# We should be able to run it in an area that is at least 5x bigger... NOPE! =/
+# splitting tiles is taking up about up to 62GB of RAM... So mayb 2x bigger max? How doe this memo allocation works?
+
+# TAKE ALL PLOTS FROM THE CODE, LEAVE ONLY PATHS!!!!
 
 # Make parallel accross work (?)
 
