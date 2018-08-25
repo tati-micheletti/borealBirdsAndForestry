@@ -1,13 +1,5 @@
 # Global script for the Backcasting Project
 
-# Adapt west are the new ones 1Km current
-
-# Bird density data: https://borealbirds.databasin.org/galleries/143b56bbc7584bd7a44ba86119061b15
-# What I need is the Breeding densities for each combination of BCR, jurisdiction, and habitat class. Internet address for this table?
-# 
-
-# OBS.: Alberto deleted all bird point counts that were not in forested areas.
-
 # STILL NEED TO CHANGE testArea = FALSE to use boreal shapefile to crop and mask to
 # CAWA: Canada Warbler
 # BBWA: Bay-breasted Warbler
