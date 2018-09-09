@@ -28,21 +28,21 @@ retrieveSQLData <- function(SQLtableVersion = sim$SQLtableVersion,
   message(crayon::yellow(paste0("Fetching ", XYTableName, " SQL table from ",  SQLServer, " :: ", 
                                 SQLDatabase)))
   queryXY <- dbSendQuery(con, paste0("SELECT * FROM ", XYTableName)) #, "WHERE BOR_LOC LIKE"
-  XY <- Cache(DBI::dbFetch, queryXY) %>% 
+  XY <- Cache(DBI::dbFetch, queryXY, userTags = "objectName:XY") %>% 
     data.table::data.table() %>%
     .[, ..colXY]
   
   message(crayon::yellow(paste0("Fetching ", PtCountTableName, " SQL table from ",  SQLServer, " :: ", 
                                 SQLDatabase)))
   queryPtCount <- dbSendQuery(con, paste0("SELECT * FROM ", PtCountTableName))
-  PtCount <- Cache(DBI::dbFetch, queryPtCount) %>%
+  PtCount <- Cache(DBI::dbFetch, queryPtCount, userTags = "objectName:PtCount") %>%
     data.table::data.table() %>%
     .[, ..colPtCount]
   
   message(crayon::yellow(paste0("Fetching ", PKEYTableName, " SQL table from ",  SQLServer, " :: ", 
                                 SQLDatabase)))
   queryPKEY <- dbSendQuery(con, paste0("SELECT * FROM ", PKEYTableName))
-  PKEY <- Cache(DBI::dbFetch, queryPKEY) %>%
+  PKEY <- Cache(DBI::dbFetch, queryPKEY, userTags = "objectName:PKEY") %>%
     data.table::data.table() %>%
     .[, ..colPKEY]
 
