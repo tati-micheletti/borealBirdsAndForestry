@@ -58,7 +58,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "dataUploading")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "birdModels")
-      sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "plots")
+      # sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "plots") # Commented to avoid all plotting!
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "save")
     },
     
@@ -88,11 +88,11 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       sim$models <- Cache(birdModelsFunctionAlberto, combinations = sim$combinations,
                                        dataset = "data",
                                        birdSp = sim$birdSpecies,
-                                       simEnv = envir(sim))
+                                       simEnv = envir(sim), userTags = "objectName:models")
     } else {
       sim$models <- Cache(birdModelsFunction, combinations = sim$combinations,
                           birdSp = sim$birdSpecies,
-                          dataset = sim$data)
+                          dataset = sim$data, userTags = "objectName:models")
     }
       
     },
