@@ -4,8 +4,7 @@ processOffsets <- function(offsetFilesName = "offsetFiles", envirSim = envir(sim
   birdSpecies <- c(birdSpecies, "PKEY")
   
   if (length(offsetFiles) == 1) {
-    message(crayon::yellow(paste0("Offset's archive contains only one table, no processing needed. 
-                                 If the .RData file contains more than one object, the biggest one will be returned.")))
+    message(crayon::yellow(paste0("Offset's archive contains only one table, no processing needed. If the .RData file contains more than one object, the biggest one will be returned.")))
     
     listSize <- unlist(lapply(offsetFiles[["newerOffsets"]], FUN = function(x) object.size(x)))
     biggstObj <- which(listSize == max(listSize))
@@ -33,8 +32,7 @@ processOffsets <- function(offsetFilesName = "offsetFiles", envirSim = envir(sim
     off2 <- DataJoin %>%
       .[, ..birdSpecies]
  
-    message(crayon::yellow(paste0("Offset's archive contains more than one table, processing tried to keep it updated. 
-                                 If the .RData file contains more than one object, the biggest one will be updated and returned.")))  
+    message(crayon::yellow(paste0("Offset's archive contains more than one table, processing tried to keep it updated. If the .RData file contains more than one object, the biggest one will be updated and returned.")))  
     
     message(crayon::green(paste0("Offsets successfully updated!")))
     
