@@ -51,7 +51,8 @@ defineModule(sim, list(
     expectsInput(objectName = "models", objectClass = "list", 
                  desc = "a list of models corresponding to bird species", sourceURL = NA),
     expectsInput(objectName = "specificTestArea", objectClass = "character", desc = "Specific test area to crop to: 'boreal', or a province english name", sourceURL = NA),
-    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA)
+    expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA),
+    expectsInput(objectName = "mapSubset", objectClass = "character", desc = "Subset of the map", sourceURL = NA)
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "populationTrends", objectClass = "list", 
@@ -67,7 +68,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
       
       sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "fetchGIS")
       sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "prediction")
-      sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "plot")
+      # sim <- scheduleEvent(sim, start(sim), "splitModelPlot", "plot") # Turn off all plotting!
 
     },
     fetchGIS = {
@@ -83,7 +84,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
 
       sim$populationTrends <- Cache(splitRasterAndPredict, inputSpecies = sim$inputSpecies,
                                                     models = sim$scaleModels,
-                                                    birdDensityRasters = sim$birdDensityRasters, #List of rasters inherited from models at 4000m resolution
+                                                    birdDensityRasters = sim$birdDensityRasters, #List of density raster's paths
                                                     disturbanceType = sim$disturbanceType, # File path
                                                     disturbanceYear = sim$disturbanceYear, # File path
                                                     landCover = sim$landCover, # File path
@@ -101,7 +102,8 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                                                     rP = sim$rP,
                                                     recoverTime = P(sim)$recoverTime,
                                                     useParallel = P(sim)$useParallel,
-                                                    extractFrom4kRasters = P(sim)$extractFrom4kRasters)
+                                                    extractFrom4kRasters = P(sim)$extractFrom4kRasters, 
+                                                    userTags = "objectName:populationTrends")
     },
     plot = {
 
@@ -145,7 +147,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
   }
 
   if (is.null(P(sim)$recoverTime)){
-    sim$recoverTime <- 10
+    sim$recoverTime <- 30
     message("recoverTime was not provided. Default value is 10 years.")
   }
   
@@ -170,13 +172,31 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
         message(crayon::yellow("Test area is TRUE, specificTestArea is 'NULL'. Cropping and masking to an area in south Ontario."))
       } else {
         if (sim$specificTestArea == "boreal") {
+          if (!is.null(sim$mapSubset)) {
+            sArP <- Cache(prepInputs,
+                          url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
+                          targetFile = "gpr_000b11a_e.shp",
+                          # Subsetting to specific Provinces
+                          archive = "gpr_000b11a_e.zip",
+                          destinationPath = dataPath(sim), 
+                          userTags = "objectName:sArP") %>%
+              raster::subset(PRENAME %in% sim$mapSubset)
+            if (nrow(sArP@data) == 0) {
+              stop(paste0("There is no Canadian Province called ",
+                          sim$mapSubset,
+                          ". Please provide a Canadian province name in English for subsetMap, ",
+                          "or use 'NULL' (does not subset boreal, dangerous when dealing with higher resolution)."))
+            }
+          } else {
+            sArP <- NULL
+          }
           message(crayon::yellow("Test area is TRUE. Cropping and masking to the Canadian Boreal."))
-          sim$rP <- prepInputs(url = "http://cfs.nrcan.gc.ca/common/boreal.zip",
-                                alsoExtract = "similar",
-                                targetFile = file.path(dataPath(sim), "NABoreal.shp"),
-                                #Boreal Shapefile
-                                destinationPath = dataPath(sim)
-            )
+          sim$rP <- prepInputs(alsoExtract = "similar", # [ FIX ] Needs a URL to make it more reproducible!
+                               archive = file.path(dataPath(sim), "BRANDmyT_OUTLINE_Dissolve.zip"),
+                               targetFile = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.shp"),
+                               studyArea = sArP,
+                               destinationPath = dataPath(sim)
+          )
         } else {
           if (!is.null(sim$specificTestArea)) {
             sim$rP <- Cache(prepInputs,
@@ -184,16 +204,17 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
                             targetFile = "gpr_000b11a_e.shp",
                             # Subsetting to a specific Province
                             archive = "gpr_000b11a_e.zip",
-                            destinationPath = dataPath(sim)) %>%
+                            destinationPath = dataPath(sim),
+                            userTags = "objectName:rP") %>%
               raster::subset(PRENAME == sim$specificTestArea)
             if (nrow(sim$rP@data) == 0) {
               stop(paste0("There is no Canadian Province called ",
-                  sim$specificTestArea,
-                  ". Please provide a Canadian province name in English for specificTestArea, ",
-                  "use 'boreal', or use 'NULL' (creates a random area in South Ontario)."))
+                          sim$specificTestArea,
+                          ". Please provide a Canadian province name in English for specificTestArea, ",
+                          "use 'boreal', or use 'NULL' (creates a random area in South Ontario)."))
             } else {
               message(crayon::yellow(paste0("Test area is TRUE. Cropped and masked to ",
-                  sim$specificTestArea)))
+                                            sim$specificTestArea)))
               
             }
           }
