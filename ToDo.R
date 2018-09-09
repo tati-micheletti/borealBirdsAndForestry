@@ -1,7 +1,5 @@
 # TO DO
 
-# Run for Ontario: Crashing at reprojecting
-# Ideas: fix prepInputs to work with gdalUtils gdalwarp() Ian on it on 13th Aug
 # Double check all code workflow : delete all plotting and all return of rasters (only paths)
 
 # after finishing, uncomment line 44 in fetchData() to use as template the projection from the disturbance product (hardcoded...)
@@ -15,6 +13,7 @@
 # splitting tiles is taking up about up to 62GB of RAM... So mayb 2x bigger max? How doe this memo allocation works?
 
 # TAKE ALL PLOTS FROM THE CODE, LEAVE ONLY PATHS!!!!
+# 
 
 # Make parallel accross work (?)
 
