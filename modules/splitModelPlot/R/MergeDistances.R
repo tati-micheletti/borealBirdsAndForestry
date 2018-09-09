@@ -12,6 +12,8 @@ MergeDistances <- function(inList = fDistanceLists,
   message(crayon::yellow("Stacking rasters for ", spName , " prediction"))
   stackDistances <- lapply(mergeList, FUN = stack)
   
+  browser() # Figure out where I should resample the rasters to 100m...
+  
   #for each raster in stackDistances (ie focal/year combo) fit model 
     #Make a stack of the density area in a single year and the expected abundance. Use to predict with fitModel   
 
@@ -25,6 +27,7 @@ MergeDistances <- function(inList = fDistanceLists,
     p <- fitModel(inRas = tempStack, inputModel = passedModel, spName = spName, tileYear = tileYear)
     return(p)
   })
+  invisible(gc())
   
   # Remove old tiles
   names(out) <- names(stackDistances)
