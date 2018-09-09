@@ -8,6 +8,10 @@
 
 library(SpaDES.core)
 library(SpaDES.tools)
+tryCatch(library(unixtools), 
+         error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
+options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
+unixtools::set.tempdir("/mnt/storage/temp")
 
 # set the directories
 workDirectory <- getwd()
@@ -27,8 +31,16 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 #   unlink(file.path(paths$cachePath, "outputRasters"), recursive = TRUE)
 # }
 
+area1 <- c("Yukon", "British Columbia")
+area2 <- c("Alberta", "Saskatchewan")
+area3 <- "Northwest Territories"
+area4 <- c("Manitoba", "Nunavut")
+area5 <- "Ontario"
+area6 <- "Quebec"
+area7 <- c("New Brunswick", "Newfoundland and Labrador", "Nova Scotia", "Prince Edward Island")
+
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "splitModelPlot")# , "finalRasterPlots"# #bayesianBirdModel #  
+modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "splitModelPlot")# "finalRasterPlots" #"bayesianBirdModel"
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 2011, timeunit = "year")
@@ -44,8 +56,8 @@ parameters <- list(
                         testArea = TRUE,
                         focalDistance = 100, # To run for neighborhood, change to 500
                         disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                        nx = 5, # mult 7
-                        ny = 5, # mult 3
+                        nx = 21, # mult 7
+                        ny = 9, # mult 3
                         rType = "INT1U",
                         buffer = c(18,18),
                         forestClass = 1:6,
@@ -56,18 +68,19 @@ parameters <- list(
 )
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
-  specificTestArea = NULL,
+  mapSubset = area3, # Provinces to run at once 
+  specificTestArea = "boreal",
   SQLtableVersion = "V4_2015",
   SQLServer = "boreal.biology.ualberta.ca",
   SQLDatabase = "BAM_National_V4_2015_0206",
   dataName = "Final_points_2010.csv", #Manuscript file was Final_points_2010.csv; testing to compare with Final_points_2010_updatedDensity.csv
-  birdSpecies = c("BBWA",
+  birdSpecies = c("BBWA"#,
                   #"BLPW"#,
                   # "BOCH",
                   # "BRCR",
-                  "BTNW",#,
-                  "CAWA",
-                  "CMWA"#,
+                  # "BTNW",#,
+                  # "CAWA",
+                  # "CMWA"#,
                   # "CONW",
                   # "OVEN",
                   # "PISI",
