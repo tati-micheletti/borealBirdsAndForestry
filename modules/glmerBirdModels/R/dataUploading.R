@@ -16,7 +16,7 @@ dataUploading <- function(dataset = sim$dataName,
   
   require(data.table)
   require(googledrive)
-  
+
   data.path <- file.path(getwd(), "modules/glmerBirdModels/data", dataset)
   
   if (file.exists(data.path)){

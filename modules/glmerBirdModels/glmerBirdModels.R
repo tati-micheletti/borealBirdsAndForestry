@@ -106,7 +106,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       #                          combinations = sim$combinations,
       #                          birdSp = sim$birdSpecies,
       #                          outputPath = outputPath(sim))
-      
+      browser()
       sim$plotCoeff <- plotCoefficients(plotList = sim$plotList,
                                         outputPath = outputPath(sim))
       
