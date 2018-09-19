@@ -98,36 +98,36 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
     },
     plots = {
       
-      sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data,
-                                               types = sim$typeDisturbance,
-                                               outputPath = outputPath(sim))
+      # sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data,
+      #                                          types = sim$typeDisturbance,
+      #                                          outputPath = outputPath(sim))
       
-      sim$plotList <- plotList(dataset = sim$models,
-                               combinations = sim$combinations,
-                               birdSp = sim$birdSpecies,
-                               outputPath = outputPath(sim))
+      # sim$plotList <- plotList(dataset = sim$models,
+      #                          combinations = sim$combinations,
+      #                          birdSp = sim$birdSpecies,
+      #                          outputPath = outputPath(sim))
       
       sim$plotCoeff <- plotCoefficients(plotList = sim$plotList,
                                         outputPath = outputPath(sim))
       
-      sim$plotAbundDist <- plotAbundanceDisturbance(plotList = sim$plotList,
-                                                    outputPath = outputPath(sim))
+      # sim$plotAbundDist <- plotAbundanceDisturbance(plotList = sim$plotList,
+      #                                               outputPath = outputPath(sim))
       
     },
     save = {
       
-      sim$tableSampling <- tableSampling(dataName = sim$dataName,
-                                         dataset = sim$data,
-                                         outputPath = outputPath(sim))
-      
-      sim$AIC <- tableAIC(models = sim$models,
-                          birdSp = sim$birdSpecies,
-                          combinations = sim$combinations,
-                          outputPath = outputPath(sim))
-      
-      sim$scaleModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
-                                      prmt = sim@params,
-                                      models = sim$models)
+      # sim$tableSampling <- tableSampling(dataName = sim$dataName,
+      #                                    dataset = sim$data,
+      #                                    outputPath = outputPath(sim))
+      # 
+      # sim$AIC <- tableAIC(models = sim$models,
+      #                     birdSp = sim$birdSpecies,
+      #                     combinations = sim$combinations,
+      #                     outputPath = outputPath(sim))
+      # 
+      # sim$scaleModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
+      #                                 prmt = sim@params,
+      #                                 models = sim$models)
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],

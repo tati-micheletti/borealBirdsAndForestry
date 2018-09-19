@@ -36,7 +36,7 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 # }
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "splitModelPlot")# , "finalRasterPlots"# #bayesianBirdModel #  
+modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels")# , "finalRasterPlots"# #bayesianBirdModel #  
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 2011, timeunit = "year")
@@ -70,23 +70,23 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
   SQLDatabase = "BAM_National_V4_2015_0206",
   dataName = "Final_points_2010.csv", #Manuscript file was Final_points_2010.csv; testing to compare with Final_points_2010_updatedDensity.csv
   birdSpecies = c("BBWA",
-                  #"BLPW"#,
-                  # "BOCH",
-                  # "BRCR",
-                  "BTNW",#,
+                  "BLPW",
+                  "BOCH",
+                  "BRCR",
+                  "BTNW",
                   "CAWA",
-                  "CMWA"#,
-                  # "CONW",
-                  # "OVEN",
-                  # "PISI",
-                  # "RBNU",
-                  # "SWTH",
-                  # "TEWA",
-                  # "WETA",
-                  # "YRWA"
+                  "CMWA",
+                  "CONW",
+                  "OVEN",
+                  "PISI",
+                  "RBNU",
+                  "SWTH",
+                  "TEWA",
+                  "WETA",
+                  "YRWA"
   ),
-  typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
-  disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
+  typeDisturbance = c("Transitional", "Permanent"), #, "Permanent", "Both"
+  disturbanceDimension = c("neighborhood"), #, "neighborhood", "LocalUndisturbed"
   disturbancePredict = c("Transitional") # Needs to match disturbanceClass from prediction module
 )
 
