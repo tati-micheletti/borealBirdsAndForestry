@@ -72,23 +72,37 @@ plotCoefficients <- function(outputPath = outputPath(sim),
     
     plotList$newTypeDisturbance <- factor(plotList$newTypeDisturbance, levels = c("SUCCESSIONAL DISTURBANCES", "ALIENATING DISTURBANCES", "COMBINED DISTURBANCES")) # Changed this
     
-    plot <- ggplot(plotList, mapping = aes(x = Estimate, y = newSpecies)) +
+    browser()
+    # increase size of the x and y axes labels.
+    # Increase the weight or width of the lines.
+    # Make two separate graphs. Also, it's the tix legends "BTNW", "-1" that need to be bigger; the axis labels could also be bigger.
+
+    plotListSuc <- plotList[plotList$newTypeDisturbance == "SUCCESSIONAL DISTURBANCES",]
+    plotListSuc$newTypeDisturbance <- factor(plotListSuc$newTypeDisturbance)
+    plotListSuc$typeDisturbance <- factor(plotListSuc$typeDisturbance)
+    plotListSuc$disturbanceDimension <- factor(plotListSuc$disturbanceDimension)
+    
+    plotListAlie <- plotList[plotList$newTypeDisturbance == "ALIENATING DISTURBANCES",]
+    plotListAlie$newTypeDisturbance <- factor(plotListAlie$newTypeDisturbance)
+    plotListAlie$typeDisturbance <- factor(plotListAlie$typeDisturbance)
+    plotListAlie$disturbanceDimension <- factor(plotListAlie$disturbanceDimension)
+      
+    plot <- ggplot(plotListAlie, mapping = aes(x = Estimate, y = newSpecies)) +
       facet_grid(disturbanceDimension ~ newTypeDisturbance, scales = "free_y") + #Changed this line
-      geom_segment(aes(x = lowerCI, xend = upperCI, yend = Species)) +
-      geom_point(data = plotList, aes(x = Estimate, fill = as.factor(Significancy)), pch=21) +
+      geom_segment(aes(x = lowerCI, xend = upperCI, yend = Species, size = 2)) +
+      geom_point(data = plotListAlie, aes(x = Estimate, fill = as.factor(Significancy), size = 15), pch=21) +
       scale_fill_manual(values = c("YES" = "black", "NO" = "white")) +
       theme(legend.position = "none",
-            strip.text.y = element_text(size=16, face="bold"), # changed this on 31st May
-            strip.text.x = element_text(size=16, face="bold"), # changed this on 31st May
+            strip.text.y = element_text(size=18, face="bold"), # changed this on 31st May
+            strip.text.x = element_text(size=18, face="bold"), # changed this on 31st May
             legend.title = element_text(face = "bold"),
-            axis.text=element_text(size=12),
-            axis.title=element_text(size=16,face="bold"),
+            axis.text=element_text(size=22),
+            axis.title=element_text(size=20,face="bold"),
             panel.background = element_rect(fill = "grey99"),
             panel.border = element_rect(colour = "black", fill=NA, size=1)) +
       labs(x = "Model coefficients", y = "Bird species") +
       geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
 
-    browser()
     png(file.path(outputPath,"plotCoefficients.png"), width = 1500, height = 863)
     plot
     dev.off()
