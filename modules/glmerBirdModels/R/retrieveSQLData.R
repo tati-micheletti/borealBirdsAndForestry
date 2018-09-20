@@ -6,8 +6,13 @@ retrieveSQLData <- function(SQLtableVersion = sim$SQLtableVersion,
   reproducible::Require("DBI")
   reproducible::Require("odbc")
   #reproducible::Require("RODBC") # Not sure it is needed. If anything fails, use it
+  # if (.Platform$OS.type == "windows"){
+  drive <- "{SQL Server Native Client 11.0}"
+} else {
+  drive <- "/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so"
+}
   con <- DBI::dbConnect(odbc::odbc(),
-                        Driver   = "/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so", # Path for the location of driver for Linux
+                        Driver   = drive, # Path for the location of driver for Linux or Windows
                         Server   = SQLServer, # Connect to BAM Server
                         # Note: even though the address is set up in Windows as boreal.biology.ualberta.ca\boreal, in R I need to exclude the \boreal
                         Database = SQLDatabase, # Got the names from the Windows ODBC connection
