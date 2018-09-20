@@ -20,27 +20,27 @@ plotCoefficients <- function(outputPath = outputPath(sim),
       } else {
         if ("NEIGHBORHOOD" %in% unique(plotList$disturbanceDimension) & 
             "TRANSITIONAL" %in% unique(plotList$typeDisturbance)) { 
-          part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "TRANSITIONAL",]
+          part <- plotList[plotList$disturbanceDimension == "NEIGHBORHOOD" & plotList$typeDisturbance == "TRANSITIONAL",]
         } else {
           if ("NEIGHBORHOOD" %in% unique(plotList$disturbanceDimension) & 
               "BOTH" %in% unique(plotList$typeDisturbance)) { 
-            part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "BOTH",]
+            part <- plotList[plotList$disturbanceDimension == "NEIGHBORHOOD" & plotList$typeDisturbance == "BOTH",]
           } else {
             if ("NEIGHBORHOOD" %in% unique(plotList$disturbanceDimension) & 
                 "PERMANENT" %in% unique(plotList$typeDisturbance)) { 
-              part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "PERMANENT",]
+              part <- plotList[plotList$disturbanceDimension == "NEIGHBORHOOD" & plotList$typeDisturbance == "PERMANENT",]
             } else {
               if ("LOCAL UNDISTURBED" %in% unique(plotList$disturbanceDimension) & 
                   "TRANSITIONAL" %in% unique(plotList$typeDisturbance)) { 
-                part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "TRANSITIONAL",]
+                part <- plotList[plotList$disturbanceDimension == "LOCAL UNDISTURBED" & plotList$typeDisturbance == "TRANSITIONAL",]
               } else {
                 if ("LOCAL UNDISTURBED" %in% unique(plotList$disturbanceDimension) & 
                     "BOTH" %in% unique(plotList$typeDisturbance)) { 
-                  part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "BOTH",]
+                  part <- plotList[plotList$disturbanceDimension == "LOCAL UNDISTURBED" & plotList$typeDisturbance == "BOTH",]
                 } else {
                   if ("LOCAL UNDISTURBED" %in% unique(plotList$disturbanceDimension) & 
                       "PERMANENT" %in% unique(plotList$typeDisturbance)) { 
-                    part <- plotList[plotList$disturbanceDimension == "LOCAL" & plotList$typeDisturbance == "PERMANENT",]
+                    part <- plotList[plotList$disturbanceDimension == "LOCAL UNDISTURBED" & plotList$typeDisturbance == "PERMANENT",]
                   } else {
                     
                   }
