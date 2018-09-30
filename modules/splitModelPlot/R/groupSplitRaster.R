@@ -32,7 +32,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   }
   
   message(crayon::green(paste0("Initializing GIS operations for ", spName)))
-  birdDensityResampled <- file.path(pathData, "birdDensityResampled", spName, ".tif")
+  birdDensityResampled <- file.path(pathData, paste0("birdDensityResampled", spName, ".tif"))
 
   if (!all(raster::res(birdDensityRasters) == c(30, 30))){
     if (!file.exists(birdDensityResampled)) {
@@ -52,19 +52,20 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
       rP <- sf::st_as_sf(rP)
       if (file.exists(file.path(pathData, "rP_sf.shp"))) file.remove(file.path(pathData, "rP_sf.shp"))
       sf::st_write(obj = rP, dsn = file.path(pathData, "rP_sf.shp"))
-      message(crayon::yellow(paste0("Resampling density rasters to 30m resolution for ", spName)))
-      reproducible::Cache(gdalwarp, srcfile = birdDensityRastersPath, 
-               dstfile = birdDensityResampled, 
-               overwrite = TRUE,
-               cutline = file.path(pathData, "rP_sf.shp"),
-               dstalpha = TRUE, 
-               s_srs = crsTemplate,
-               t_srs = crsTemplate,
-               multi = TRUE, 
-               of = "GTiff",
-               crop_to_cutline = TRUE, 
-               tr = c(30, 30))
-      birdDensityRasters <- raster::raster(birdDensityResampled)
+      tr <- c(30,30)
+      system( # This will be replaced by prepInputs when it can handle large files with gdalwarp system call
+        paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+               " -multi ",
+               "-wo NUM_THREADS=30 ",
+               "-ot UInt32 ",
+               "-overwrite ",
+               "-tr ", paste(tr, collapse = " "), " ",
+               "-crop_to_cutline ",
+               "-cutline ", file.path(pathData, "rP_sf.shp"), " ", 
+               birdDensityRastersPath, " ",
+               birdDensityResampled),
+        wait = TRUE)
+      birdDensityRasters <- raster::raster(birdDensityResampled) 
       gc()
     } else {
       birdDensityRasters <- raster::raster(birdDensityResampled)
@@ -74,22 +75,50 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   
   # ~~~~~~~~~ LANDCOVER ~~~~~~~~~~~~
   # Load landCover
-  browser() # Land cover prepInputs not working for area similar to NWT (when reprojecting "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif")
-  landCover <- Cache(prepInputs, targetFile = file.path(pathData, "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"),
-                          destinationPath = pathData,
-                          rasterToMatch = birdDensityRasters,
-                          studyArea = rP, userTags = "objectName::landCover")
+  browser() # Redownload landCover, add to data folder, re-run gdalwarp
+
+  landCoverPath <- #"/mnt/storage/borealBirdsAndForestry/cache/land/CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"#landCover
+  landCover <- raster::raster(landCoverPath)
+  if (as.character(raster::crs(birdDensityRasters)) != as.character(raster::crs(landCover))){
+    # [ FIX ] Also test for aligment use a raster package function for it...
+  savedReprojTile <- file.path(intermPath, "land", paste0(landCover@data@names, ".tif"))
+  tr <- res(birdDensityRasters)
+
+  system( # This will be replaced by prepInputs when it can handle large files with gdalwarp system call
+    paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+           "-s_srs \"", as.character(raster::crs(landCover)), "\"",
+           " -t_srs \"", as.character(raster::crs(birdDensityRasters)), "\"",
+           " -multi ",
+           "-wo NUM_THREADS=35 ",
+           "-ot Byte ",
+           "-overwrite ",
+           "-crop_to_cutline ",
+           "-cutline ", file.path(pathData, "rP_sf.shp"), " ", 
+           "-tr ", paste(tr, collapse = " "), " ",
+           landCoverPath, " ",
+           savedReprojTile),
+    wait = TRUE)
+  gc()
+  landCoverReproj <- raster::raster(savedReprojTile) %>%
+    raster::crop(birdDensityRasters)
+  raster::extent(landCoverReproj) <- raster::alignExtent(extent = raster::extent(landCoverReproj), 
+                                                         object = birdDensityRasters, snap = "near")
   
-  landCover[] <- round(landCover[], 0)
-  storage.mode(landCover[]) = "integer"
+#  CHECK IF THE RASTERS MATCH (EXT AND RES): ONLY PROCEED IF THEY DO!
   
+  file.copy(from = savedReprojTile, to = landCoverPath, overwrite = TRUE)
+#  file.remove(savedReprojTile) # OBS. If I have any problems in the landcover raster, it might be due to 
+  landCover <- raster::raster(landCoverPath) # ancilary raster files that were not recreated, but kept (only the .tif was reproj and replaced)
+  
+    }
+browser() # Check LandCover and check bird Density Raster
   # Split landCover
-  message(crayon::yellow(paste0("Splitting lanCover tiles for ", spName)))
+  message(crayon::yellow(paste0("Splitting landCover tiles for ", spName)))
   landCover <- Cache(splitRaster, r = landCover, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
                      rType = rType, path = file.path(intermPath, "land")) # override the original in memory
   gc()
   # ~~~~~~~~~ DISTURBANCE TYPE ~~~~~~~~~~~~
-  
+  browser() # Implement the same solution from land cover
   # Load disturbanceType
   disturbanceType <- prepInputs(targetFile = file.path(pathData, "C2C_change_type.tif"), # If this is not wrking, might be becuse these objects were in sim and now they are not
                                 destinationPath = pathData,
@@ -98,6 +127,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                                 length = TRUE)
   disturbanceType[] <- round(disturbanceType[], 0)
   storage.mode(disturbanceType[]) = "integer"
+  browser()
   # Split disturbanceType
   message(crayon::yellow(paste0("Splitting disturbanceType tiles for ", spName)))
   disturbanceType <- Cache(splitRaster, r = disturbanceType, nx = nx, ny = ny, buffer = buffer,  # Splitting disturbanceType Raster, write to disk,
@@ -133,8 +163,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
   message(crayon::green(paste0("GIS operations finalized for ", spName, "! :D")))
   
   # ======================== FINISHED GIS ===================================
-  browser()
-  
+browser()
   lengthvect <- 1:(nx * ny)
   
   # Using parallel: Outlist is a list of all the tiles after running the predictions
