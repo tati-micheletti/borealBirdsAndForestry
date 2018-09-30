@@ -192,7 +192,7 @@ doEvent.splitModelPlot = function(sim, eventTime, eventType) {
           }
           message(crayon::yellow("Test area is TRUE. Cropping and masking to the Canadian Boreal."))
           sim$rP <- prepInputs(alsoExtract = "similar", # [ FIX ] Needs a URL to make it more reproducible!
-                               archive = file.path(dataPath(sim), "BRANDmyT_OUTLINE_Dissolve.zip"),
+                               archive = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.zip"),
                                targetFile = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.shp"),
                                studyArea = sArP,
                                destinationPath = dataPath(sim)
