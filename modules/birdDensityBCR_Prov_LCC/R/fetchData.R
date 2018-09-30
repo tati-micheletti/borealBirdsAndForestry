@@ -43,7 +43,7 @@ fetchData <- function(pathData = dataPath(sim),
                      destinationPath = pathData,
                      studyArea = studyArea,
                      userTags = "objectName:LCC05")
-      LCC05[] <- LCC05[]
+
       LCC05 <- Cache(projectInputs, LCC05, targetCRS = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0",
                      userTags = "objectName:LCC05")
       
