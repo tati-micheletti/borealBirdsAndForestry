@@ -56,8 +56,8 @@ parameters <- list(
                         testArea = TRUE,
                         focalDistance = 100, # To run for neighborhood, change to 500
                         disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                        nx = 21, # mult 7
-                        ny = 9, # mult 3
+                        nx = 10, # mult 7
+                        ny = 2, # mult 3
                         rType = "INT1U",
                         buffer = c(18,18),
                         forestClass = 1:6,
@@ -68,7 +68,7 @@ parameters <- list(
 )
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
-  mapSubset = area3, # Provinces to run at once 
+  mapSubset = NULL, # Provinces to run at once 
   specificTestArea = "boreal",
   SQLtableVersion = "V4_2015",
   SQLServer = "boreal.biology.ualberta.ca",
