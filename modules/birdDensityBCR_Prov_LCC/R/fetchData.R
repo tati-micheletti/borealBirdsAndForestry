@@ -150,8 +150,9 @@ fetchData <- function(pathData = dataPath(sim),
         spRas <- raster::raster(resolution = res(LCC05), crs = raster::crs(LCC05), ext = extent(LCC05)) %>%
           raster::setValues(vals$D)
         spRas@data@names <- x
-        # Write density files to disk while 
-        raster::writeRaster(x = spRas, filename = densityFiles[[x]], overwrite = FALSE)
+        # Write density files to disk while
+        if (densityFiles[[x]])
+        raster::writeRaster(x = spRas, filename = densityFiles[[x]], overwrite = TRUE) # Changed to TRUE, change back to FALSE # not necessarily. I have cache
         rm(spRas)
         invisible(gc())
         return(densityFiles[[x]])
