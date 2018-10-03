@@ -35,7 +35,7 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 # }
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles")
+modules <- list("focalCalculation")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles")
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 2011, timeunit = "year")
@@ -46,18 +46,19 @@ parameters <- list(
   bayesianBirdModel = list(testArea = TRUE), # FALSE means using boral shapefile to crop and mask
   glmerBirdModels = list(cropForModel = FALSE,
                          avoidAlbertosData = TRUE),
-  prepTiles = list(recoverTime = 30,
-                        testArea = TRUE, # Should a study area be used (i.e. boreal)?
-                        focalDistance = 100, # To run for neighborhood, change to 500
-                        disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
+  prepTiles = list(testArea = TRUE, # Should a study area be used (i.e. boreal)?
                         nx = 10, # mult 7
                         ny = 2, # mult 3
                         rType = "INT1U",
                         buffer = c(18,18), # Buffer to make sure that when rasters are slip, they won't have edge effects
-                        forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
-                        .useCache = FALSE, # Should it override module's .useCache?
-                        useParallel = NULL) # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
-)                                           # As of 12th July, 'across' is not working... See notes above
+                        .useCache = FALSE), # Should it override module's .useCache?
+  focalCalculation = list(recoverTime = 30,
+                           ressampledRes = 250,
+                           focalDistance = 100, # To run for neighborhood, change to c(100, 500)
+                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
+                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
+                           useParallel = NULL) # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
+        )
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
   mapSubset = NULL, # Provinces to run at once. Good to subset provinces still within the boreal
