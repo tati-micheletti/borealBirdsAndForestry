@@ -13,14 +13,10 @@ defineModule(sim, list(
   documentation = list("README.txt", "prepTiles.Rmd"),
   reqdPkgs = list("crayon"),
   parameters = rbind(
-    defineParameter("disturbanceClass", "numeric", 2, 0, NA, 
-                    "the class value(s) corresponding to input disturbanceType for which to compute focal statistics"),
     defineParameter("nx", "numeric", 2, 1, NA, "the number of tiles to split raster into, along horizontal axis"),
     defineParameter("ny", "numeric", 2, 1, NA, "the number of tiles to split raster into, along vertical axis"),
     defineParameter("rType", "character", "FLT4S", NA, NA, "pixel data type for splitRaster"),
     defineParameter("buffer", "numeric", 3, 0, NA, "the number of cells to buffer tiles during splitRaster. Measured in cells, not distance"),
-    defineParameter("forestClass", "numeric", 1:6, NA, NA, "Relevant forest classes in land cover map"),
-    defineParameter("useParallel", "character", NULL, NA, NA, "Should we parallelize tile processing?"),
     defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
   ),
   inputObjects = bind_rows(
@@ -95,23 +91,71 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
       
-      browser() # Make this work!!!
-      sim$Raster1 <- prepInputs(
-        # url = sim$urlRaster1,
-                            archive = file.path(dataPath(sim), "C2C_Change_Type.zip"),
-                            # targetFile = file.path(dataPath(sim),"C2C_change_type.tif"),
-                            destinationPath = dataPath(sim),
-                            studyArea = sim$rP,
-                            length = TRUE) # took length = TRUE out. Don't remember what it does! ><
-
+      # sim$Raster1 <- Cache(prepInputs,url = sim$urlRaster1,
+      #                       archive = file.path(dataPath(sim), "C2C_Change_Type.zip"),
+      #                       targetFile = file.path(dataPath(sim),"C2C_change_type.tif"),
+      #                       destinationPath = dataPath(sim),
+      #                       studyArea = sim$rP,
+      #                       length = TRUE) # took length = TRUE out. Don't remember what it does! ><
+      
+      # =============== Meanwhile Alternative =========================
+      browser()
+      reprojRaster1 <- file.path(dataPath(sim), "reprojRaster1.tif")
+      if (!file.exists(reprojRaster1)){
+        ras1 <- raster::raster(file.path(dataPath(sim),"C2C_change_type.tif"))
+        rPPath <- file.path(dataPath(sim), "cutline.shp")
+        cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras1)))
+        writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
+        
+        system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+                      "-cutline ", rPPath, " ",
+                      "-crop_to_cutline ",
+                      "-multi ",
+                      "-wo NUM_THREADS=35 ",
+                      "-tr 30 30 ",
+                      "-ot Byte ",
+                      "-of GTiff ",
+                      file.path(dataPath(sim),"C2C_change_type.tif"), " ",
+                      reprojRaster1),
+               wait = TRUE)
+      }
+      sim$Raster1 <- raster::raster(reprojRaster1)
+      
+      # =============== Meanwhile Alternative =========================
+      
       message(crayon::yellow(paste0("Raster2 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      sim$Raster2 <- prepInputs(url = sim$urlRaster2,
-                            targetFile = file.path(dataPath(sim), ""),
-                            destinationPath = dataPath(sim),
-                            rasterToMatch = sim$Raster1,
-                            studyArea = sim$rP)
+      # sim$Raster2 <- prepInputs(url = sim$urlRaster2,
+      #                       targetFile = file.path(dataPath(sim), ""),
+      #                       destinationPath = dataPath(sim),
+      #                       rasterToMatch = sim$Raster1,
+      #                       studyArea = sim$rP)
+      
+      # =============== Meanwhile Alternative =========================
+      reprojRaster2 <- file.path(dataPath(sim), "reprojRaster2.tif")
+      if (!file.exists(reprojRaster2)){
+        ras2 <- raster::raster(file.path(dataPath(sim),"CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"))
+        rPPath <- file.path(dataPath(sim), "cutline.shp")
+        cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras2)))
+        writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
+        
+        system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+                      "-s_srs \"", as.character(raster::crs(sim$reprojRaster2)), "\"",
+                      " -t_srs \"", as.character(raster::crs(sim$reprojRaster1)), "\"",
+                      "-cutline ", rPPath, " ",
+                      "-crop_to_cutline ",
+                      "-multi ",
+                      "-wo NUM_THREADS=35 ",
+                      "-tr 30 30 ",
+                      "-ot Byte ",
+                      "-of GTiff ",
+                      file.path(dataPath(sim),"CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"), " ",
+                      reprojRaster2),
+               wait = TRUE)
+      }
+      sim$Raster2 <- raster::raster(reprojRaster2)
+      # =============== Meanwhile Alternative =========================
       
       raster::extent(sim$Raster2) <- raster::alignExtent(extent = raster::extent(sim$Raster2), object = sim$Raster1, snap = "near")
       if (!raster::compareRaster(sim$Raster2, sim$Raster1, extent = TRUE)){
@@ -121,17 +165,40 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Raster3 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      sim$Raster3 <- prepInputs(url = sim$urlRaster3,
-                            archive = file.path(dataPath(sim), "C2C_Change_Year.zip"),
-                            destinationPath = dataPath(sim),
-                            rasterToMatch = sim$Raster2,
-                            studyArea = sim$rP)
+      # sim$Raster3 <- prepInputs(url = sim$urlRaster3,
+      #                       archive = file.path(dataPath(sim), "C2C_Change_Year.zip"),
+      #                       destinationPath = dataPath(sim),
+      #                       rasterToMatch = sim$Raster2,
+      #                       studyArea = sim$rP)
       
+      # =============== Meanwhile Alternative =========================
+      reprojRaster3 <- file.path(dataPath(sim), "reprojRaster3.tif")
+      if (!file.exists(reprojRaster3)){
+        ras1 <- raster::raster(file.path(dataPath(sim),"C2C_change_year.tif"))
+        rPPath <- file.path(dataPath(sim), "cutline.shp")
+        cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras3)))
+        writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
+        
+        system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+                      "-cutline ", rPPath, " ",
+                      "-crop_to_cutline ",
+                      "-multi ",
+                      "-wo NUM_THREADS=35 ",
+                      "-tr 30 30 ",
+                      "-ot Byte ",
+                      "-of GTiff ",
+                      file.path(dataPath(sim),"C2C_change_year.tif"), " ",
+                      reprojRaster3),
+               wait = TRUE)
+      }
+      sim$Raster3 <- raster::raster(reprojRaster3)
+      
+      # =============== Meanwhile Alternative =========================
       raster::extent(sim$Raster3) <- raster::alignExtent(extent = raster::extent(sim$Raster3), object = sim$Raster2, snap = "near")
       if (!raster::compareRaster(sim$Raster3, sim$Raster2, extent = TRUE)){
         stop("Rasters don't align. Please debug it.")
       }
-
+      
       message(crayon::green("Big rasters prepared for splitting!"))
       
       # schedule future event(s)
@@ -147,38 +214,25 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       sim$Raster1[] <- round(sim$Raster1[], 0)
       storage.mode(sim$Raster1[]) = "integer"
       sim$Raster1 <- Cache(splitRaster, r = sim$Raster1, nx = sim$nx, ny = sim$ny, buffer = sim$buffer,  # Splitting landCover Raster, write to disk,
-                         rType = sim$rType, path = file.path(cachePath(sim), "Raster1")) # override the original in memory
+                           rType = sim$rType, path = file.path(cachePath(sim), "Raster1")) # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster2 tiles")))
       sim$Raster2 <- Cache(splitRaster, r = sim$Raster2, nx = sim$nx, ny = sim$ny, buffer = sim$buffer,  # Splitting landCover Raster, write to disk,
-                       rType = sim$rType, path = file.path(cachePath(sim), "Raster2")) # override the original in memory
+                           rType = sim$rType, path = file.path(cachePath(sim), "Raster2")) # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster3 tiles")))
       sim$Raster3 <- Cache(splitRaster, r = sim$Raster3, nx = sim$nx, ny = sim$ny, buffer = sim$buffer,  # Splitting landCover Raster, write to disk,
-                       rType = sim$rType, path = file.path(cachePath(sim), "Raster3")) # override the original in memory
+                           rType = sim$rType, path = file.path(cachePath(sim), "Raster3")) # override the original in memory
       gc()
       
       sim$rastersList <- list("Raster1" = sim$Raster1, 
                               "Raster2" = sim$Raster2, 
                               "Raster3" = sim$Raster3) # Splitted rasters' list
       
-      message(crayon::green("All rasters tiled. Preparing masking..."))
+      message(crayon::green("All rasters tiled!"))
       
-      # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim), "prepTiles", "tilesMasking")
-    },
-    
-    tilesMasking = {
-      
-      
-      
-      # Need to take each tile from each one of the three groups in order to mask for forests (both landcover and disturbance type)
-      sim$Raster3 <- #MASKING FUNCTION?
-      
-        
-      message(crayon::green("Raster3 is masked. Returning tiles' paths."))
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
@@ -198,9 +252,9 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
   if (!suppliedElsewhere(object = "urlRaster2", sim = sim)) {
     if (!suppliedElsewhere(object = "Raster2", sim = sim)) {
       message(crayon::yellow(paste0("Neither its url or Raster2 were provided. Using default.",
-              " ATTENTION: The default url for this raster downloads a .rar file.",
-              " prepInputs doesn't deal with .rar for now. Please unrar it",
-              " manually once it is downloaded.")))
+                                    " ATTENTION: The default url for this raster downloads a .rar file.",
+                                    " prepInputs doesn't deal with .rar for now. Please unrar it",
+                                    " manually once it is downloaded.")))
       sim$urlRaster2 <- extractURL(objectName = "urlRaster2", sim = sim)
       
     }
