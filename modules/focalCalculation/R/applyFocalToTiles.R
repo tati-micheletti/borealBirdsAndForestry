@@ -11,7 +11,8 @@ applyFocalToTiles <- function(useParallel = P(sim)$useParallel, # Should do para
                                   ressampledRes = P(sim)$ressampledRes){
   
   browser()
-  # Subset matching tiles
+  
+# Subset matching tiles
   message(crayon::green("Tiles organized..."))
   totalTiles <- unique(lengths(listTilePaths))
   lengthVector <- 1:totalTiles
@@ -26,6 +27,7 @@ applyFocalToTiles <- function(useParallel = P(sim)$useParallel, # Should do para
     message(crayon::red(paste0("Starting nested functions on ", 
                                names(orderedRasterList)[tiles], 
                                " of ", totalTiles)))
+    # VERSION BEFORE REMODELING. WORKFLOW BELOW WON'T WORK...
     assign(x = paste0(names(orderedRasterList)[tiles]),
            value = lapply(X = 1:length(listTilePaths), FUN = function(eachTile) {
              ras <- raster::raster(orderedRasterList[[tiles]][eachTile])
