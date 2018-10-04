@@ -38,7 +38,7 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 modules <- list("focalCalculation")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles")
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 2011, timeunit = "year")
+times <- list(start = 3, end = 4, timeunit = "year") # Change back to 1985 2011. Just did 3-10 because of fake Rasters
 parameters <- list(
   birdDensityBCR_Prov_LCC = list(extractFrom4kRasters = FALSE,
                                  avoidAlbertosData = TRUE,
@@ -53,7 +53,7 @@ parameters <- list(
                         buffer = c(18,18), # Buffer to make sure that when rasters are slip, they won't have edge effects
                         .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
-                           ressampledRes = 250,
+                           resampledRes = 250,
                            focalDistance = 100, # To run for neighborhood, change to c(100, 500)
                            disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                            forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
@@ -62,7 +62,7 @@ parameters <- list(
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
   mapSubset = NULL, # Provinces to run at once. Good to subset provinces still within the boreal
-  specificTestArea = "boreal",
+  specificTestArea = NULL, # "boreal",
   SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
   SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
   SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
