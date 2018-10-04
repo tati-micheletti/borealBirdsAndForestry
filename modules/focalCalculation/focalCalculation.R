@@ -5,7 +5,7 @@ defineModule(sim, list(
                        "applies a binary function to certain rasters of all tiles ", 
                        "of a list of a list of rasters, applies a focal function", 
                        " to these tiles and resamples them, merge, and returns", 
-                       "a list of ressampled tiles masked to a given value", 
+                       "a list of resample tiles masked to a given value", 
                        " (in this case, per year)."),
   keywords =  c("focal", "big data", "raster"),
   authors = c(person("Tati", "Micheletti", email = "tati.micheletti@gmail.com", role = c("aut", "cre")),
@@ -17,7 +17,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "focalCalculation.Rmd"),
-  reqdPkgs = list(),
+  reqdPkgs = list("raster"),
   parameters = rbind(
     defineParameter("forestClass", "numeric", 1:6, NA, NA, 
                     "Relevant forest classes in land cover map"),
@@ -28,8 +28,8 @@ defineModule(sim, list(
                     paste0("The distance at which to compute focal statistics, in units of", 
                            " the input rastesr CRS. This will be used to ", 
                            "create a matrix with circular weights summing to 1)")),
-    defineParameter("ressampledRes", "numeric", 250, NA, NA, 
-                    "Resolution to which the final focal raster should be ressample to"),
+    defineParameter("resampledRes", "numeric", 250, NA, NA, 
+                    "Resolution to which the final focal raster should be resample to"),
     defineParameter(".useCache", "logical", FALSE, NA, NA,"Should this entire module be run with caching activated?"),
     defineParameter("useParallel", "character", NULL, NA, NA, "Should we parallelize tile processing?")
     ),
@@ -54,6 +54,9 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
+      
+      sim$focalYearList <- list()
+      sim$counter <- start(sim)
 
       if (is.null(sim$listTilePaths)) {
           stop(paste0("No list of tile paths was provided ",
@@ -62,24 +65,24 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
         }
 
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim), "focalCalculation", "focalOperations")
+      sim <- scheduleEvent(sim, time(sim), "focalCalculation", "focalOperations")
 
     },
     
     focalOperations = {
       
-      
-      sim$focalYearList <- applyFocalToTiles(useParallel = P(sim)$useParallel, # Should do paralell only for focal and predicting, maybe?
+      sim$focalYearList[[paste0("Year", sim$counter)]] <- applyFocalToTiles(#useParallel = P(sim)$useParallel, # Should do paralell only for focal and predicting, maybe?
                                                  listTilePaths = sim$listTilePaths,
-                                                 pathData = dataPath(sim),
-                                                 pathCache = cachePath(sim), 
-                                                 startTime = start(sim), 
-                                                 endTime = end(sim),
+                                                 # pathData = dataPath(sim),
+                                                 # pathCache = cachePath(sim), 
                                                  forestClass = P(sim)$forestClass,
                                                  focalDistance = P(sim)$focalDistance,
                                                  disturbanceClass = P(sim)$disturbanceClass,
                                                  recoverTime = P(sim)$recoverTime,
-                                                 ressampledRes = P(sim)$ressampledRes)
+                                                 resampledRes = P(sim)$resampledRes,
+                                                 currentYear = time(sim))
+      sim$counter <- sim$counter + 1
+      sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "focalOperations")
       
           },
 
