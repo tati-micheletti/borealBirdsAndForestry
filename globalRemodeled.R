@@ -1,20 +1,11 @@
 # Global script for the Backcasting Project REMODELED
 
-# Right now, I have installed reproducible from Ian's github in my local library. 
-# So I need to load reproducible from there. (Line 16). After changes are merged into PredictiveEcology,
-# Delete these (and line 16)
-# library(devtools)
-# withr::with_libpaths(new = "/home/tmichele/R/x86_64-pc-linux-gnu-library/3.4", 
-#                      code = install_github(repo = "ianmseddy/reproducible", ref = "development"))
-
 library(SpaDES.core)
 library(SpaDES.tools)
 tryCatch(library(unixtools), 
          error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
 options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
 unixtools::set.tempdir("/mnt/storage/temp")
-
-library(reproducible, lib = "/home/tmichele/R/x86_64-pc-linux-gnu-library/3.4") # This will be commented out when Ian's changes to original reproducible are merged
 
 # set the directories
 workDirectory <- getwd()
