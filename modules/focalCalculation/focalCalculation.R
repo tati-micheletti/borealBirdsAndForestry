@@ -60,35 +60,35 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
       
       sim$focalYearList <- list()
       sim$counter <- start(sim)
-
+      
       if (is.null(sim$listTilePaths)) {
-          stop(paste0("No list of tile paths was provided ",
-                      "and the dummy default has not loaded. 
+        stop(paste0("No list of tile paths was provided ",
+                    "and the dummy default has not loaded. 
                       Check module code."))
-        }
-
+      }
+      
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "focalCalculation", "focalOperations")
-
+      
     },
     
     focalOperations = {
       
       sim$focalYearList[[paste0("Year", sim$counter)]] <- Cache(applyFocalToTiles, #useParallel = P(sim)$useParallel, 
-        # We will use parallel only if when all is in memory, it leaves space in memory for dealing with more than 1 at a time
-                                                 listTilePaths = sim$listTilePaths,
-                                                 pathData = dataPath(sim),
-                                                 forestClass = P(sim)$forestClass,
-                                                 focalDistance = P(sim)$focalDistance,
-                                                 disturbanceClass = P(sim)$disturbanceClass,
-                                                 recoverTime = P(sim)$recoverTime,
-                                                 resampledRes = P(sim)$resampledRes,
-                                                 currentYear = time(sim))
+                                                                # We will use parallel only if when all is in memory, it leaves space in memory for dealing with more than 1 at a time
+                                                                listTilePaths = sim$listTilePaths,
+                                                                pathData = dataPath(sim),
+                                                                forestClass = P(sim)$forestClass,
+                                                                focalDistance = P(sim)$focalDistance,
+                                                                disturbanceClass = P(sim)$disturbanceClass,
+                                                                recoverTime = P(sim)$recoverTime,
+                                                                resampledRes = P(sim)$resampledRes,
+                                                                currentYear = time(sim))
       sim$counter <- sim$counter + 1
       sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "focalOperations")
       
-          },
-
+    },
+    
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
@@ -96,9 +96,9 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
 }
 
 .inputObjects <- function(sim) {
- 
+  
   if (!suppliedElsewhere("listTilePaths", sim)) {
-    sim$listTilePaths <- Cache(createRandomRasterList, rastersPerList = 5, numberOfLists = 3, returnPaths = TRUE)
+    sim$listTilePaths <- Cache(createRandomRasterList, rastersPerList = 5, numberOfLists = 3)
     message(crayon::yellow(paste0("List of tile paths not found (no other module is creating it). ",
                                   "Using a dummy list of rasters"))) # [ FIX ] Need to make really tiled rasters
   }
