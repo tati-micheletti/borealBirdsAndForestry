@@ -43,7 +43,10 @@ defineModule(sim, list(
                   desc = paste0("This list is structured in a way that the ",
                                 "masked value passed is the first level of ",
                                 "the list, which is composed of a full patched",
-                                " raster with all merged tiles"))
+                                " raster with all merged tiles")),
+    createsOutput(objectName = "counter", objectClass = "numeric",
+                  desc = paste0("Counter of the number of tiles",
+                                " used for saving the focal list"))
   )
 ))
 
@@ -71,10 +74,10 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
     
     focalOperations = {
       
-      sim$focalYearList[[paste0("Year", sim$counter)]] <- applyFocalToTiles(#useParallel = P(sim)$useParallel, # Should do paralell only for focal and predicting, maybe?
+      sim$focalYearList[[paste0("Year", sim$counter)]] <- Cache(applyFocalToTiles, #useParallel = P(sim)$useParallel, 
+        # We will use parallel only if when all is in memory, it leaves space in memory for dealing with more than 1 at a time
                                                  listTilePaths = sim$listTilePaths,
-                                                 # pathData = dataPath(sim),
-                                                 # pathCache = cachePath(sim), 
+                                                 pathData = dataPath(sim),
                                                  forestClass = P(sim)$forestClass,
                                                  focalDistance = P(sim)$focalDistance,
                                                  disturbanceClass = P(sim)$disturbanceClass,
@@ -97,7 +100,7 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
   if (!suppliedElsewhere("listTilePaths", sim)) {
     sim$listTilePaths <- Cache(createRandomRasterList, rastersPerList = 5, numberOfLists = 3, returnPaths = TRUE)
     message(crayon::yellow(paste0("List of tile paths not found (no other module is creating it). ",
-                                  "Using a dummy list of rasters")))
+                                  "Using a dummy list of rasters"))) # [ FIX ] Need to make really tiled rasters
   }
   
   return(invisible(sim))
