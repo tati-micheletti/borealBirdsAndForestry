@@ -32,29 +32,29 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
       
 # =============== RASTER 1 (in this case, disturbance TYPE raster) =============== #
     
-             Raster1 <- raster::raster(orderedRasterList[[tiles]][1])
-             Raster1[] <- Raster1[] %>% # Bring raster to memory, faster processing
-               round(0)  # Round to 0, useful for integer rasters, makes them smaller
-             storage.mode(Raster1[]) <- "integer" # Reducing size of raster by converting it to a real binary
-             
-      if (!all(is.na(Raster1[])) == TRUE) {
-
-             # 1. Converting raster to binary to select only harvesting disturbances
-             binaryRaster1 <- binaryReclassify(inFile = Raster1, inValues = disturbanceClass)
-             rm(Raster1)
-             gc()
-             
-             # binaryRaster1 = binaryDisturb
-             binaryRaster1[] <- binaryRaster1[] %>% # Bring raster to memory, faster processing
-               round(0)  # Round to 0, useful for integer rasters, makes them smaller
-               storage.mode(binaryRaster1[]) <- "integer" # Reducing size of raster by converting it to a real binary
-               
-               if (max(binaryRaster1[]) == 0) {
-                 message(crayon::red(paste0("Year ", currentYear, " for ", names(orderedRasterList)[tiles], 
-                                               " was skipped as it doesn't have activities type ", disturbanceClass)))
-                 Raster3 <- binaryRaster1
-                 
-                 # Resample raster to 250m
+    Raster1 <- raster::raster(orderedRasterList[[tiles]][1])
+    Raster1[] <- Raster1[] %>% # Bring raster to memory, faster processing
+      round(0)  # Round to 0, useful for integer rasters, makes them smaller
+    storage.mode(Raster1[]) <- "integer" # Reducing size of raster by converting it to a real binary
+    
+    if (!all(is.na(Raster1[])) == TRUE) {
+      
+      # 1. Converting raster to binary to select only harvesting disturbances
+      binaryRaster1 <- binaryReclassify(inFile = Raster1, inValues = disturbanceClass)
+      rm(Raster1)
+      gc()
+      
+      # binaryRaster1 = binaryDisturb
+      binaryRaster1[] <- binaryRaster1[] %>% # Bring raster to memory, faster processing
+        round(0)  # Round to 0, useful for integer rasters, makes them smaller
+      storage.mode(binaryRaster1[]) <- "integer" # Reducing size of raster by converting it to a real binary
+      
+      if (max(binaryRaster1[]) == 0) {
+        message(crayon::red(paste0("Year ", currentYear, " for ", names(orderedRasterList)[tiles], 
+                                   " was skipped as it doesn't have activities type ", disturbanceClass)))
+        Raster3 <- binaryRaster1
+        
+        # Resample raster to 250m
                  y <- raster::raster(res = c(resampledRes, resampledRes), 
                                      crs = raster::crs(Raster3),
                                      ext = extent(Raster3))
@@ -150,7 +150,7 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                                    crs = raster::crs(Raster3),
                                    ext = extent(Raster3))
                
-               message(crayon::bgYellow(paste0("Resampling ", 
+               message(crayon::green(paste0("Resampling ", 
                                              names(orderedRasterList)[tiles], 
                                              " (focal distance ", max(focalDistance), 
                                              ") to ", resampledRes, "m resolution (Time: "
@@ -171,20 +171,18 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
   })
 
   gc()
-  # IF FAILS (ALL 250m RASTERS ARE IN MEMORY (should work, as LCC2005 250m for the whole country fits in mem and uses only ~8Gb if float. 
-  # We Can always also multiply by 1000 and store as integer... 
-  #  ADD filename ARGUMENT TO resample() so it writes to disk)
-  
-  # [ FIX ] uncomment when have the real rasters - OR - 
-  # mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge) # NOT SURE IT WORKS WITH RASTERS IN MEMORY UNCOMMENT [ FIX ]
-  # mergedTilesName <- file.path(pathData, paste0("mergedFocal", currentYear, resampledRes, "m")
-  # raster::writeRaster(x = mergedFocalTiles, filename = mergedTilesName)
-  # rm(mergedFocalTiles)
+  # IF FAILS (which shouldn't, as LCC2005 250m for the whole country fits in mem and uses only ~8Gb if float. 
+  # We Can always also multiply by 1000 and store as integer...) ADD filename ARGUMENT TO resample() so it writes to disk
+browser()
+  mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge) # NOT SURE IT WORKS WITH RASTERS IN MEMORY UNCOMMENT [ FIX ]
+  mergedTilesName <- file.path(pathData, paste0("mergedFocal", currentYear, resampledRes, "m"))
+  raster::writeRaster(x = mergedFocalTiles, filename = mergedTilesName)
+  rm(mergedFocalTiles)
     gc()
-  # return(mergedFocalTiles)
+  return(mergedFocalTiles)
   
-  mergedFocalTiles <- focalTilesToMerge[[1]]  # DUMMY LINE EXCLUDE [ FIX ]
-  mergedFocalTiles@data@names <- paste0("mergedFocalYear", currentYear, "Res", resampledRes, "m")  # DUMMY LINE EXCLUDE [ FIX ]
+  # mergedFocalTiles <- focalTilesToMerge[[1]]  # DUMMY LINE EXCLUDE [ FIX ]
+  # mergedFocalTiles@data@names <- paste0("mergedFocalYear", currentYear, "Res", resampledRes, "m")  # DUMMY LINE EXCLUDE [ FIX ]
   
   return(mergedFocalTiles)  # DUMMY LINE EXCLUDE [ FIX ]
 }
