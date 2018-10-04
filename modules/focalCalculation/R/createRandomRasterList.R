@@ -9,7 +9,7 @@ createRandomRasterList <- function(rastersPerList = 4,
                               ymn = -30^3, ymx = 30^3,
                        resolution = c(30, 30),
                        crs = "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs",
-                       vals = round(runif(n = 3240000, min = 3, max = 10)))
+                       vals = round(runif(n = 3240000, min = 1, max = 10)))
         names(ras) <- paste0("rasterNumber", nRas, "List", nList)
         return(ras)
       })
