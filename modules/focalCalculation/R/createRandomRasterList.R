@@ -38,6 +38,7 @@ createRandomRasterList <- function(rastersPerList = 4,
           raster::writeRaster(x = ras, filename = pathToRas, overwrite = TRUE)
           return(pathToRas)
         })
+        return(listRastersPaths)
       }
       )
       return(listPaths)
