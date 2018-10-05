@@ -57,16 +57,8 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "predictBirds", "plot")
     },
     plot = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
 
-      #plotFun(sim) # uncomment this, replace with object to plot
-      # schedule future event(s)
-
-      # e.g.,
-      #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "predictBirds", "plot")
-
-      # ! ----- STOP EDITING ----- ! #
+      
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
