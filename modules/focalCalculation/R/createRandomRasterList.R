@@ -32,7 +32,7 @@ createRandomRasterList <- function(rastersPerList = 4,
       r@data@names <- paste0(r@data@names, "Tiled")
         allLists <- list.files(path = file.path(getwd(), "dummyRasters/tiled"), 
                                       pattern = r@data@names, full.names = TRUE) %>%
-          .[grep(pattern = "gri$", x = .)]
+          .[grep(pattern = "grd$", x = .)]
           
         if (length(allLists) == rastersPerList) {
           return(allLists)
