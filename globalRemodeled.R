@@ -41,7 +41,7 @@ parameters <- list(
                         nx = 10, # mult 7
                         ny = 2, # mult 3
                         rType = "INT1U",
-                        buffer = c(18,18), # Buffer to make sure that when rasters are slip, they won't have edge effects
+                        buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
                         .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
                            resampledRes = 250,
