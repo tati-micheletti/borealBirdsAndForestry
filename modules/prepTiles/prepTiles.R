@@ -90,12 +90,12 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Raster1 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      
+      browser()
       sim$Raster1 <- Cache(prepInputs, url = sim$urlRaster1,
                             targetFile = file.path(dataPath(sim),"C2C_change_type.tif"),
                             destinationPath = dataPath(sim),
                             studyArea = sim$rP,
-                            length = TRUE) # took length = TRUE out. Don't remember what it does! ><
+                            length = TRUE, useCache = TRUE) # took length = TRUE out. Don't remember what it does! >< Put it back just in case...
       
       # =============== Meanwhile Alternative =========================
       # reprojRaster1 <- file.path(dataPath(sim), "reprojRaster1.tif")
