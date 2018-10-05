@@ -40,7 +40,8 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
     if (!all(is.na(Raster1[])) == TRUE) {
       
       # 1. Converting raster to binary to select only harvesting disturbances
-      binaryRaster1 <- binaryReclassify(inFile = Raster1, inValues = disturbanceClass)
+      binaryRaster1 <- Cache(binaryReclassify, inFile = Raster1, inValues = disturbanceClass, 
+                             userTags = "objectName:binaryRaster1")
       rm(Raster1)
       gc()
       
@@ -58,7 +59,8 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                  y <- raster::raster(res = c(resampledRes, resampledRes), 
                                      crs = raster::crs(Raster3),
                                      ext = extent(Raster3))
-                 Raster3 <- raster::resample(x = Raster3, y = y, method = "ngb")
+                 Raster3 <- Cache(raster::resample, x = Raster3, y = y, method = "ngb",
+                                  userTags = "functionFinality:resampledSkipped")
                  return(Raster3)
                }
                
@@ -70,7 +72,8 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                storage.mode(Raster2[]) <- "integer" # Reducing size of raster by converting it to a real binary
                
                # 1. Converting raster to binary to select only harvesting disturbances
-               binaryRaster2 <- binaryReclassify(inFile = Raster2, inValues = forestClass)
+               binaryRaster2 <- Cache(binaryReclassify, inFile = Raster2, inValues = forestClass, 
+                                      userTags = "objectName:binaryRaster2")
                rm(Raster2)
                gc()
                
@@ -99,11 +102,13 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                  outMat[outMat > 0] <- 1 / length(outMat[outMat > 0])
                  focalMatrices <- outMat
                } else {
-                 focalMatrices <- raster::focalWeight(x = binaryRaster2, d = focalDistance)
+                 focalMatrices <- Cache(raster::focalWeight, x = binaryRaster2, 
+                                        d = focalDistance, userTags = "functionFinality:focalWeight")
                }
                
                # 3. calculate focal statistics with each matrix
-               LCFocals <- raster::focal(x = binaryRaster2, w = focalMatrices, na.rm = TRUE)
+               LCFocals <- Cache(raster::focal, x = binaryRaster2, w = focalMatrices, 
+                                 na.rm = TRUE, userTags = "functionFinality:focalMatrix")
                rm(binaryRaster2) # Remove binaryRaster2 so we free memory for the next raster to be processed
                gc()
 
@@ -131,11 +136,11 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                                              , Sys.time(), ")")))
                
                
-               Raster3 <- raster::mask(x = binaryRaster1, mask = Raster3, maskvalue = 999, inverse = TRUE, updatevalue = 0)
+               Raster3 <- Cache(raster::mask, x = binaryRaster1, mask = Raster3, 
+                                maskvalue = 999, inverse = TRUE, updatevalue = 0, 
+                                userTags = "functionFinality:masked")
                
                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ F O C A L ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-               
-# Apply focal function (jumboFocal) to the current tile using focalWeight matrices
                
                message(crayon::yellow(paste0("Applying focal operation to ", 
                                              names(orderedRasterList)[tiles], 
@@ -156,7 +161,7 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                                              ") to ", resampledRes, "m resolution (Time: "
                                              , Sys.time(), ")")))
                
-               Raster3 <- raster::resample(x = Raster3, y = y, method = "bilinear")
+               Raster3 <- Cache(raster::resample, x = Raster3, y = y, method = "bilinear", userTags = "functionFinality:resampled")
                
               return(Raster3)
   } else {
@@ -169,21 +174,22 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
     return(binaryRaster1)
   }
   })
-
   gc()
   # IF FAILS (which shouldn't, as LCC2005 250m for the whole country fits in mem and uses only ~8Gb if float. 
   # We Can always also multiply by 1000 and store as integer...) ADD filename ARGUMENT TO resample() so it writes to disk
-browser()
+browser() 
+# might bring all rasters to memory? just: lapply(focalTilesToMerge, function(ras){ras[] <- ras[]})
+# Maybe I will need to put all rasters in a list?
+  env <- environment()
+  lapply(X = focalTilesToMerge, FUN = function(eachTile){
+    assign(x = eachTile@data@names, value = eachTile, envir = env)
+    })
+  
   mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge) # NOT SURE IT WORKS WITH RASTERS IN MEMORY UNCOMMENT [ FIX ]
   mergedTilesName <- file.path(pathData, paste0("mergedFocal", currentYear, resampledRes, "m"))
   raster::writeRaster(x = mergedFocalTiles, filename = mergedTilesName)
   rm(mergedFocalTiles)
     gc()
-  return(mergedFocalTiles)
-  
-  # mergedFocalTiles <- focalTilesToMerge[[1]]  # DUMMY LINE EXCLUDE [ FIX ]
-  # mergedFocalTiles@data@names <- paste0("mergedFocalYear", currentYear, "Res", resampledRes, "m")  # DUMMY LINE EXCLUDE [ FIX ]
-  
-  return(mergedFocalTiles)  # DUMMY LINE EXCLUDE [ FIX ]
+  return(mergedTilesName)
 }
 
