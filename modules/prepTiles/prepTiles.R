@@ -90,21 +90,24 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Raster1 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      browser()
+
       sim$Raster1 <- Cache(prepInputs, url = sim$urlRaster1,
-                            targetFile = file.path(dataPath(sim),"C2C_change_type.tif"),
-                            destinationPath = dataPath(sim),
-                            studyArea = sim$rP,
-                            length = TRUE, useCache = TRUE) # took length = TRUE out. Don't remember what it does! >< Put it back just in case...
+                                 destinationPath = dataPath(sim),
+                                 studyArea = sim$rP,
+                                 length = TRUE, useCache = TRUE,
+                                 userTags = c("objectName:Raster1",
+                                              "fileName:C2C_change_type")) #, purge = 7
       
+      # Don't remember what length = TRUE is, but it was important at some point!
+
       # =============== Meanwhile Alternative =========================
       # reprojRaster1 <- file.path(dataPath(sim), "reprojRaster1.tif")
       # if (!file.exists(reprojRaster1)){
+      #   browser()
       #   ras1 <- raster::raster(file.path(dataPath(sim),"C2C_change_type.tif"))
       #   rPPath <- file.path(dataPath(sim), "cutline.shp")
       #   cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras1)))
       #   writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
-      #   
       #   system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
       #                 "-cutline ", rPPath, " ",
       #                 "-crop_to_cutline ",
@@ -118,18 +121,19 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       #          wait = TRUE)
       # }
       # sim$Raster1 <- raster::raster(reprojRaster1)
-      
+
       # =============== Meanwhile Alternative =========================
       
       message(crayon::yellow(paste0("Raster2 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      sim$Raster2 <- prepInputs(url = sim$urlRaster2,
-                            targetFile = file.path(dataPath(sim), ""),
+      sim$Raster2 <- Cache(prepInputs, url = sim$urlRaster2,
                             destinationPath = dataPath(sim),
                             rasterToMatch = sim$Raster1,
                             studyArea = sim$rP,
-                            length = TRUE)
+                            length = TRUE, useCache = TRUE,
+                            userTags = c("objectName:Raster2", 
+                                         "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"))
       
       # =============== Meanwhile Alternative =========================
       # reprojRaster2 <- file.path(dataPath(sim), "reprojRaster2.tif")
@@ -138,7 +142,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       #   rPPath <- file.path(dataPath(sim), "cutline.shp")
       #   cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras2)))
       #   writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
-      #   
+      # 
       #   system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
       #                 "-s_srs \"", as.character(raster::crs(sim$reprojRaster2)), "\"",
       #                 " -t_srs \"", as.character(raster::crs(sim$reprojRaster1)), "\"",
@@ -164,11 +168,12 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Raster3 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      sim$Raster3 <- prepInputs(url = sim$urlRaster3,
-                            archive = file.path(dataPath(sim), "C2C_Change_Year.zip"),
+      sim$Raster3 <- Cache(prepInputs, url = sim$sim$urlRaster3,
                             destinationPath = dataPath(sim),
                             rasterToMatch = sim$Raster2,
-                            studyArea = sim$rP, length = TRUE)
+                            studyArea = sim$rP, length = TRUE, useCache = TRUE,
+                            userTags = c("objectName:Raster3", 
+                                         "fileName:C2C_change_year"))
       
       # =============== Meanwhile Alternative =========================
       # reprojRaster3 <- file.path(dataPath(sim), "reprojRaster3.tif")
@@ -177,7 +182,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       #   rPPath <- file.path(dataPath(sim), "cutline.shp")
       #   cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras3)))
       #   writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
-      #   
+      # 
       #   system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
       #                 "-cutline ", rPPath, " ",
       #                 "-crop_to_cutline ",
@@ -211,7 +216,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       browser()
       # [ FIX ] TRY BRINGING TO MEMORY TO MAKE TILING QUICKER? IF DOESN'T WORK, FORGET IT! IF WORKS, REPEAT BELOW
       sim$Raster1[] <- round(sim$Raster1[], 0)
-      storage.mode(sim$Raster1[]) = "integer"
+      storage.mode(sim$Raster1[]) = "integer" # Re-write? 
       sim$Raster1 <- Cache(splitRaster, r = sim$Raster1, nx = sim$nx, ny = sim$ny, buffer = sim$buffer,  # Splitting landCover Raster, write to disk,
                            rType = sim$rType, path = file.path(cachePath(sim), "Raster1")) # override the original in memory
       gc()
