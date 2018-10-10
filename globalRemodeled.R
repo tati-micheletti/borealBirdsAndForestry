@@ -1,5 +1,7 @@
 # Global script for the Backcasting Project REMODELED
 
+devtools::install_github("tati-micheletti/reproducible", ref = "development")
+
 library(SpaDES.core)
 library(SpaDES.tools)
 tryCatch(library(unixtools), 
@@ -26,7 +28,7 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 # }
 
 ## list the modules to use
-modules <- list("focalCalculation")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles")
+modules <- list("prepTiles")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "focalCalculation")
 
 ## Set simulation and module parameters
 times <- list(start = 3, end = 4, timeunit = "year") # Change back to 1985 2011. Just did 3-10 because of fake Rasters
@@ -53,7 +55,7 @@ parameters <- list(
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
   mapSubset = NULL, # Provinces to run at once. Good to subset provinces still within the boreal
-  specificTestArea = NULL, # "boreal",
+  specificTestArea = "boreal", # "boreal",
   SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
   SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
   SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
