@@ -31,7 +31,7 @@ defineModule(sim, list(
     defineParameter("resampledRes", "numeric", 250, NA, NA, 
                     "Resolution to which the final focal raster should be resample to"),
     defineParameter(".useCache", "logical", FALSE, NA, NA,"Should this entire module be run with caching activated?"),
-    defineParameter("useParallel", "character", NULL, NA, NA, "Should we parallelize tile processing?")
+    defineParameter("useParallel", "character", NULL, NA, NA, "Should we parallelize tile processing?") # CHeck if I am actually gonna use it
     ),
   inputObjects = bind_rows(
     expectsInput(objectName = "listTilePaths", objectClass = "character", 
@@ -69,6 +69,7 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
       
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "focalCalculation", "focalOperations")
+      sim <- scheduleEvent(sim, time(sim), "focalCalculation", "updateCounter", eventPriority = .lowest())
       
     },
     
@@ -84,8 +85,15 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
                                                                 recoverTime = P(sim)$recoverTime,
                                                                 resampledRes = P(sim)$resampledRes,
                                                                 currentYear = time(sim))
-      sim$counter <- sim$counter + 1
+      
       sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "focalOperations")
+      
+    },
+    updateCounter = {
+      
+      sim$counter <- sim$counter + 1
+      
+      sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "updateCounter")
       
     },
     
