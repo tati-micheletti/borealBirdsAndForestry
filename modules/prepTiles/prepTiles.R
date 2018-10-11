@@ -96,33 +96,8 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                                  studyArea = sim$rP,
                                  length = TRUE, useCache = TRUE,
                                  userTags = c("objectName:Raster1",
-                                              "fileName:C2C_change_type")) #, purge = 7
-      
-      # Don't remember what length = TRUE is, but it was important at some point!
-
-      # =============== Meanwhile Alternative =========================
-      # reprojRaster1 <- file.path(dataPath(sim), "reprojRaster1.tif")
-      # if (!file.exists(reprojRaster1)){
-      #   browser()
-      #   ras1 <- raster::raster(file.path(dataPath(sim),"C2C_change_type.tif"))
-      #   rPPath <- file.path(dataPath(sim), "cutline.shp")
-      #   cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras1)))
-      #   writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
-      #   system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
-      #                 "-cutline ", rPPath, " ",
-      #                 "-crop_to_cutline ",
-      #                 "-multi ",
-      #                 "-wo NUM_THREADS=35 ",
-      #                 "-tr 30 30 ",
-      #                 "-ot Byte ",
-      #                 "-of GTiff ",
-      #                 file.path(dataPath(sim),"C2C_change_type.tif"), " ",
-      #                 reprojRaster1),
-      #          wait = TRUE)
-      # }
-      # sim$Raster1 <- raster::raster(reprojRaster1)
-
-      # =============== Meanwhile Alternative =========================
+                                              "fileName:C2C_change_type")) # Don't remember what length = TRUE is, but it was important at some point
+      gc()
       
       message(crayon::yellow(paste0("Raster2 being prepared.",
                                     " This might take a few hours depending on",
@@ -134,31 +109,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                             length = TRUE, useCache = TRUE,
                             userTags = c("objectName:Raster2", 
                                          "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"))
-      
-      # =============== Meanwhile Alternative =========================
-      # reprojRaster2 <- file.path(dataPath(sim), "reprojRaster2.tif")
-      # if (!file.exists(reprojRaster2)){
-      #   ras2 <- raster::raster(file.path(dataPath(sim),"CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"))
-      #   rPPath <- file.path(dataPath(sim), "cutline.shp")
-      #   cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras2)))
-      #   writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
-      # 
-      #   system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
-      #                 "-s_srs \"", as.character(raster::crs(sim$reprojRaster2)), "\"",
-      #                 " -t_srs \"", as.character(raster::crs(sim$reprojRaster1)), "\"",
-      #                 "-cutline ", rPPath, " ",
-      #                 "-crop_to_cutline ",
-      #                 "-multi ",
-      #                 "-wo NUM_THREADS=35 ",
-      #                 "-tr 30 30 ",
-      #                 "-ot Byte ",
-      #                 "-of GTiff ",
-      #                 file.path(dataPath(sim),"CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"), " ",
-      #                 reprojRaster2),
-      #          wait = TRUE)
-      # }
-      # sim$Raster2 <- raster::raster(reprojRaster2)
-      # =============== Meanwhile Alternative =========================
+      gc()
       
       raster::extent(sim$Raster2) <- raster::alignExtent(extent = raster::extent(sim$Raster2), object = sim$Raster1, snap = "near")
       if (!raster::compareRaster(sim$Raster2, sim$Raster1, extent = TRUE)){
@@ -174,30 +125,8 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                             studyArea = sim$rP, length = TRUE, useCache = TRUE,
                             userTags = c("objectName:Raster3", 
                                          "fileName:C2C_change_year"))
-      
-      # =============== Meanwhile Alternative =========================
-      # reprojRaster3 <- file.path(dataPath(sim), "reprojRaster3.tif")
-      # if (!file.exists(reprojRaster3)){
-      #   ras1 <- raster::raster(file.path(dataPath(sim),"C2C_change_year.tif"))
-      #   rPPath <- file.path(dataPath(sim), "cutline.shp")
-      #   cutline <- sp::spTransform(x = sim$rP, CRS = as.character(raster::crs(ras3)))
-      #   writeOGR(obj = sim$rP, dsn = dataPath(sim), layer = "cutline", driver = "ESRI Shapefile")
-      # 
-      #   system(paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
-      #                 "-cutline ", rPPath, " ",
-      #                 "-crop_to_cutline ",
-      #                 "-multi ",
-      #                 "-wo NUM_THREADS=35 ",
-      #                 "-tr 30 30 ",
-      #                 "-ot Byte ",
-      #                 "-of GTiff ",
-      #                 file.path(dataPath(sim),"C2C_change_year.tif"), " ",
-      #                 reprojRaster3),
-      #          wait = TRUE)
-      # }
-      # sim$Raster3 <- raster::raster(reprojRaster3)
-      
-      # =============== Meanwhile Alternative =========================
+      gc()
+ 
       raster::extent(sim$Raster3) <- raster::alignExtent(extent = raster::extent(sim$Raster3), object = sim$Raster2, snap = "near")
       if (!raster::compareRaster(sim$Raster3, sim$Raster2, extent = TRUE)){
         stop("Rasters don't align. Please debug it.")
