@@ -102,7 +102,8 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Raster2 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      sim$Raster2 <- Cache(prepInputs, url = sim$urlRaster2,
+      sim$Raster2 <- Cache(prepInputs, #url = sim$urlRaster2, # Will restablish the url as soon as prepInputs is working with .rar again
+                            targetFile = "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif",
                             destinationPath = dataPath(sim),
                             rasterToMatch = sim$Raster1,
                             studyArea = sim$rP,
