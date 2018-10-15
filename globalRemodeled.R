@@ -1,7 +1,5 @@
 # Global script for the Backcasting Project REMODELED
 
-devtools::install_github("tati-micheletti/reproducible", ref = "development")
-
 library(SpaDES.core)
 library(SpaDES.tools)
 tryCatch(library(unixtools), 
