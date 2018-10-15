@@ -120,7 +120,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Raster3 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-      sim$Raster3 <- Cache(prepInputs, url = sim$sim$urlRaster3,
+      sim$Raster3 <- Cache(prepInputs, url = sim$urlRaster3,
                             destinationPath = dataPath(sim),
                             rasterToMatch = sim$Raster2,
                             studyArea = sim$rP, length = TRUE, useCache = TRUE,
@@ -142,23 +142,33 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       
       # Now all rasterd need to be tiled using the paramethers provided nx and ny
       message(crayon::yellow(paste0("Splitting Raster1 tiles")))
-      
-      browser()
-      # [ FIX ] TRY BRINGING TO MEMORY TO MAKE TILING QUICKER? IF DOESN'T WORK, FORGET IT! IF WORKS, REPEAT BELOW
-      sim$Raster1[] <- round(sim$Raster1[], 0)
-      storage.mode(sim$Raster1[]) = "integer" # Re-write? 
-      sim$Raster1 <- Cache(splitRaster, r = sim$Raster1, nx = sim$nx, ny = sim$ny, buffer = sim$buffer,  # Splitting landCover Raster, write to disk,
-                           rType = sim$rType, path = file.path(cachePath(sim), "Raster1")) # override the original in memory
+      dir.create(file.path(cachePath(sim), "Raster1"))
+      sim$Raster1 <- Cache(splitRaster, r = sim$Raster1, 
+                           nx = params(sim)$prepTiles$nx, 
+                           ny = params(sim)$prepTiles$ny, 
+                           buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
+                           rType = params(sim)$prepTiles$rType, 
+                           path = file.path(cachePath(sim), "Raster1")) # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster2 tiles")))
-      sim$Raster2 <- Cache(splitRaster, r = sim$Raster2, nx = sim$nx, ny = sim$ny, buffer = sim$buffer,  # Splitting landCover Raster, write to disk,
-                           rType = sim$rType, path = file.path(cachePath(sim), "Raster2")) # override the original in memory
+      dir.create(file.path(cachePath(sim), "Raster2"))
+      sim$Raster2 <- Cache(splitRaster, r = sim$Raster1, 
+                           nx = params(sim)$prepTiles$nx, 
+                           ny = params(sim)$prepTiles$ny, 
+                           buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
+                           rType = params(sim)$prepTiles$rType,
+                           path = file.path(cachePath(sim), "Raster2")) # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster3 tiles")))
-      sim$Raster3 <- Cache(splitRaster, r = sim$Raster3, nx = sim$nx, ny = sim$ny, buffer = sim$buffer,  # Splitting landCover Raster, write to disk,
-                           rType = sim$rType, path = file.path(cachePath(sim), "Raster3")) # override the original in memory
+      dir.create(file.path(cachePath(sim), "Raster3"))
+      sim$Raster3 <- Cache(splitRaster, r = sim$Raster1, 
+                           nx = params(sim)$prepTiles$nx, 
+                           ny = params(sim)$prepTiles$ny, 
+                           buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
+                           rType = params(sim)$prepTiles$rType,
+                           path = file.path(cachePath(sim), "Raster3")) # override the original in memory
       gc()
       
       sim$rastersList <- list("Raster1" = sim$Raster1, 
