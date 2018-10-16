@@ -62,12 +62,6 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
       
       sim$focalYearList <- list()
       
-      if (is.null(sim$listTilePaths)) {
-        stop(paste0("No list of tile paths was provided ",
-                    "and the dummy default has not loaded. 
-                      Check module code."))
-      }
-      
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "focalCalculation", "focalOperations")
       
