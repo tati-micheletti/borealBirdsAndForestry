@@ -153,7 +153,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       
       message(crayon::yellow(paste0("Splitting Raster2 tiles")))
       dir.create(file.path(cachePath(sim), "Raster2"))
-      sim$Raster2 <- Cache(splitRaster, r = sim$Raster1, 
+      sim$Raster2 <- Cache(splitRaster, r = sim$Raster2, 
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
                            buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
@@ -163,14 +163,14 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       
       message(crayon::yellow(paste0("Splitting Raster3 tiles")))
       dir.create(file.path(cachePath(sim), "Raster3"))
-      sim$Raster3 <- Cache(splitRaster, r = sim$Raster1, 
+      sim$Raster3 <- Cache(splitRaster, r = sim$Raster3, 
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
                            buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
                            rType = params(sim)$prepTiles$rType,
                            path = file.path(cachePath(sim), "Raster3")) # override the original in memory
       gc()
-      
+      browser()
       sim$rastersList <- list("Raster1" = sim$Raster1, 
                               "Raster2" = sim$Raster2, 
                               "Raster3" = sim$Raster3) # Splitted rasters' list
