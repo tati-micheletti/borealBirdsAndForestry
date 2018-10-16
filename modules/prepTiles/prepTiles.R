@@ -90,13 +90,13 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Raster1 being prepared.",
                                     " This might take a few hours depending on",
                                     " the extent of the raster.")))
-
       sim$Raster1 <- Cache(prepInputs, url = sim$urlRaster1,
                                  destinationPath = dataPath(sim),
                                  studyArea = sim$rP,
                                  length = TRUE, useCache = TRUE,
                                  userTags = c("objectName:Raster1",
-                                              "fileName:C2C_change_type")) # Don't remember what length = TRUE is, but it was important at some point
+                                              "fileName:C2C_change_type"),
+                           cacheId = "74286256127df354937f3d89fe187a4a") # Don't remember what length = TRUE is, but it was important at some point
       gc()
       
       message(crayon::yellow(paste0("Raster2 being prepared.",
@@ -109,7 +109,8 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                             studyArea = sim$rP,
                             length = TRUE, useCache = TRUE,
                             userTags = c("objectName:Raster2", 
-                                         "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"))
+                                         "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"),
+                           cacheId = "c5e684a7c995df3306c3462bc4ce24df")
       gc()
       
       raster::extent(sim$Raster2) <- raster::alignExtent(extent = raster::extent(sim$Raster2), object = sim$Raster1, snap = "near")
@@ -125,7 +126,8 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                             rasterToMatch = sim$Raster2,
                             studyArea = sim$rP, length = TRUE, useCache = TRUE,
                             userTags = c("objectName:Raster3", 
-                                         "fileName:C2C_change_year"))
+                                         "fileName:C2C_change_year"),
+                           cacheId = "c61d504bbb68d83f305d8f876b311c86")
       gc()
  
       raster::extent(sim$Raster3) <- raster::alignExtent(extent = raster::extent(sim$Raster3), object = sim$Raster2, snap = "near")
