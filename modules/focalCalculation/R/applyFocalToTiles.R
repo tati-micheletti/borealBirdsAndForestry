@@ -10,7 +10,7 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                                   currentYear = time(sim)){
   
 #  [ FIX ] Add parallel for tile masking!!!
-  
+
 # Subset matching tiles
   message(crayon::green("Tiles organized..."))
   totalTiles <- unique(lengths(listTilePaths))
@@ -53,15 +53,14 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
       if (max(binaryRaster1[]) == 0) {
         message(crayon::red(paste0("Year ", currentYear, " for ", names(orderedRasterList)[tiles], 
                                    " was skipped as it doesn't have activities type ", disturbanceClass)))
-        Raster3 <- binaryRaster1
-        
+
         # Resample raster to 250m
-                 y <- raster::raster(res = c(resampledRes, resampledRes), 
-                                     crs = raster::crs(Raster3),
-                                     ext = extent(Raster3))
-                 Raster3 <- Cache(raster::resample, x = Raster3, y = y, method = "ngb",
-                                  userTags = "functionFinality:resampledSkipped")
-                 return(Raster3)
+        y <- raster::raster(res = c(resampledRes, resampledRes), 
+                            crs = raster::crs(binaryRaster1),
+                            ext = extent(binaryRaster1))
+        Raster3 <- Cache(raster::resample, x = binaryRaster1, y = y, method = "ngb",
+                         userTags = "functionFinality:resampledSkipped")
+        return(Raster3)
                }
                
 # =============== RASTER 2 (in this case, LAND COVER raster) =============== #
@@ -171,20 +170,20 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                         crs = raster::crs(binaryRaster1),
                         ext = extent(binaryRaster1))
     Raster3 <- raster::resample(x = binaryRaster1, y = y, method = "ngb")
-    return(binaryRaster1)
+    return(Raster3)
   }
   })
   gc()
   # IF FAILS (which shouldn't, as LCC2005 250m for the whole country fits in mem and uses only ~8Gb if float. 
   # We Can always also multiply by 1000 and store as integer...) ADD filename ARGUMENT TO resample() so it writes to disk
-browser() 
+
 # might bring all rasters to memory? just: lapply(focalTilesToMerge, function(ras){ras[] <- ras[]})
 # Maybe I will need to put all rasters in a list?
   env <- environment()
   lapply(X = focalTilesToMerge, FUN = function(eachTile){
     assign(x = eachTile@data@names, value = eachTile, envir = env)
     })
-  
+  browser() 
   mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge) # NOT SURE IT WORKS WITH RASTERS IN MEMORY UNCOMMENT [ FIX ]
   mergedTilesName <- file.path(pathData, paste0("mergedFocal", currentYear, resampledRes, "m"))
   raster::writeRaster(x = mergedFocalTiles, filename = mergedTilesName)
