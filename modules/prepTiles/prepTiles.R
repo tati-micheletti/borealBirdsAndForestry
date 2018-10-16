@@ -110,7 +110,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                             length = TRUE, useCache = TRUE,
                             userTags = c("objectName:Raster2", 
                                          "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"),
-                           cacheId = "c5e684a7c995df3306c3462bc4ce24df")
+                           cacheId = "af8ac2b611698d718c31a8f339ad1f07")
       gc()
       
       raster::extent(sim$Raster2) <- raster::alignExtent(extent = raster::extent(sim$Raster2), object = sim$Raster1, snap = "near")
