@@ -30,8 +30,10 @@ defineModule(sim, list(
                            "create a matrix with circular weights summing to 1)")),
     defineParameter("resampledRes", "numeric", 250, NA, NA, 
                     "Resolution to which the final focal raster should be resample to"),
-    defineParameter(".useCache", "logical", FALSE, NA, NA,"Should this entire module be run with caching activated?"),
-    defineParameter("useParallel", "character", NULL, NA, NA, "Should we parallelize tile processing?") # CHeck if I am actually gonna use it
+    defineParameter(".useCache", "logical", FALSE, NA, NA,
+                    "Should this entire module be run with caching activated?"),
+    defineParameter("useParallel", "character", NULL, NA, NA, 
+                    "Should we parallelize tile processing?") # Check if I am actually gonna use it
     ),
   inputObjects = bind_rows(
     expectsInput(objectName = "listTilePaths", objectClass = "character", 
@@ -59,7 +61,6 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
     init = {
       
       sim$focalYearList <- list()
-      sim$counter <- start(sim)
       
       if (is.null(sim$listTilePaths)) {
         stop(paste0("No list of tile paths was provided ",
@@ -69,14 +70,14 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
       
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "focalCalculation", "focalOperations")
-      sim <- scheduleEvent(sim, time(sim), "focalCalculation", "updateCounter", eventPriority = .lowest())
       
     },
     
     focalOperations = {
-      
-      sim$focalYearList[[paste0("Year", sim$counter)]] <- Cache(applyFocalToTiles, #useParallel = P(sim)$useParallel, 
-                                                                # We will use parallel only if when all is in memory, it leaves space in memory for dealing with more than 1 at a time
+      browser()
+      sim$focalYearList[[paste0("Year", time(sim))]] <- Cache(applyFocalToTiles, #useParallel = P(sim)$useParallel, 
+                                                                # We will use parallel only if when all is in memory, 
+                                                                # it leaves space in memory for dealing with more than 1 at a time
                                                                 listTilePaths = sim$listTilePaths,
                                                                 pathData = dataPath(sim),
                                                                 forestClass = P(sim)$forestClass,
@@ -87,13 +88,6 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
                                                                 currentYear = time(sim))
       
       sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "focalOperations")
-      
-    },
-    updateCounter = {
-      
-      sim$counter <- sim$counter + 1
-      
-      sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "updateCounter")
       
     },
     
