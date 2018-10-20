@@ -36,7 +36,7 @@ defineModule(sim, list(
                     "Should we parallelize tile processing?") # Check if I am actually gonna use it
     ),
   inputObjects = bind_rows(
-    expectsInput(objectName = "listTilePaths", objectClass = "character", 
+    expectsInput(objectName = "rastersList", objectClass = "character", 
                  desc = paste0("Character listing the raster paths to the tiles from",
                                " Raster3"))
   ),
@@ -45,10 +45,7 @@ defineModule(sim, list(
                   desc = paste0("This list is structured in a way that the ",
                                 "masked value passed is the first level of ",
                                 "the list, which is composed of a full patched",
-                                " raster with all merged tiles")),
-    createsOutput(objectName = "counter", objectClass = "numeric",
-                  desc = paste0("Counter of the number of tiles",
-                                " used for saving the focal list"))
+                                " raster with all merged tiles"))
   )
 ))
 
@@ -68,11 +65,10 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
     },
     
     focalOperations = {
-      browser()
       sim$focalYearList[[paste0("Year", time(sim))]] <- Cache(applyFocalToTiles, #useParallel = P(sim)$useParallel, 
                                                                 # We will use parallel only if when all is in memory, 
                                                                 # it leaves space in memory for dealing with more than 1 at a time
-                                                                listTilePaths = sim$listTilePaths,
+                                                                listTilePaths = sim$rastersList,
                                                                 pathData = dataPath(sim),
                                                                 forestClass = P(sim)$forestClass,
                                                                 focalDistance = P(sim)$focalDistance,
@@ -93,8 +89,9 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
 
 .inputObjects <- function(sim) {
   
-  if (!suppliedElsewhere("listTilePaths", sim)) {
-    sim$listTilePaths <- Cache(createRandomRasterList, rastersPerList = 5, numberOfLists = 3)
+  if (!suppliedElsewhere("rastersList", sim)) {
+    browser()
+    sim$rastersList <- Cache(createRandomRasterList, rastersPerList = 5, numberOfLists = 3)
     message(crayon::yellow(paste0("List of tile paths not found (no other module is creating it). ",
                                   "Using a dummy list of rasters"))) # [ FIX ] Need to make really tiled rasters
   }
