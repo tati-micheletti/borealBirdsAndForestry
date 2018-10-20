@@ -26,10 +26,10 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 # }
 
 ## list the modules to use
-modules <- list("prepTiles")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "focalCalculation")
+modules <- list("prepTiles", "focalCalculation")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "focalCalculation")
 
 ## Set simulation and module parameters
-times <- list(start = 3, end = 4, timeunit = "year") # Change back to 1985 2011. Just did 3-10 because of fake Rasters
+times <- list(start = 1985, end = 2011, timeunit = "year") # Change back to 1985 2011. Just did 3-10 because of fake Rasters
 parameters <- list(
   birdDensityBCR_Prov_LCC = list(extractFrom4kRasters = FALSE,
                                  avoidAlbertosData = TRUE,
@@ -39,7 +39,7 @@ parameters <- list(
                          avoidAlbertosData = TRUE),
   prepTiles = list(testArea = TRUE, # Should a study area be used (i.e. boreal)?
                         nx = 10, # mult 7
-                        ny = 2, # mult 3
+                        ny = 4, # mult 3
                         rType = "INT1U",
                         buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
                         .useCache = FALSE), # Should it override module's .useCache?
@@ -88,7 +88,7 @@ clearPlot()
 
 ## Simulation setup
 mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
-system.time(mySimOut <- spades(mySim, debug = TRUE))
+mySimOut <- spades(mySim, debug = TRUE)
 
 # To save the outputs
 # localAUG16 <- as(mySimOut, "simList_")
