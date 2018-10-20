@@ -48,7 +48,7 @@ defineModule(sim, list(
                  desc = "Subset of the map")
   ),
   outputObjects = bind_rows(
-    createsOutput(objectName = "listTilePaths", objectClass = "character", 
+    createsOutput(objectName = "rastersList", objectClass = "character", 
                   desc = paste0("Character listing the raster paths to the tiles from",
                                 " Raster3"))
   )
@@ -89,7 +89,9 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       
       message(crayon::yellow(paste0("Raster1 being prepared.",
                                     " This might take a few hours depending on",
-                                    " the extent of the raster.")))
+                                    " the extent of the raster.",
+                                    " (Time: "
+                                    , Sys.time(), ")")))
       sim$Raster1 <- Cache(prepInputs, url = sim$urlRaster1,
                                  destinationPath = dataPath(sim),
                                  studyArea = sim$rP,
@@ -101,7 +103,9 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       
       message(crayon::yellow(paste0("Raster2 being prepared.",
                                     " This might take a few hours depending on",
-                                    " the extent of the raster.")))
+                                    " the extent of the raster.",
+                                    " (Time: "
+                                    , Sys.time(), ")")))
       sim$Raster2 <- Cache(prepInputs, #url = sim$urlRaster2, # Will restablish the url as soon as prepInputs is working with .rar again
                             targetFile = "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif",
                             destinationPath = dataPath(sim),
@@ -120,7 +124,9 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       
       message(crayon::yellow(paste0("Raster3 being prepared.",
                                     " This might take a few hours depending on",
-                                    " the extent of the raster.")))
+                                    " the extent of the raster.",
+                                    " (Time: "
+                                    , Sys.time(), ")")))
       sim$Raster3 <- Cache(prepInputs, url = sim$urlRaster3,
                             destinationPath = dataPath(sim),
                             rasterToMatch = sim$Raster2,
@@ -138,13 +144,13 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::green("Big rasters prepared for splitting!"))
       
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim), "prepTiles", "tileRasters")
+      sim <- scheduleEvent(sim, start(sim), "prepTiles", "tileRasters", eventPriority = 1)
     },
     tileRasters = {
       
       # Now all rasterd need to be tiled using the paramethers provided nx and ny
-      message(crayon::yellow(paste0("Splitting Raster1 tiles")))
-      dir.create(file.path(cachePath(sim), "Raster1"))
+      message(crayon::yellow(paste0("Splitting Raster1 tiles", " (Time: "
+                                    , Sys.time(), ")")))
       sim$Raster1 <- Cache(splitRaster, r = sim$Raster1, 
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
@@ -153,7 +159,8 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            path = file.path(cachePath(sim), "Raster1")) # override the original in memory
       gc()
       
-      message(crayon::yellow(paste0("Splitting Raster2 tiles")))
+      message(crayon::yellow(paste0("Splitting Raster2 tiles", " (Time: "
+                                    , Sys.time(), ")")))
       dir.create(file.path(cachePath(sim), "Raster2"))
       sim$Raster2 <- Cache(splitRaster, r = sim$Raster2, 
                            nx = params(sim)$prepTiles$nx, 
@@ -163,7 +170,8 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            path = file.path(cachePath(sim), "Raster2")) # override the original in memory
       gc()
       
-      message(crayon::yellow(paste0("Splitting Raster3 tiles")))
+      message(crayon::yellow(paste0("Splitting Raster3 tiles", " (Time: "
+                                    , Sys.time(), ")")))
       dir.create(file.path(cachePath(sim), "Raster3"))
       sim$Raster3 <- Cache(splitRaster, r = sim$Raster3, 
                            nx = params(sim)$prepTiles$nx, 
@@ -172,7 +180,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            rType = params(sim)$prepTiles$rType,
                            path = file.path(cachePath(sim), "Raster3")) # override the original in memory
       gc()
-      browser()
+
       sim$rastersList <- list("Raster1" = sim$Raster1, 
                               "Raster2" = sim$Raster2, 
                               "Raster3" = sim$Raster3) # Splitted rasters' list
