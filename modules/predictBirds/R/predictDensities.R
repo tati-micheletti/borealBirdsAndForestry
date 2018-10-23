@@ -6,8 +6,9 @@ predictDensities <- function(birdSpecies = sim$birdSpecies,
   
 predictionPerSpecies <-  lapply(birdSpecies, function(spName){
   message(crayon::yellow("Stacking rasters for ", spName , " prediction"))
-  browser()
-  birdD <- birdDensityRasters[[spName]]
+  birdD <- raster::raster(birdDensityRasters[[spName]])
+  valsD <- log(raster::getValues(birdD)) # log the value of densities so it is the same of the original model
+  birdD <- raster::setValues(birdD, valsD)
   stackRas <- raster::stack(disturbanceRas, birdD)
   if ("glmerMod" %in% class(models)){
     names(stackRas)[1] <- names(models@frame)[2] #Make this P(sim)$focalDistance
