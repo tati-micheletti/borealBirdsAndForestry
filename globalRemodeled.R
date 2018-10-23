@@ -1,5 +1,10 @@
 # Global script for the Backcasting Project REMODELED
 
+# OBS. on 23rd Oct I installed tati-micheletti/SpaDES.tools 
+# ref = f04ed7183dfb038f4278fa1654ee0c065c2908c6 as my PR is still being analyzed by Travis
+# This looks ready, but still need to test it. On 23rd Eliot asked me to use 388 for a few days, 
+# so I will wait until they are finished
+
 library(SpaDES.core)
 library(SpaDES.tools)
 tryCatch(library(unixtools), 
