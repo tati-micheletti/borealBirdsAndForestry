@@ -7,17 +7,19 @@
 
 library(SpaDES.core)
 library(SpaDES.tools)
-tryCatch(library(unixtools), 
-         error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
-options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
-unixtools::set.tempdir("/mnt/storage/temp")
+# tryCatch(library(unixtools), 
+#          error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
+# options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
+# unixtools::set.tempdir("/mnt/storage/temp")
+
 
 # set the directories
 workDirectory <- getwd()
 
 paths <- list(
   # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
-  cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
+  # cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
+  cachePath = file.path(workDirectory, "cache"),
   # while the other folders are in the working directory
   modulePath = file.path(workDirectory, "modules"),
   inputPath = file.path(workDirectory, "inputs"),
@@ -31,7 +33,7 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 # }
 
 ## list the modules to use
-modules <- list("prepTiles", "focalCalculation")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "focalCalculation")
+modules <- list("predictBirds")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "focalCalculation")
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 2011, timeunit = "year") # Change back to 1985 2011. Just did 3-10 because of fake Rasters
@@ -56,37 +58,37 @@ parameters <- list(
                            useParallel = NULL) # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
         )
 
-objects <- list( # Possible to include 'rP' directly here as a shapefile!
-  mapSubset = NULL, # Provinces to run at once. Good to subset provinces still within the boreal
-  specificTestArea = "boreal", # "boreal",
-  SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
-  SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
-  SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
-  dataName = "Final_points_2010.csv", # Alberto's manuscript data to select points. Data are, however coming from SQL.
-  birdSpecies = c("BBWA", # Bird species to run the models for
-                  #"BLPW"#,
-                  # "BOCH",
-                  # "BRCR",
-                  "BTNW",
-                  "CAWA",
-                  "CMWA"#,
-                  # "CONW",
-                  # "OVEN",
-                  # "PISI",
-                  # "RBNU",
-                  # "SWTH",
-                  # "TEWA",
-                  # "WETA",
-                  # "YRWA"
-  ),
-  typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
-  disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
-  disturbancePredict = c("Transitional")#, # Needs to match disturbanceClass from prediction module. Type of disturbance we want to predict from.
-  # Raster1 = NA, # direct path to locally stored object as a "character string.
-  # urlRaster1 = NA, #If you want to download the object from a specific url that not the default, specify the url as a "character string" here
-  # Use the same logic for Raster2 and Raster3
-)
-
+# objects <- list( # Possible to include 'rP' directly here as a shapefile!
+#   mapSubset = NULL, # Provinces to run at once. Good to subset provinces still within the boreal
+#   specificTestArea = "boreal", # "boreal",
+#   SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
+#   SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
+#   SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
+#   dataName = "Final_points_2010.csv", # Alberto's manuscript data to select points. Data are, however coming from SQL.
+#   birdSpecies = c("BBWA", # Bird species to run the models for
+#                   #"BLPW"#,
+#                   # "BOCH",
+#                   # "BRCR",
+#                   "BTNW",
+#                   "CAWA",
+#                   "CMWA"#,
+#                   # "CONW",
+#                   # "OVEN",
+#                   # "PISI",
+#                   # "RBNU",
+#                   # "SWTH",
+#                   # "TEWA",
+#                   # "WETA",
+#                   # "YRWA"
+#   ),
+#   typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
+#   disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
+#   disturbancePredict = c("Transitional")#, # Needs to match disturbanceClass from prediction module. Type of disturbance we want to predict from.
+#   # Raster1 = NA, # direct path to locally stored object as a "character string.
+#   # urlRaster1 = NA, #If you want to download the object from a specific url that not the default, specify the url as a "character string" here
+#   # Use the same logic for Raster2 and Raster3
+# )
+objects <- list()
 clearPlot()
 
 #file.remove("/mnt/storage/borealBirdsAndForestry/cache/logParallel")
