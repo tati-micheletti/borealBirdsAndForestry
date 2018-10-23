@@ -161,7 +161,7 @@ fetchData <- function(pathData = dataPath(sim),
       
       names(densityRasList) <- birdSp
       ClassFilter <- function(x) inherits(get(x), "RasterLayer") & !inherits(get(x), "sf")
-      rasRM <- Filter(ClassFilter, ls())
+      rasRM <- Filter(ClassFilter, ls()) # Cleaning up?
       rm(rasRM)
       invisible(gc())
     }
