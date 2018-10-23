@@ -119,7 +119,7 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
       
       # 3. calculate focal statistics with each matrix
       LCFocals <- Cache(raster::focal, x = Raster2, w = focalMatrices, 
-                        na.rm = TRUE, userTags = paste0("functionFinality:focalMatrix", tiles))
+                        na.rm = TRUE, userTags = paste0("functionFinality:focalMatrix", tiles))      
       rm(Raster2) # Remove Raster2 so we free memory for the next raster to be processed
       gc()
       
@@ -129,21 +129,18 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
       Raster3[] <- Raster3[] %>% # Bring raster to memory, faster processing
         round(0)  # Round to 0, useful for integer rasters, makes them smaller
       storage.mode(Raster3[]) <- "integer" # Reducing size of raster by converting it to a real binary
-      
       if (currentYear > 1000){
         currentYear <- currentYear - 1900
       }
       
       # Calculate cummulative effects. If not wanted, change to maskValue <- currentYear
       maskValue <- c((currentYear - recoverTime) : currentYear)
-      
       # Replace values of interest for big ones (999)
-      yearValue <- getValues(Raster3)
+      yearValue <- raster::getValues(Raster3)
       yearValue[yearValue %in% maskValue] <- 999
-      Raster3 <- setValues(Raster3, yearValue)
+      Raster3 <- raster::setValues(Raster3, yearValue)
       rm(yearValue)
       gc()
-      
       message(crayon::yellow(paste0("Masking Tile ", tiles,
                                     " of ", totalTiles, " tiles (Time: "
                                     , Sys.time(), ")")))
@@ -160,7 +157,7 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                                                        object = Raster1, 
                                                        snap = "near")
       }
-      
+
       Raster3 <- Cache(raster::mask, x = Raster1, mask = Raster3, 
                        maskvalue = 999, inverse = TRUE, updatevalue = 0, 
                        userTags = paste0("functionFinality:masked", tiles))
@@ -186,36 +183,38 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                                                        snap = "near")
       }
       # Apply focal
-      Raster3 <- Cache(individualFocal, inList = Raster3, inWeight = focalMatrices, denomRas = LCFocals, userTags = paste0("individualFocal",tiles))
+      Raster3 <- Cache(individualFocal, inList = Raster3, inWeight = focalMatrices, denomRas = LCFocals, 
+                       userTags = paste0("individualFocal",tiles))
       Raster3@data@names <- paste0(names(orderedRasterList)[tiles], "Focal", max(focalDistance))
+      # Some inf values returned from dividing by 0 (non-forest in LCC), so we devided by LCFocals. 
+      # Now we need to make the values that are above 1, 1.
+      aboveValue <- raster::getValues(Raster3)
+      aboveValue[aboveValue > 1] <- 1
+      Raster3 <- raster::setValues(Raster3, aboveValue)
+      rm(aboveValue)
       rm(LCFocals)
       gc()
-      
+
       # Resample raster to 250m
-      y <- raster::raster(res = c(resampledRes, resampledRes),
-                          crs = raster::crs(Raster3),
-                          ext = extent(Raster3))
-      
       message(crayon::green(paste0("Resampling Tile ", 
                                    tiles, 
                                    " (focal distance ", max(focalDistance), 
                                    ") to ", resampledRes, "m resolution (Time: "
                                    , Sys.time(), ")")))
+
+      Raster3FilePathRes <- file.path(pathData, paste0("resampled/resampled",
+                                                       tiles, ".tif"))
       if (Raster3@data@max == 0) {
         mth <- "near"
       } else {
         mth <- "bilinear"
       }
-      raster::writeRaster(Raster3, filename = file.path(pathData, paste0("toResample", 
+
+      raster::writeRaster(Raster3, filename = file.path(pathData, paste0("toResample",
                                                                          tiles, ".tif")),
                           format = "GTiff", overwrite = TRUE)
-      gc()
-      Raster3FilePath <- file.path(pathData, paste0("toResample", 
+      Raster3FilePath <- file.path(pathData, paste0("toResample",
                                                     tiles, ".tif"))
-      Raster3FilePathRes <- file.path(pathData, paste0("resampled/resampled", 
-                                                           tiles, ".tif"))
-      gc()
-      browser()
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
                "-s_srs \"", as.character(raster::crs(Raster3)), "\"",
@@ -227,16 +226,22 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
                "-tr ", paste(rep(resampledRes, 2), collapse = " "), " ",
                "-r ", paste0(mth, " "),
                Raster3FilePath, " ",
-               Raster3FilePathRes), 
+               Raster3FilePathRes),
         wait = TRUE)
-      Raster3 <- raster::raster(file.path(pathData, paste0("resampled/resampled", tiles, ".tif")))
+      Raster3 <- raster::raster(Raster3FilePathRes)
       gc()
       
+      Raster3 <- raster::writeRaster(Raster3, filename = file.path(pathData, 
+                                                                   paste0("resampled/resampled",
+                                                                                    tiles)),
+                                     overwrite = TRUE)
+      Raster3 <- raster::raster(file.path(pathData, 
+                                          paste0("resampled/resampled",
+                                                 tiles)))
       return(Raster3)
     }
   })
   gc()
-  browser()
   mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge)
   rm(focalTilesToMerge)
   gc()
@@ -244,6 +249,6 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
   raster::writeRaster(x = mergedFocalTiles, filename = mergedTilesName, overwrite = TRUE)
   rm(mergedFocalTiles)
   gc()
-  return(mergedTilesName)
+  return(raster::raster(mergedTilesName))
 }
 
