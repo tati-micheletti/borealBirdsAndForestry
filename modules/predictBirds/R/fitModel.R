@@ -3,12 +3,6 @@ fitModel <- function(inRas = stack,
                      spName = spName,
                      tileYear = currentTime){
 
-  browser()
-
-  # inRas[[2]][] <- inRas[[2]][]/1000 # Returning density to its original value: log(density_in_absence_disturbance) NO, values in original value
-  # But need to log?
-  # Its a list of birds, need to recover raster::raster()
-
   #Raster predict will work with any model that works with 'predict'
   if ("glmerMod" %in% class(inputModel)){
     prediction <- predict(object = inRas,
