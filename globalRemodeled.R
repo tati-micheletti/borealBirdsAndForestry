@@ -33,7 +33,9 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 # }
 
 ## list the modules to use
-modules <- list("predictBirds")#"birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "focalCalculation")
+modules <- list("birdAbundanceTrends")
+#Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles", 
+                         #"focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 2011, timeunit = "year") # Change back to 1985 2011. Just did 3-10 because of fake Rasters
