@@ -10,6 +10,7 @@ fakeFocalRasterYears <- function(st = start(sim),
   Years <- c(0, st:ed)
   if (st > 1000){
     Years <- Years - 1900
+    Years[1] <- 0
   }
   bff <- (max(focalYearList[]) - min(focalYearList[]))/length(Years)
   vecM <- numeric(length(Years))
@@ -31,16 +32,23 @@ fakeFocalRasterYears <- function(st = start(sim),
   rclmat[1,3] <- 90
   focalYearList <- raster::reclassify(x = focalYearList,
                                           rcl = rclmat)
-  focalYearList <- lapply(X = st:ed, FUN = function(yrs){
-    browser()
+  focalYearList <- lapply(X = Years, FUN = function(yrs){
+    yearValue <- raster::getValues(focalYearList)
+    yearValue[yearValue %in% yrs] <- 999
+    focalYearList <- raster::setValues(focalYearList, yearValue)
+    ras <- raster::mask(x = focalYearList, mask = focalYearList,
+                     maskvalue = 999, inverse = TRUE, updatevalue = 0)
+    focalMatrix <- raster::focalWeight(x = focalYearList, 
+                                       d = 4*res[1])
+    focalYearList <- raster::focal(x = focalYearList, w = focalMatrix, 
+                                   na.rm = TRUE)
+    focalYearList[] <- focalYearList[]/max(focalYearList[], na.rm = TRUE)
+    vals <- raster::getValues(focalYearList)
+    vals[vals < 0.85] <- 0
+    focalYearList <- raster::setValues(focalYearList, vals)
+    focalYearList@data@names <- paste0("Year", yrs+1900)
+    return(focalYearList)
   })
-  focalMatrix <- raster::focalWeight(x = focalYearList, 
-                         d = 4*res[1])
-  focalYearList <- raster::focal(x = focalYearList, w = focalMatrix, 
-                    na.rm = TRUE)
-  focalYearList[] <- focalYearList[]/max(focalYearList[], na.rm = TRUE)
-  vals <- raster::getValues(focalYearList)
-  vals[vals < 0.85] <- 0
-  focalYearList <- raster::setValues(focalYearList, vals)
-  return()
+  focalYearList <- focalYearList[-1]
+  return(focalYearList)
 }
