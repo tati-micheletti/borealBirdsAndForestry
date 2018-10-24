@@ -25,7 +25,7 @@ fitModel <- function(inRas = stack,
     }
   }
   prediction[] <- prediction[]*1000 # Results are already in density scale and multiplied by 1000 for saving space
-  storage.mode(prediction[]) = "integer"
+  suppressWarnings(storage.mode(prediction[]) <- "integer")
   
   message(crayon::green(paste0(spName, " prediction finalized for ", tileYear)))
 
