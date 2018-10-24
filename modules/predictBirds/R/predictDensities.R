@@ -24,7 +24,7 @@ predictionPerSpecies <-  lapply(birdSpecies, function(spName){
     }
   }
   predicted <- fitModel(inRas = stackRas, inputModel = models, spName = spName, tileYear = currentTime)
-  dir.create(file.path(pathData, "predicted"))
+  suppressWarnings(dir.create(file.path(pathData, "predicted")))
   predictedName <- file.path(pathData, paste0("predicted/predicted", spName, currentTime, ".tif"))
   raster::writeRaster(x = predicted, filename = predictedName, format = "GTiff", overwrite = TRUE)
   predicted <- raster(predictedName)
