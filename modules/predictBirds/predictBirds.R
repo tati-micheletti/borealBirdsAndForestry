@@ -37,11 +37,10 @@ defineModule(sim, list(
     expectsInput(objectName = "birdDensityRasters", objectClass = "list", 
                  desc = paste0("list of rasters with information",
                                " on species densities based on LCC and BCR/Prov")),
-    expectsInput(objectName = "focalDistance", objectClass = "numeric", 
-                 desc = paste0("Distance for which the disturance % is calculated"))
   ),
   outputObjects = bind_rows(
-    createsOutput(objectName = NA, objectClass = NA, desc = NA)
+    createsOutput(objectName = "predictRas", objectClass = "list", 
+                  desc = "List of years, which is a list of species")
   )
 ))
 
