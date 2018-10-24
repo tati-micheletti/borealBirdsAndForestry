@@ -36,8 +36,6 @@ fakeFocalRasterYears <- function(st = start(sim),
     yearValue <- raster::getValues(focalYearList)
     yearValue[yearValue %in% yrs] <- 999
     focalYearList <- raster::setValues(focalYearList, yearValue)
-    ras <- raster::mask(x = focalYearList, mask = focalYearList,
-                     maskvalue = 999, inverse = TRUE, updatevalue = 0)
     focalMatrix <- raster::focalWeight(x = focalYearList, 
                                        d = 4*res[1])
     focalYearList <- raster::focal(x = focalYearList, w = focalMatrix, 
