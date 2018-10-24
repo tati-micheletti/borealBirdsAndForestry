@@ -55,11 +55,13 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
     },
     predictBirdsDensities = {
       
-      sim$predictRas[[paste0("Year", time(sim))]] <- predictDensities(birdSpecies = sim$birdSpecies,
+      sim$predictRas[[paste0("Year", time(sim))]] <- Cache(predictDensities, birdSpecies = sim$birdSpecies,
                                                                       disturbanceRas = sim$focalYearList[[paste0("Year", time(sim))]],
                                                                       birdDensityRasters = sim$birdDensityRasters,
                                                                       currentTime = time(sim),
-                                                                      models = sim$models)
+                                                                      models = sim$models,
+                                                                      pathData = dataPath(sim), 
+                                                           userTags = paste0("predicted", time(sim)))
       
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + 1, "predictBirds", "predictBirdsDensities")
@@ -76,7 +78,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
     message(paste0("No disturbance list of rasters found.", 
                    "Using fake disturbance raster for years ", 
                    start(sim), ":", end(sim)))
-    sim$focalYearList <- fakeFocalRasterYears(st = start(sim),
+    sim$focalYearList <- Cache(fakeFocalRasterYears, st = start(sim),
                                               ed = end(sim),
                                               res = c(250, 250),
                                               crsRas = "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
