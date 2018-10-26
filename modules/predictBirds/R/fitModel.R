@@ -15,20 +15,23 @@ fitModel <- function(inRas = stack,
       tempRas <- raster::raster(nrows = nrow(inRas[[1]]), ncols = ncol(inRas[[1]]), 
                                 crs = raster::crs(inRas[[1]]), ext = extent(inRas[[1]]), 
                                 resolution = res(inRas[[1]]), vals = 0)
-      names(tempRas) <- paste0("OFFSET_", spName)
-      assign(x = paste0("OFFSET_", spName), value = tempRas)
-      inRas <- addLayer(x = inRas, get(paste0("OFFSET_", spName)))
+      off <- names(inputModel$data)[grepl(pattern = "OF", x = names(inputModel$data)) & 
+                                    grepl(pattern = spName, x = names(inputModel$data))]
+      names(tempRas) <- off
+      assign(x = off, value = tempRas)
+      inRas <- addLayer(x = inRas, get(off))
       prediction <- predict(object = inRas,
                             model = inputModel,
-                            type = "response") # re.form = NA drops the random effects from the models; "response" gives us the density, not log
+                            type = "response") # No re.form in glm
       names(prediction) <- paste0("prediction", spName, tileYear)
     }
   }
-  prediction[] <- prediction[]*1000 # Results are already in density scale and multiplied by 1000 for saving space
-  suppressWarnings(storage.mode(prediction[]) <- "integer")
+  # I will try without first... If it doesn't fir, we multiply
+  #prediction[] <- prediction[]*1000 # Results are already in density scale and multiplied by 1000 for saving space
+  #suppressWarnings(storage.mode(prediction[]) <- "integer")
   
   message(crayon::green(paste0(spName, " prediction finalized for ", tileYear)))
-
+  
   return(prediction)
 }
 
