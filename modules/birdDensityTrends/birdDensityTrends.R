@@ -1,13 +1,10 @@
-
-# Everything in this file gets sourced during simInit, and all functions and objects
-# are put into the simList. To use objects, use sim$xxx, and are thus globally available
-# to all modules. Functions can be used without sim$ as they are namespaced, like functions
-# in R packages. If exact location is required, functions will be: sim$<moduleName>$FunctionName
 defineModule(sim, list(
   name = "birdDensityTrends",
-  description = NA, #"insert module description here",
-  keywords = NA, # c("insert key words here"),
-  authors = person("First", "Last", email = "first.last@example.com", role = c("aut", "cre")),
+  description = paste0("This module will take a list of yearly predictions, fit a regression ", 
+                       "model to these and return a list of slope and significancy per species"),
+  keywords = c("trend", "linear model, "),
+  authors = c(person("Tati", "Micheletti", email = "tati.micheletti@gmail.com", role = c("aut", "cre")),
+              person("Ian", "Eddy", email = "ian.eddy@canada.ca", role = c("aut", "cre"))),
   childModules = character(0),
   version = list(SpaDES.core = "0.2.3", birdDensityTrends = "0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
@@ -15,95 +12,56 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "birdDensityTrends.Rmd"),
-  reqdPkgs = list(),
+  reqdPkgs = list("raster"),
   parameters = rbind(
-    #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
-    defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
-    defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
-    defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
-    defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter("plotting", "logical", TRUE, NA, NA, paste0("This describes if the ", 
+                    "plotting event should occur")),
+    defineParameter(".useCache", "logical", FALSE, NA, NA, 
+                    paste0("Should this entire module be",
+                           " run with caching activated? This is generally intended for data-type", 
+                           " modules, where stochasticity and time are not relevant"))
   ),
   inputObjects = bind_rows(
-    #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
-    expectsInput(objectName = NA, objectClass = NA, desc = NA, sourceURL = NA)
+    expectsInput(objectName = "birdSpecies", objectClass = "character", 
+                 desc = "List of bird species to be modeled"),
+    expectsInput(objectName = "predictRas", objectClass = "list",
+                 desc = "List of years, which is a list of species with density rasters")
   ),
   outputObjects = bind_rows(
-    #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = NA, objectClass = NA, desc = NA)
+    createsOutput(objectName = "trends", objectClass = "list", 
+                  desc = paste0("List of species, with significant slope raster. ",
+                                "The slope has was masked by significancy at alpha = 0.05"))
   )
 ))
-
-## event types
-#   - type `init` is required for initialiazation
 
 doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
-      ### check for more detailed object dependencies:
-      ### (use `checkObject` or similar)
-
-      # do stuff for this event
-      sim <- Init(sim)
-
-      # schedule future event(s)
-      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "birdDensityTrends", "plot")
-      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "birdDensityTrends", "save")
+      sim <- scheduleEvent(sim, end(sim), "birdDensityTrends", "fitTrend", eventPriority = .last())
+      sim <- scheduleEvent(sim, end(sim), "birdDensityTrends", "plot", eventPriority = .last())
+    },
+    fitTrend = {
+      
+      sim$trends <- Cache(trendPerSpecies, birdSpecies = sim$birdSpecies,
+                                    predictRas = sim$predictRas,
+                                    startTime = start(sim),
+                                    endTime = end(sim),
+                                    outPath = outputPath(sim),
+                                    userTags = paste0("trendYears", 
+                                                      start(sim), ":",
+                                                      end(sim)))
     },
     plot = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      #plotFun(sim) # uncomment this, replace with object to plot
-      # schedule future event(s)
-
-      # e.g.,
-      #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "birdDensityTrends", "plot")
-
-      # ! ----- STOP EDITING ----- ! #
-    },
-    save = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-
-      # schedule future event(s)
-
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "birdDensityTrends", "save")
-
-      # ! ----- STOP EDITING ----- ! #
-    },
-    event1 = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-
-      # schedule future event(s)
-
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "birdDensityTrends", "templateEvent")
-
-      # ! ----- STOP EDITING ----- ! #
-    },
-    event2 = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-
-      # schedule future event(s)
-
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "birdDensityTrends", "templateEvent")
-
-      # ! ----- STOP EDITING ----- ! #
+      if (P(sim)$plotting == TRUE){
+        lapply(X = names(sim$trends), FUN = function(sp){
+          assign(x = paste0("ras", sp), value = raster::raster(sim$trends[[sp]]))
+          eval(parse(text = paste0("quickPlot::Plot(ras", sp,", title = paste0('Trends from ', 
+                                   start(sim), ' to ', end(sim), ' for ', sp))")))
+        })
+      } else {
+        message(crayon::blurred("Plotting is turned off."))
+      }
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
@@ -111,81 +69,42 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
   return(invisible(sim))
 }
 
-## event functions
-#   - follow the naming convention `modulenameEventtype()`;
-#   - `modulenameInit()` function is required for initiliazation;
-#   - keep event functions short and clean, modularize by calling subroutines from section below.
-
-### template initialization
-Init <- function(sim) {
-  # # ! ----- EDIT BELOW ----- ! #
-
-  # ! ----- STOP EDITING ----- ! #
-
-  return(invisible(sim))
-}
-
-### template for save events
-Save <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # do stuff for this event
-  sim <- saveFiles(sim)
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for plot events
-plotFun <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # do stuff for this event
-  #Plot(sim$object)
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for your event1
-Event1 <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
-  # sim$event1Test1 <- " this is test for event 1. " # for dummy unit test
-  # sim$event1Test2 <- 999 # for dummy unit test
-
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for your event2
-Event2 <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
-  # sim$event2Test1 <- " this is test for event 2. " # for dummy unit test
-  # sim$event2Test2 <- 777  # for dummy unit test
-
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
 .inputObjects <- function(sim) {
-  # Any code written here will be run during the simInit for the purpose of creating
-  # any objects required by this module and identified in the inputObjects element of defineModule.
-  # This is useful if there is something required before simulation to produce the module
-  # object dependencies, including such things as downloading default datasets, e.g.,
-  # downloadData("LCC2005", modulePath(sim)).
-  # Nothing should be created here that does not create a named object in inputObjects.
-  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
-  # Note: the module developer can check if an object is 'suppliedElsewhere' to
-  # selectively skip unnecessary steps because the user has provided those inputObjects in the
-  # simInit call, or another module will supply or has supplied it. e.g.,
-  # if (!suppliedElsewhere('defaultColor', sim)) {
-  #   sim$map <- Cache(prepInputs, extractURL('map')) # download, extract, load file from url in sourceURL
-  # }
-  # ! ----- EDIT BELOW ----- ! #
-
-  # ! ----- STOP EDITING ----- ! #
+  if (!suppliedElsewhere("predictRas", sim)){
+    if (suppliedElsewhere("birdSpecies", sim)){
+      stop(paste0("Bird list supplied, but predicted rasters not.",
+                  " Please either provide either both objects, or ",
+                  "none of these two."))
+    } else {  
+      if (!suppliedElsewhere("birdSpecies", sim)){
+    message(paste0("No species list found. Using fake data for bay-breasted", 
+                   " warbler and canada warbler (BBWA and CAWA)"))
+    sim$birdSpecies <- c("BBWA", "CAWA")
+  }
+      message(paste0("No bird density raster found.",
+                     " Using fake time series rasters for BBWA and CAWA for years ",
+                     start(sim), " to ", end(sim)))
+      sim$predictRas <- Cache(createRandomRasterList, rastersPerList = length(sim$birdSpecies),
+                                        numberOfLists = length(start(sim):end(sim)),
+                                        returnPaths = FALSE,
+                                        splittedTiles = FALSE)
+      yr <- start(sim):end(sim)
+      # Just need to rename the lists
+      sim$predictRas <- lapply(X = 1:length(sim$predictRas), FUN = function(nRas){
+        lapply(X = 1:length(sim$birdSpecies), FUN = function(nSp){
+          sim$predictRas[[nRas]][[nSp]]@data@names <- paste0(sim$birdSpecies[nSp], "Year", yr[nRas])
+          return(sim$predictRas[[nRas]][[nSp]])
+        })
+        names(sim$predictRas[[nRas]]) <- sim$birdSpecies
+        return(sim$predictRas[[nRas]])
+      })
+      names(sim$predictRas) <- paste0("Year", yr)
+    }
+  }
+  if (!suppliedElsewhere("birdSpecies", sim)){
+    message("No species list found. Using species names provided by the predictRas object")
+    sim$birdSpecies <- names(sim$predictRas)
+  }
+  
   return(invisible(sim))
 }
-### add additional events as needed by copy/pasting from above
