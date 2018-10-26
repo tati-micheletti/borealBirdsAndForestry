@@ -2,7 +2,7 @@ predictDensities <- function(birdSpecies = sim$birdSpecies,
                              disturbanceRas = sim$focalYearList[[paste0("Year", time(sim))]],
                              birdDensityRasters = sim$birdDensityRasters,
                              currentTime = time(sim),
-                             models = sim$models,
+                             modelList = sim$models,
                              pathData = dataPath(sim)) {
 
 predictionPerSpecies <-  lapply(birdSpecies, function(spName){
@@ -14,6 +14,7 @@ predictionPerSpecies <-  lapply(birdSpecies, function(spName){
   rm(valsD)
   gc()
   stackRas <- raster::stack(disturbanceRas, birdD) # Might need to remove individual rasters here
+  models <- modelList[[spName]]
   if ("glmerMod" %in% class(models)){
     names(stackRas)[1] <- names(models@frame)[2]
     names(stackRas)[2] <- names(models@frame)[3]
@@ -29,8 +30,8 @@ predictionPerSpecies <-  lapply(birdSpecies, function(spName){
   raster::writeRaster(x = predicted, filename = predictedName, format = "GTiff", overwrite = TRUE)
   predicted <- raster(predictedName)
   gc()
-  return(predicted) # The predicted value is multiplied by 1000 and stored as integer
+  return(predicted) # The predicted value is NOT multiplied by 1000! For that, need to change fitModel!
 })
 names(predictionPerSpecies) <- birdSpecies
-  return(predictionPerSpecies)
+return(predictionPerSpecies)
 }
