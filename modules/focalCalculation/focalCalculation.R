@@ -69,7 +69,7 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
                                                                 # We will use parallel only if when all is in memory, 
                                                                 # it leaves space in memory for dealing with more than 1 at a time
                                                                 listTilePaths = sim$rastersList,
-                                                                pathData = dataPath(sim),
+                                                                pathData = cachePath(sim),
                                                                 forestClass = P(sim)$forestClass,
                                                                 focalDistance = P(sim)$focalDistance,
                                                                 disturbanceClass = P(sim)$disturbanceClass,
