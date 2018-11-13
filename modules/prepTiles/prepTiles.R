@@ -142,7 +142,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       }
       
       message(crayon::green("Big rasters prepared for splitting!"))
-      
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "prepTiles", "tileRasters", eventPriority = 1)
     },
@@ -162,7 +162,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Splitting Raster2 tiles", " (Time: "
                                     , Sys.time(), ")")))
       dir.create(file.path(cachePath(sim), "Raster2"))
-      sim$Raster2 <- Cache(splitRaster, r = sim$Raster2, 
+      sim$Raster2 <- Cache(splitRaster, r = sim$Raster2,
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
                            buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
@@ -236,37 +236,43 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
     } else {
       if (is.null(sim$specificTestArea)) {
         sim$polyMatrix <- matrix(c(-79.471273, 48.393518), ncol = 2) 
-        sim$areaSize <- 10000000
+        sim$areaSize <- 1e+11
         set.seed(1234)
-        sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon
+        sim$rP <- randomPolygon(x = polyMatrix, area = areaSize) # Create Random polygon
         message(crayon::yellow("Test area is TRUE, specificTestArea is 'NULL'. Cropping and masking to an area in south Ontario."))
       } else {
         if (sim$specificTestArea == "boreal") {
           if (!is.null(sim$mapSubset)) {
+            if (sim$mapSubset != "Canada") {
             sArP <- Cache(prepInputs,
                           url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
                           targetFile = "gpr_000b11a_e.shp",
                           # Subsetting to specific Provinces
-                          archive = "gpr_000b11a_e.zip",
                           destinationPath = dataPath(sim), 
                           userTags = "objectName:sArP") %>%
               raster::subset(PRENAME %in% sim$mapSubset)
-            if (nrow(sArP@data) == 0) {
-              stop(paste0("There is no Canadian Province called ",
+              if (nrow(sArP@data) == 0) {
+                stop(paste0("There is no Canadian Province called ",
                           sim$mapSubset,
                           ". Please provide a Canadian province name in English for subsetMap, ",
                           "or use 'NULL' (does not subset boreal)."))
+              }
+            } else {
+              if (sim$mapSubset == "Canada") {
+                sArP <- NULL # [ FIX ] when I can run the first rasters again! So far, it is complicated to do it cause it is being used elsewhere
+                  # Cache(raster::getData('GADM', country = 'CAN', level = 0), 
+                  #             userTags = "Canada.sArP")
+              }
             }
           } else {
-            sArP <- NULL
-          }
+              sArP <- NULL
+            }
           message(crayon::yellow("Test area is TRUE. Cropping and masking to the Canadian Boreal."))
           sim$rP <- prepInputs(alsoExtract = "similar", # [ FIX ] Needs a URL to make it more reproducible!
                                archive = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.zip"),
                                targetFile = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.shp"),
                                studyArea = sArP,
-                               destinationPath = dataPath(sim)
-          )
+                               destinationPath = dataPath(sim))
         } else {
           if (!is.null(sim$specificTestArea)) {
             sim$rP <- Cache(prepInputs,
