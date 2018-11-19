@@ -37,22 +37,24 @@ fetchData <- function(pathData = dataPath(sim),
                        overwrite = FALSE,
                        verbose = FALSE)
       }
-      
+
       LCC05 <- Cache(prepInputs, targetFile = "LCC2005_V1_4a.tif",
                      archive = "LandCoverOfCanada2005_V1_4.zip",
                      destinationPath = pathData,
                      studyArea = studyArea,
+                     overwrite = TRUE,
                      userTags = "objectName:LCC05")
 
       LCC05 <- Cache(projectInputs, LCC05, targetCRS = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0",
-                     userTags = "objectName:LCC05")
+                     userTags = "objectName:LCC05-reproj")
       
       BCR <- Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
                    targetFile = "BCR_Terrestrial_master.shp",
-                   archive = "bcr_terrestrial_shape.zip",
+                   # archive = "bcr_terrestrial_shape.zip",
                    destinationPath = pathData,
                    studyArea = studyArea,
                    rasterToMatch = LCC05,
+                   overwrite = TRUE,
                    userTags = "objectName:BCR")
       
       # For some reason it doesn't work for the boreal shapefile. However, BCR has province information. We will use that. 
