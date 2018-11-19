@@ -36,11 +36,13 @@ defineModule(sim, list(
                  desc = "list of boreal bird models"),
     expectsInput(objectName = "birdDensityRasters", objectClass = "list", 
                  desc = paste0("list of rasters with information",
-                               " on species densities based on LCC and BCR/Prov")),
+                               " on species densities based on LCC and BCR/Prov"))
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "predictRas", objectClass = "list", 
-                  desc = "List of years, which is a list of species with density rasters")
+                  desc = "List of years, which is a list of species with density rasters"),
+    createsOutput(objectName = "predictModels", objectClass = "list",
+                  desc = paste0("list of models for prediction"))
   )
 ))
 
@@ -54,13 +56,17 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
     },
     predictBirdsDensities = {
       
+      sim$predictModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
+                                        prmt = sim@params,
+                                        models = sim$models)
+      
       sim$predictRas[[paste0("Year", time(sim))]] <- Cache(predictDensities, birdSpecies = sim$birdSpecies,
                                                            disturbanceRas = sim$focalYearList[[paste0("Year", time(sim))]],
                                                            birdDensityRasters = sim$birdDensityRasters,
                                                            currentTime = time(sim),
-                                                           modelList = sim$models,
-                                                           pathData = dataPath(sim), 
-                                                           userTags = paste0("predicted", time(sim)))
+                                                           modelList = sim$predictModels,
+                                                           pathData = cachePath(sim), 
+                                                           cacheId = paste0("predicted", time(sim)))
       
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + 1, "predictBirds", "predictBirdsDensities")
