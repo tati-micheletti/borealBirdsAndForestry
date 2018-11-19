@@ -43,12 +43,19 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
     },
     fitTrend = {
       
+      if (is.null(P(sim)$focalDistance)){
+        fd <- NULL  
+      } else {
+        fd <- max(P(sim)$focalDistance)
+      }
+      
       sim$trends <- Cache(trendPerSpecies, birdSpecies = sim$birdSpecies,
+                                    focalDistance = P(sim)$focalDistance,
                                     predictRas = sim$predictRas,
                                     startTime = start(sim),
                                     endTime = end(sim),
-                                    outPath = outputPath(sim),
-                                    userTags = paste0("trendYears", 
+                                    outPath = cachePath(sim),
+                                    cacheId = paste0("trendYears", fd,"TS:",
                                                       start(sim), ":",
                                                       end(sim)))
     },
@@ -73,7 +80,7 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
   if (!suppliedElsewhere("predictRas", sim)){
     if (suppliedElsewhere("birdSpecies", sim)){
       stop(paste0("Bird list supplied, but predicted rasters not.",
-                  " Please either provide either both objects, or ",
+                  " Please either provide both objects, or ",
                   "none of these two."))
     } else {  
       if (!suppliedElsewhere("birdSpecies", sim)){
