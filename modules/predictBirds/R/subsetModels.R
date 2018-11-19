@@ -1,0 +1,24 @@
+subsetModels <- function(disturbancePredict = sim$disturbancePredict,
+                         prmt = sim@params,
+                         models = sim$models){
+  
+  if(any(grepl(pattern = "focalDistance", names(unlist(prmt))))){
+    rw <- which(grepl(pattern = "focalDistance", names(unlist(prmt))))
+    focalDistance <- as.numeric(unlist(prmt)[rw])
+    if(all(!focalDistance %in% c(100, 500))){
+      warning("Predictions won't be performed for focal distances other than 100 or 500")
+    }
+    if (all(length(unique(focalDistance)) == 1 & focalDistance == 100)){
+      comb <- paste0("local", disturbancePredict) 
+      } else {
+        if (all(length(focalDistance) == 2 & focalDistance == c(100, 500))){ 
+          comb <- paste0("neighborhood", disturbancePredict)
+          } else {
+            NULL
+          }
+      }
+    slct <- which(names(models) %in% comb)
+    models <- models[[slct]]
+  }
+  return(models)
+}
