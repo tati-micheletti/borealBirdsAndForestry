@@ -68,10 +68,10 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
         sim$data <- sim$birdData
       } else {
         
-        sim$SQLData <- retrieveSQLData(SQLtableVersion = sim$SQLtableVersion,
+        sim$SQLData <- suppressWarnings(retrieveSQLData(SQLtableVersion = sim$SQLtableVersion,
                                        SQLServer = sim$SQLServer,
                                        SQLDatabase = sim$SQLDatabase,
-                                       birdSpecies = sim$birdSpecies)
+                                       birdSpecies = sim$birdSpecies))
 
         sim$data <- dataUploading(data = sim$dataName, 
                                   combinations =  sim$combinations,
@@ -124,10 +124,6 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                           birdSp = sim$birdSpecies,
                           combinations = sim$combinations,
                           outputPath = outputPath(sim))
-      
-      sim$scaleModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
-                                      prmt = sim@params,
-                                      models = sim$models)
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -163,6 +159,6 @@ Init <- function(sim) {
   if (!suppliedElsewhere("disturbanceDimension", sim)){
     sim$disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed")
   }
-  
+
   return(invisible(sim))
 }
