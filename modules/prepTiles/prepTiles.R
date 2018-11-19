@@ -151,34 +151,38 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       # Now all rasterd need to be tiled using the paramethers provided nx and ny
       message(crayon::yellow(paste0("Splitting Raster1 tiles", " (Time: "
                                     , Sys.time(), ")")))
+      suppressWarnings(dir.create(file.path(cachePath(sim), "Raster1")))
       sim$Raster1 <- Cache(splitRaster, r = sim$Raster1, 
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
-                           buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
+                           buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceType Raster, write to disk,
                            rType = params(sim)$prepTiles$rType, 
-                           path = file.path(cachePath(sim), "Raster1")) # override the original in memory
+                           path = file.path(cachePath(sim), "Raster1"),
+                           cacheId = "4ad1a58bca394fb20b45cb00c7462f72") # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster2 tiles", " (Time: "
                                     , Sys.time(), ")")))
-      dir.create(file.path(cachePath(sim), "Raster2"))
+      suppressWarnings(dir.create(file.path(cachePath(sim), "Raster2")))
       sim$Raster2 <- Cache(splitRaster, r = sim$Raster2,
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
                            buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
                            rType = params(sim)$prepTiles$rType,
-                           path = file.path(cachePath(sim), "Raster2")) # override the original in memory
+                           path = file.path(cachePath(sim), "Raster2"),
+                           cacheId = "b872b52f5d3d9af78b740ca3b478c284") # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster3 tiles", " (Time: "
                                     , Sys.time(), ")")))
-      dir.create(file.path(cachePath(sim), "Raster3"))
+      suppressWarnings(dir.create(file.path(cachePath(sim), "Raster3")))
       sim$Raster3 <- Cache(splitRaster, r = sim$Raster3, 
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
-                           buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
+                           buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceYear Raster, write to disk,
                            rType = params(sim)$prepTiles$rType,
-                           path = file.path(cachePath(sim), "Raster3")) # override the original in memory
+                           path = file.path(cachePath(sim), "Raster3"),
+                           cacheId = "e2e84d254bd8a8032c58263a11a23da3") # override the original in memory
       gc()
 
       sim$rastersList <- list("Raster1" = sim$Raster1, 
