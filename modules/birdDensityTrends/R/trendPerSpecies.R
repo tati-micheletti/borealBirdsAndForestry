@@ -28,7 +28,8 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
     } else {
       splittedPath <- file.path(outPath, paste0("trends", focalDistance))
       message(crayon::yellow(paste0("Splitting rasters for ", birdSpecies[sp], " (Time: ", Sys.time(), ")")))
-      splittedList <- Cache(lapply, X = birdTS, FUN = splitRaster, nx = 2, ny = 2, buffer = c(800, 800),
+      browser()
+      splittedList <- Cache(lapply, X = birdTS, splitRaster, nx = 2, ny = 2, buffer = c(800, 800),
                             path = splittedPath)
       totalTiles <- unique(lengths(splittedList))
       lengthVector <- 1:totalTiles
@@ -111,7 +112,7 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
                                                                     object = slopeSignificancy, 
                                                                     snap = "near")
           }
-          browser()
+          browser() # Check memory usage
           raster::mask(x = slopeCoefficient, mask = slopeSignificancy,
                        maskvalue = 0, updatevalue = 0,
                        filename = slopePath, overwrite = TRUE)
@@ -133,6 +134,7 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
       rm(mergedFocalTiles)
       gc()
       return(raster::raster(mergedTilesName))
+      browser()
     }
   })
   names(trends) <- birdSpecies
