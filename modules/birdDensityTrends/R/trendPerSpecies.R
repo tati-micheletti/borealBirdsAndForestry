@@ -1,4 +1,5 @@
 trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
+                            focalDistance = NULL,
                             predictRas = sim$predictRas,
                             startTime = start(sim),
                             endTime = end(sim),
