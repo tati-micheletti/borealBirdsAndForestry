@@ -24,6 +24,10 @@ defineModule(sim, list(
   inputObjects = bind_rows(
     expectsInput(objectName = "birdSpecies", objectClass = "character", 
                  desc = "List of bird species to be modeled"),
+    expectsInput(objectName = "focalDistance", objectClass = "numeric",
+                 desc = paste0("If provided somewhere else as a parameter, ", 
+                               "the focal distance is inputted here as an object mainly for naming purposes. ",
+                               "If the parameter is not provided, it becomes NULL")),
     expectsInput(objectName = "predictRas", objectClass = "list",
                  desc = "List of years, which is a list of species with density rasters")
   ),
@@ -42,20 +46,13 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, end(sim), "birdDensityTrends", "plot", eventPriority = .last())
     },
     fitTrend = {
-      
-      if (is.null(P(sim)$focalDistance)){
-        fd <- NULL  
-      } else {
-        fd <- max(P(sim)$focalDistance)
-      }
-      
       sim$trends <- Cache(trendPerSpecies, birdSpecies = sim$birdSpecies,
-                                    focalDistance = P(sim)$focalDistance,
+                                    focalDistance = sim$focalDistance,
                                     predictRas = sim$predictRas,
                                     startTime = start(sim),
                                     endTime = end(sim),
                                     outPath = cachePath(sim),
-                                    cacheId = paste0("trendYears", fd,"TS:",
+                                    cacheId = paste0("trendYears", sim$focalDistance,"TS:",
                                                       start(sim), ":",
                                                       end(sim)))
     },
@@ -111,6 +108,13 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
   if (!suppliedElsewhere("birdSpecies", sim)){
     message("No species list found. Using species names provided by the predictRas object")
     sim$birdSpecies <- names(sim$predictRas)
+  }
+  if (!is.null(unlist(P(mySim),
+                     use.names = FALSE)[grepl(pattern = "focalDistance", 
+                                              x = names(unlist(P(mySim))))])){
+    sim$focalDistance <- max(as.numeric(unlist(P(mySim), 
+                                               use.names = FALSE)[grepl(pattern = "focalDistance", 
+                                                                        x = names(unlist(P(mySim))))]))
   }
   
   return(invisible(sim))

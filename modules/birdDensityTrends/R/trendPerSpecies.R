@@ -3,13 +3,11 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
                             predictRas = sim$predictRas,
                             startTime = start(sim),
                             endTime = end(sim),
-                            outPath = outputPath(sim)){
+                            outPath = cachePath(sim)){
   if (!identical(names(predictRas[[1]]), birdSpecies)){
     stop("Your species list and predicted rasters do not match. Please revise the code")
   }
-  if (!is.null(focalDistance)) {
-    focalDistance <- max(focalDistance)
-  }
+
   # Select each species' time series
   message(crayon::red(paste0("Starting trend analysis (Time: "
                              , Sys.time(), ")")))
@@ -29,9 +27,8 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
     } else {
       splittedPath <- file.path(outPath, paste0("trends", focalDistance))
       message(crayon::yellow(paste0("Splitting rasters for ", birdSpecies[sp], " (Time: ", Sys.time(), ")")))
-      browser()
       splittedList <- Cache(lapply, X = birdTS, splitRaster, nx = 2, ny = 2, buffer = c(800, 800),
-                            path = splittedPath)
+                            path = splittedPath, cacheId = paste0("splitTrends", focalDistance, birdSpecies[sp]))
       totalTiles <- unique(lengths(splittedList))
       lengthVector <- 1:totalTiles
       orderedRasterList <- lapply(X = lengthVector, FUN = function(index){
@@ -72,6 +69,7 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
                                           ncol = ncol(arrayStack), 
                                           byrow = FALSE) # retrieves values from slope Coefficient, arranges into a corrected (inversed) matrix
           rm(slopeValues)
+          rm(arrayStack)
           gc()
           # Assigning significancy values to the raster, multiplying by 1000 for efficient storage
           slopeSignificancy <- predictedStack[[1]] %>%
@@ -85,6 +83,7 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
             raster::setValues(slopeCoefficientVals)
           names(slopeCoefficient) <- "slopeCoefficient"
           rm(slopeCoefficientVals)
+          rm(predictedStack)
           gc()
           
           # Now we are excluding the significancy of trends
@@ -101,6 +100,10 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
           message(crayon::yellow(paste0("Masking significant pixels for tile ", tiles,
                                         " of ", birdSpecies[sp],
                                         " (Time: ", Sys.time(), ")")))
+          rm(vals)
+          gc()
+
+
           
           if (!identical(raster::extent(slopeCoefficient), raster::extent(slopeSignificancy))){
             if (raster::ncell(slopeSignificancy) < raster::ncell(slopeCoefficient)) {
@@ -113,7 +116,6 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
                                                                     object = slopeSignificancy, 
                                                                     snap = "near")
           }
-          browser() # Check memory usage
           raster::mask(x = slopeCoefficient, mask = slopeSignificancy,
                        maskvalue = 0, updatevalue = 0,
                        filename = slopePath, overwrite = TRUE)
@@ -135,7 +137,6 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
       rm(mergedFocalTiles)
       gc()
       return(raster::raster(mergedTilesName))
-      browser()
     }
   })
   names(trends) <- birdSpecies
