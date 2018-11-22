@@ -1,24 +1,25 @@
 # Global script for the Backcasting Project REMODELED
 
-# FOR 500m
-# DOUBLE CHECK IF FOCAL WEIGHT WILL GET THE CACHE. IT SHOULD NOT!
-# [ FIX ] Add cacheId to the split raster call in prepTiles
+
+# Add this to the birdDensityBCR_Prov_LCC module/fetchData() and make it (will be used in 500m only) ==> has the browser call. Just needs to pass projectInputs()
+# Then add fixed to another branch (tempMaskTrends) for using it with the trends of 100m (temporary)
 
 library(SpaDES.core)
 library(SpaDES.tools)
-tryCatch(library(unixtools),
-         error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
+# tryCatch(library(unixtools),
+#          error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
 options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
-unixtools::set.tempdir("/mnt/storage/temp")
+# unixtools::set.tempdir("/mnt/storage/temp")
 
 
 # set the directories
-workDirectory <- getwd()
-
+#workDirectory <- getwd()
+workDirectory <- "C:/Users/tmichele/GitHub/borealBirdsAndForestry"
 paths <- list(
   # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
-  cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
+  # cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
   # while the other folders are in the working directory
+  cachePath = file.path(workDirectory, "cache"),
   modulePath = file.path(workDirectory, "modules"),
   inputPath = file.path(workDirectory, "inputs"),
   outputPath = file.path(workDirectory, "outputs")
@@ -28,8 +29,9 @@ options("reproducible.cachePath" = paths$cachePath)
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
-                "focalCalculation", "predictBirds", "birdDensityTrends")
+# modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
+#                 "focalCalculation", "predictBirds", "birdDensityTrends")
+modules <- list("birdDensityBCR_Prov_LCC")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 
