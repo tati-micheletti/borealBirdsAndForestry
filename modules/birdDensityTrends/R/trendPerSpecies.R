@@ -103,8 +103,6 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
           rm(vals)
           gc()
 
-
-          
           if (!identical(raster::extent(slopeCoefficient), raster::extent(slopeSignificancy))){
             if (raster::ncell(slopeSignificancy) < raster::ncell(slopeCoefficient)) {
               slopeCoefficient <- raster::crop(x = slopeCoefficient, y = slopeSignificancy)
