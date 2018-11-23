@@ -109,12 +109,12 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
     message("No species list found. Using species names provided by the predictRas object")
     sim$birdSpecies <- names(sim$predictRas)
   }
-  if (!is.null(unlist(P(mySim),
+  if (!is.null(unlist(sim@params,
                      use.names = FALSE)[grepl(pattern = "focalDistance", 
-                                              x = names(unlist(P(mySim))))])){
-    sim$focalDistance <- max(as.numeric(unlist(P(mySim), 
+                                              x = names(unlist(sim@params)))])){
+    sim$focalDistance <- max(as.numeric(unlist(sim@params, 
                                                use.names = FALSE)[grepl(pattern = "focalDistance", 
-                                                                        x = names(unlist(P(mySim))))]))
+                                                                        x = names(unlist(sim@params)))]))
   }
   
   return(invisible(sim))
