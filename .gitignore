@@ -97,8 +97,11 @@ cache/backpack.db
 !plotCoefficients.png
 !plotDisturbanceSector.png
 !plotList.csv
-!TableS1-1.csv
-!TableS1-2.csv               
+TableS1-1.csv
+TableS1-2.csv               
+outputs/TableS1-1.csv
+outputs/TableS1-2.csv               
+
 !TableS2.csv                 
 # Keygens
 *sshkeygen.*
@@ -118,4 +121,5 @@ borealBirdsAndForestryManuscripts
 !tableNegatives500.csv
 !barGraph.png
 !BRANDT_OUTLINE_Dissolve.zip
+
 
