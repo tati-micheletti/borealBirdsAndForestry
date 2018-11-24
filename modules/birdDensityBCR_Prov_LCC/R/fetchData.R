@@ -98,10 +98,12 @@ fetchData <- function(pathData = dataPath(sim),
         spRas <- raster::raster(resolution = res(LCC05), crs = raster::crs(LCC05), ext = extent(LCC05)) %>%
           raster::setValues(vals$D)
         spRas@data@names <- sp
-        browser() #Mask raster birds range birdsRangeList
-        
+      
+        #Mask raster birds range birdsRangeList
+        spRas <- maskingSpeciesRange(densityRasters = spRas,
+                                     sp = sp,
+                                     birdsRangeList = sim$birdsRangeList)
         # Write density files to disk while
-        if (densityFiles[[sp]])
         raster::writeRaster(x = spRas, filename = densityFiles[[sp]], overwrite = TRUE)
         rm(spRas)
         invisible(gc())
@@ -109,7 +111,7 @@ fetchData <- function(pathData = dataPath(sim),
       }
       })
       names(densityRasList) <- birdSp
-      browser() # Are the density rasters created? BBWA should 
+      browser() # Are the density rasters created? BBWA should INMY PC AT WORK
       ClassFilter <- function(x) inherits(get(x), "RasterLayer") & !inherits(get(x), "sf")
       rasRM <- Filter(ClassFilter, ls()) # Cleaning up?
       rm(rasRM)
