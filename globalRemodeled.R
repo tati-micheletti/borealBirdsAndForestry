@@ -6,7 +6,7 @@
 #  ATTENTION!!! You SHOULD merge the branch "densityRastersFixed" once you finished running everything on 100m focal!!!
 # Add asPath() to paths in all caches!!! This is screwing up lots of things... 
 
-# BUT for the immediate purposes, create an extra branch on trends and add a masking to the species range  (branch done, NOT FIXED FOR MASKING YET)
+# BUT for the immediate purposes, create an extra branch on trends and add a masking to the species range: did this by creating an extra module instead of a new branch
 
 
 library(SpaDES.core)
@@ -34,7 +34,7 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 
 ## list the modules to use
 modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
-                "focalCalculation", "predictBirds", "birdDensityTrends")
+                "focalCalculation", "predictBirds", "birdDensityTrends", "habitatDensityMasking")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 
