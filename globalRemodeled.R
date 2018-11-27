@@ -2,10 +2,9 @@
 
 # FOR 500m
 # DOUBLE CHECK IF FOCAL WEIGHT WILL GET THE CACHE. IT SHOULD NOT!
-# FIX LINE 68 in predictBirds!! 
 #  ATTENTION!!! You SHOULD merge the branch "densityRastersFixed" once you finished running everything on 100m focal!!!
 # Add asPath() to paths in all caches!!! This is screwing up lots of things... 
-
+# FIX BCR_PROV_LCC module + fetchData() for cache paths AFTER merging the fixes!
 # BUT for the immediate purposes, create an extra branch on trends and add a masking to the species range: did this by creating an extra module instead of a new branch
 
 
@@ -34,7 +33,7 @@ setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath 
 
 ## list the modules to use
 modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
-                "focalCalculation", "predictBirds", "birdDensityTrends", "habitatDensityMasking")
+                "focalCalculation", "predictBirds", "birdDensityTrends")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 
