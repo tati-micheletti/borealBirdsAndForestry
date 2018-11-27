@@ -65,9 +65,7 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
     },
     
     focalOperations = {
-      sim$focalYearList[[paste0("Year", time(sim))]] <- Cache(applyFocalToTiles, #useParallel = P(sim)$useParallel, 
-                                                                # We will use parallel only if when all is in memory, 
-                                                                # it leaves space in memory for dealing with more than 1 at a time
+      sim$focalYearList[[paste0("Year", time(sim))]] <- Cache(applyFocalToTiles,
                                                                 listTilePaths = sim$rastersList,
                                                                 pathData = cachePath(sim),
                                                                 forestClass = P(sim)$forestClass,
@@ -94,7 +92,7 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
   if (!suppliedElsewhere("rastersList", sim)) {
     sim$rastersList <- Cache(createRandomRasterList, rastersPerList = 5, numberOfLists = 3)
     message(crayon::yellow(paste0("List of tile paths not found (no other module is creating it). ",
-                                  "Using a dummy list of rasters"))) # [ FIX ] Need to make really tiled rasters
+                                  "Using a dummy list of rasters")))
   }
   
   return(invisible(sim))
