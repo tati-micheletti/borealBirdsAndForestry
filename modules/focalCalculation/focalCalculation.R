@@ -76,8 +76,8 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
                                                                 recoverTime = P(sim)$recoverTime,
                                                                 resampledRes = P(sim)$resampledRes,
                                                                 currentYear = time(sim),
-                                                              userTags = paste0("functionFinality:applyFocalToTiles",
-                                                                                time(sim)))
+                                                              cacheId = paste0("focalToTiles", max(focalDistance),
+                                                                               "m", time(sim)))
       
       sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "focalOperations")
       
