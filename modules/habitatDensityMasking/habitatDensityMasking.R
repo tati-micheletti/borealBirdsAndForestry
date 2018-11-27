@@ -47,7 +47,7 @@ doEvent.habitatDensityMasking = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, end(sim), "habitatDensityMasking", "maskToHR", eventPriority = .last())
     },
     maskToHR = {
-      trendsWithinRange <- maskingHR(trendRasters = sim$trends,
+      sim$trendsWithinRange <- maskingHR(trendRasters = sim$trends,
                                  birdsRangeList = sim$birdsRangeList,
                                  pathData = asPath(cachePath(sim)))
       },
