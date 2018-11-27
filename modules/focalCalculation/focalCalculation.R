@@ -76,7 +76,7 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
                                                                 recoverTime = P(sim)$recoverTime,
                                                                 resampledRes = P(sim)$resampledRes,
                                                                 currentYear = time(sim),
-                                                              cacheId = paste0("focalToTiles", max(focalDistance),
+                                                              cacheId = paste0("focalToTiles", max(sim$focalDistance),
                                                                                "m", time(sim)))
       
       sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "focalOperations")
@@ -92,7 +92,6 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
 .inputObjects <- function(sim) {
   
   if (!suppliedElsewhere("rastersList", sim)) {
-    browser()
     sim$rastersList <- Cache(createRandomRasterList, rastersPerList = 5, numberOfLists = 3)
     message(crayon::yellow(paste0("List of tile paths not found (no other module is creating it). ",
                                   "Using a dummy list of rasters"))) # [ FIX ] Need to make really tiled rasters
