@@ -28,7 +28,7 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
       splittedPath <- file.path(outPath, paste0("trends", focalDistance))
       message(crayon::yellow(paste0("Splitting rasters for ", birdSpecies[sp], " (Time: ", Sys.time(), ")")))
       splittedList <- Cache(lapply, X = birdTS, splitRaster, nx = 2, ny = 2, buffer = c(800, 800),
-                            path = splittedPath, cacheId = paste0("splitTrends", focalDistance, birdSpecies[sp]))
+                            path = asPath(splittedPath), cacheId = paste0("splitTrends", focalDistance, birdSpecies[sp]))
       totalTiles <- unique(lengths(splittedList))
       lengthVector <- 1:totalTiles
       orderedRasterList <- lapply(X = lengthVector, FUN = function(index){

@@ -93,7 +93,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                                     " (Time: "
                                     , Sys.time(), ")")))
       sim$Raster1 <- Cache(prepInputs, url = sim$urlRaster1,
-                                 destinationPath = dataPath(sim),
+                                 destinationPath = asPath(dataPath(sim)),
                                  studyArea = sim$rP,
                                  length = TRUE, useCache = TRUE,
                                  userTags = c("objectName:Raster1",
@@ -108,7 +108,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                                     , Sys.time(), ")")))
       sim$Raster2 <- Cache(prepInputs, #url = sim$urlRaster2, # Will restablish the url as soon as prepInputs is working with .rar again
                             targetFile = "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif",
-                            destinationPath = dataPath(sim),
+                            destinationPath = asPath(dataPath(sim)),
                             rasterToMatch = sim$Raster1,
                             studyArea = sim$rP,
                             length = TRUE, useCache = TRUE,
@@ -128,7 +128,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                                     " (Time: "
                                     , Sys.time(), ")")))
       sim$Raster3 <- Cache(prepInputs, url = sim$urlRaster3,
-                            destinationPath = dataPath(sim),
+                            destinationPath = asPath(dataPath(sim)),
                             rasterToMatch = sim$Raster2,
                             studyArea = sim$rP, length = TRUE, useCache = TRUE,
                             userTags = c("objectName:Raster3", 
@@ -252,7 +252,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                           url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
                           targetFile = "gpr_000b11a_e.shp",
                           # Subsetting to specific Provinces
-                          destinationPath = dataPath(sim), 
+                          destinationPath = asPath(dataPath(sim)), 
                           userTags = "objectName:sArP") %>%
               raster::subset(PRENAME %in% sim$mapSubset)
               if (nrow(sArP@data) == 0) {
@@ -284,7 +284,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                             targetFile = "gpr_000b11a_e.shp",
                             # Subsetting to a specific Province
                             archive = "gpr_000b11a_e.zip",
-                            destinationPath = dataPath(sim),
+                            destinationPath = asPath(dataPath(sim)),
                             userTags = "objectName:rP") %>%
               raster::subset(PRENAME == sim$specificTestArea)
             if (nrow(sim$rP@data) == 0) {
