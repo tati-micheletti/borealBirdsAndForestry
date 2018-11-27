@@ -217,9 +217,14 @@ applyFocalToTiles <- function(#useParallel = P(sim)$useParallel, # Should do par
       }
     })
     gc()
-    mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge)
+    # mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge) # When mergeRaster is fixed for function, can exchange 
+    rasMosaicArgs <- focalTilesToMerge
+    rasMosaicArgs$fun <- max
+    mergedFocalTiles <- do.call(what = raster::mosaic, args = rasMosaicArgs)
     rm(focalTilesToMerge)
+    rm(rasMosaicArgs)
     gc()
+    mergedFocalTiles <- round(x = mergedFocalTiles, digits = 4)
     raster::writeRaster(x = mergedFocalTiles, filename = mergedTilesName, overwrite = TRUE, format = "GTiff")
     rm(mergedFocalTiles)
     gc()

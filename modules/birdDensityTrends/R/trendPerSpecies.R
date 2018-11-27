@@ -127,8 +127,12 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
       message(crayon::green(paste0("Merging tiles for ", birdSpecies[sp], 
                                    " (Time: ", Sys.time(), ")")))
       focalTilesToMerge <- lapply(X = focalTilesToMerge, FUN = raster)
-      mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge)
+      rasMosaicArgs <- focalTilesToMerge
+      rasMosaicArgs$fun <- max
+      mergedFocalTiles <- do.call(what = raster::mosaic, args = rasMosaicArgs)
+      # mergedFocalTiles <- SpaDES.tools::mergeRaster(focalTilesToMerge) # We can use this back when 
       rm(focalTilesToMerge)
+      rm(rasMosaicArgs)
       gc()
       raster::writeRaster(x = mergedFocalTiles, filename = mergedTilesName, 
                           overwrite = TRUE, format = "GTiff")
