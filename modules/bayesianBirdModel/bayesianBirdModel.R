@@ -108,7 +108,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
           sim$rP <- Cache(prepInputs, url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip", 
                           targetFile = "gpr_000b11a_e.shp", # Subsetting to a specific Province
                           archive = "gpr_000b11a_e.zip",
-                          destinationPath = asPath(dataPath(sim))) %>%
+                          destinationPath = dataPath(sim)) %>%
             raster::subset(PRENAME == sim$specificTestArea)
           if (nrow(sim$rP@data) == 0) {
             stop(paste0(

@@ -51,7 +51,7 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
                                     predictRas = sim$predictRas,
                                     startTime = start(sim),
                                     endTime = end(sim),
-                                    outPath = asPath(cachePath(sim)),
+                                    outPath = cachePath(sim),
                                     cacheId = paste0("trendYears", sim$focalDistance,"TS:",
                                                       start(sim), ":",
                                                       end(sim)))
