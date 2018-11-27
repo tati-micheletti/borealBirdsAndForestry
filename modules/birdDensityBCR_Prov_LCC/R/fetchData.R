@@ -17,7 +17,7 @@ fetchData <- function(pathData = dataPath(sim),
                         archive = paste0(x, "_current.zip"),
                         url = paste0("https://s3-us-west-2.amazonaws.com/bam-databasin-climatechangepredictions/climatepredictions-ascii/",
                                      x, "_current.zip"),
-                        destinationPath = pathData,
+                        destinationPath = asPath(pathData),
                         studyArea = studyArea, fun = "raster::raster")
     })
   } else {
@@ -39,31 +39,31 @@ fetchData <- function(pathData = dataPath(sim),
                        verbose = FALSE)
       }
     
-# Concatenate LCC05 as now passing targetCRS shouls work. Needs testing!!! Need to come back to it after working on the list of rasters...
+# Concatenate LCC05 as now passing targetCRS should work...
 # browser() # ORIGINAL CRS: +proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
       LCC05 <- Cache(prepInputs, targetFile = "LCC2005_V1_4a.tif",
-                     destinationPath = pathData,
+                     destinationPath = asPath(pathData),
                      studyArea = studyArea,
                      overwrite = TRUE,
                      # targetCRS = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0",
                      cacheId = "LCC05")
       targetCRS <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
-      LCC05 <- projectInputs(LCC05, targetCRS = targetCRS)
+      LCC05 <- Cache(projectInputs, LCC05, targetCRS = targetCRS, cacheId = "reprojLCC05")
       
       BCR <- Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
                    targetFile = "BCR_Terrestrial_master.shp",
-                   destinationPath = pathData,
+                   destinationPath = asPath(pathData),
                    studyArea = studyArea,
                    rasterToMatch = LCC05,
                    overwrite = TRUE,
-                   userTags = "objectName:BCR")
+                   cacheId = "BCR")
       
      message(crayon::green(paste0("prepInputs() is downloading the density file needed for the analysis from Google Drive and placing in ",
                                     pathData)))
 
-      densityEstimates <- Cache(prepInputs, url = "https://drive.google.com/file/d/1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX/view?usp=sharing",
+      densityEstimates <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
                                 targetFile = densityEstimatesFileName, # OBS. Not all species have densities for all combinations of LCC_PROV_BCR. Not all species are everywhere!
-                                destinationPath = pathData, fun = "data.table::fread",
+                                destinationPath = asPath(pathData), fun = "data.table::fread",
                                 userTags = "objectName:densityEstimates", overwrite = TRUE) %>% # Also checked if it was pooled with other BCR, but not.
         .[SPECIES %in% birdSp,]
       
@@ -86,6 +86,7 @@ fetchData <- function(pathData = dataPath(sim),
         } else {
           BCR_PROV_LCC_Estimates <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCR, LCC05 = LCC05, densityEstimates = densityEstimates,
                                           userTags = "objectName:BCR_PROV_LCC_Estimates")
+          browser()
         rm(densityEstimates)
         rm(BCR)
         invisible(gc())
@@ -111,7 +112,7 @@ fetchData <- function(pathData = dataPath(sim),
       }
       })
       names(densityRasList) <- birdSp
-      browser() # Are the density rasters created? BBWA should INMY PC AT WORK
+      browser()
       ClassFilter <- function(x) inherits(get(x), "RasterLayer") & !inherits(get(x), "sf")
       rasRM <- Filter(ClassFilter, ls()) # Cleaning up?
       rm(rasRM)
