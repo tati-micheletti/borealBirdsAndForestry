@@ -37,8 +37,8 @@ createBCR_PROV_LCC_Estimates <- function(BCR = BCR,
   PROV_BCR_LCC <- data.table::data.table(ID = as.numeric(rasPROV[]),
                                          BCR = as.numeric(rasBCR[]),
                                          LCC = as.numeric(LCC05[]))
-  
-  densityEstimates <- plyr::join(densityEstimates, PROVabb)
+  browser()
+  densityEstimates <- Cache(plyr::join, densityEstimates, PROVabb, cacheId = "densityEstimates")
   out <- list(PROV_BCR_LCC = PROV_BCR_LCC, 
               densityEstimates = densityEstimates)
   return(out)
