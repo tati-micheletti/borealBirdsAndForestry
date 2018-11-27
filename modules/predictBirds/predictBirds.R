@@ -66,8 +66,8 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
                                                            currentTime = time(sim),
                                                            modelList = sim$predictModels,
                                                            pathData = cachePath(sim), 
-                                                           cacheId = paste0("predicted", time(sim))) # [ FIX ] ADD THIS BEFORE 500m!!! sim$focalDistance, "m", 
-      
+                                                           cacheId = paste0("predicted", max(sim$focalDistance), 
+                                                                            "m", time(sim)))
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + 1, "predictBirds", "predictBirdsDensities")
       
