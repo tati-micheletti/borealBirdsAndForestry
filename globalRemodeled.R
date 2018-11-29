@@ -1,25 +1,23 @@
 # Global script for the Backcasting Project REMODELED
 
-
-# Add this to the birdDensityBCR_Prov_LCC module/fetchData() and make it (will be used in 500m only) ==> has the browser call. Just needs to pass projectInputs()
-# Then add fixed to another branch (tempMaskTrends) for using it with the trends of 100m (temporary)
+# FOR 500m
+# DOUBLE CHECK IF FOCAL WEIGHT WILL GET THE CACHE. IT SHOULD NOT!
 
 library(SpaDES.core)
 library(SpaDES.tools)
-# tryCatch(library(unixtools),
-#          error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
+tryCatch(library(unixtools),
+         error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
 options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
-# unixtools::set.tempdir("/mnt/storage/temp")
+unixtools::set.tempdir("/mnt/storage/temp")
 
 
 # set the directories
-#workDirectory <- getwd()
-workDirectory <- "C:/Users/tmichele/GitHub/borealBirdsAndForestry"
+workDirectory <- getwd()
+
 paths <- list(
   # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
-  # cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
+  cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
   # while the other folders are in the working directory
-  cachePath = file.path(workDirectory, "cache"),
   modulePath = file.path(workDirectory, "modules"),
   inputPath = file.path(workDirectory, "inputs"),
   outputPath = file.path(workDirectory, "outputs")
@@ -29,9 +27,8 @@ options("reproducible.cachePath" = paths$cachePath)
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-# modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
-#                 "focalCalculation", "predictBirds", "birdDensityTrends")
-modules <- list("birdDensityBCR_Prov_LCC")
+modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
+                "focalCalculation", "predictBirds", "birdDensityTrends")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 
@@ -45,19 +42,19 @@ parameters <- list(
   glmerBirdModels = list(cropForModel = FALSE,
                          avoidAlbertosData = TRUE),
   prepTiles = list(testArea = TRUE, # Should a study area be used (i.e. boreal)?
-                        nx = 12, # mult 7
-                        ny = 5, # mult 3
-                        rType = "INT1U",
-                        buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
-                        .useCache = FALSE), # Should it override module's .useCache?
+                   nx = 12, # mult 7
+                   ny = 5, # mult 3
+                   rType = "INT1U",
+                   buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
+                   .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
-                           resampledRes = 250,
-                           focalDistance = 100, # To run for neighborhood, change to c(100, 500)
-                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
-                           useParallel = NULL), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
+                          resampledRes = 250,
+                          focalDistance = 100, # To run for neighborhood, change to c(100, 500)
+                          disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
+                          forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
+                          useParallel = NULL), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
   birdDensityTrends = list(plotting = FALSE)
-        )
+)
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
   mapSubset = NULL, # "Canada" or Provinces to run at once. Good to subset provinces still within the boreal
@@ -70,9 +67,9 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
                   #"BLPW"#,
                   # "BOCH",
                   # "BRCR",
-                   "BTNW",
-                   "CAWA",
-                   "CMWA"#,
+                  "BTNW",
+                  "CAWA",
+                  "CMWA"#,
                   # "CONW",
                   # "OVEN",
                   # "PISI",
@@ -81,7 +78,7 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
                   # "TEWA",
                   # "WETA",
                   # "YRWA"
-   ),
+  ),
   typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
   disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
   disturbancePredict = c("Transitional")#, # Needs to match disturbanceClass from prediction module. Type of disturbance we want to predict from.
@@ -104,4 +101,3 @@ mySimOut <- spades(mySim, debug = TRUE)
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "backcast_10July2018.rds"))
-
