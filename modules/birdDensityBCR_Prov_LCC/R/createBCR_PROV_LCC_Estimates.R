@@ -3,25 +3,21 @@ createBCR_PROV_LCC_Estimates <- function(BCR = BCR,
                                      densityEstimates = densityEstimates){
   
   # 2. Rasterize (fasterize) both PROV and BCR.
-  
   # =========== BCR 
   message(crayon::yellow(paste0("Fasterizing BCRsf")))
   BCRsf <- sf::st_as_sf(BCR)
   BCRsf <- BCRsf[!is.na(BCRsf$PROVINCE_S),] # Excluding a weird NA from the polygons
-  BCRsf <- BCRsf[!BCRsf$COUNTRY == "USA",] # Excluding the USA from the analysis
-  rasBCR <- Cache(fasterize::fasterize, sf = BCRsf, raster = LCC05, field = "BCR",
-                  userTags = "objectName:rasBCR")
+  BCRsf <- BCRsf[BCRsf$COUNTRY == "CANADA",] # Excluding the USA from the analysis
+  rasBCR <- fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "BCR")
   rasBCR[] <- rasBCR[]
   
   # # ==========+ PROV
   
   PROV_ID <- data.table(PROVINCE_S = unique(BCRsf$PROVINCE_S), ID = seq(200, 199 + length(unique(BCRsf$PROVINCE_S))))
   BCRsf$PROV_ID <- PROV_ID$ID[match(BCRsf$PROVINCE_S, PROV_ID$PROVINCE_S)]
-  rasPROV <- Cache(fasterize::fasterize, sf = BCRsf, raster = LCC05, field = "PROV_ID",
-                   userTags = "objectName:rasPROV")
+  rasPROV <- fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "PROV_ID")
   
   # 3. Create a lookout table
-  
   PROVabb <- structure(list(PRENAME = structure(1:13, .Label = c("Alberta", 
                                                                  "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", 
                                                                  "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", 
@@ -34,11 +30,11 @@ createBCR_PROV_LCC_Estimates <- function(BCR = BCR,
                        .Names = c("PRENAME", "ID", "PROV"), row.names = c(NA, -13L), class = "data.frame")
   
   # 4. Set a base data.table to retrieve the specific density values for each pixel 
-  PROV_BCR_LCC <- data.table::data.table(ID = as.numeric(rasPROV[]),
-                                         BCR = as.numeric(rasBCR[]),
-                                         LCC = as.numeric(LCC05[]))
-  browser()
-  densityEstimates <- Cache(plyr::join, densityEstimates, PROVabb, cacheId = "densityEstimates")
+  PROV_BCR_LCC <- data.table::data.table(ID = as.integer(rasPROV[]),
+                                         BCR = as.integer(rasBCR[]),
+                                         LCC = as.integer(LCC05[]))
+
+  densityEstimates <- Cache(plyr::join, densityEstimates, PROVabb, userTags = "densityEstimatesIntegers")
   out <- list(PROV_BCR_LCC = PROV_BCR_LCC, 
               densityEstimates = densityEstimates)
   return(out)
