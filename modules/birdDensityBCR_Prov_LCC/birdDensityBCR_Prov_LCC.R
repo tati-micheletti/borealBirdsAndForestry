@@ -27,6 +27,7 @@ defineModule(sim, list(
     defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
   ),
   inputObjects = bind_rows(
+    expectsInput(objectName = "birdsRangeList", objectClass = "list", desc = "List of rasters of BAM boreal birds' ranges (more accurate than BirdLifeInternational)", sourceURL = NA),
     expectsInput(objectName = "specificTestArea", objectClass = "character", desc = "Specific test area to crop to: 'boreal', or a province english name", sourceURL = NA),
     expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA),
     expectsInput(objectName = "densityEstimatesURL", objectClass = "character", desc = "density values calculated by BAM - Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv", sourceURL = "https://drive.google.com/open?id=1Gd9VsKIXX_384UxQsJnwzsSZFuyQyscw"),
@@ -57,6 +58,7 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
       
       sim$birdDensityRasters <- fetchData(pathData = dataPath(sim), 
                                           birdSp = sim$birdSpecies, 
+                                          birdsRangeList = sim$birdsRangeList,
                                           studyArea = sim$rP, 
                                           extractFrom4kRasters = P(sim)$extractFrom4kRasters,
                                           densityEstimatesURL = sim$densityEstimatesURL,
@@ -131,7 +133,7 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
             sArP <- NULL
           }
             message(crayon::yellow("Test area is TRUE. Cropping and masking to the Canadian Boreal."))
-            sim$rP <- prepInputs(archive = file.path(dataPath(sim), "BRANDmyT_OUTLINE_Dissolve.zip"),  # [ FIX ] Needs a URL to make it more reproducible!
+            sim$rP <- prepInputs(archive = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.zip"),  # [ FIX ] Needs a URL to make it more reproducible!
                                  targetFile = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.shp"),
                                  studyArea = sArP,
                                  destinationPath = dataPath(sim)
@@ -160,6 +162,9 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
         }
       }
     }
+  }
+  if (!suppliedElsewhere("birdsRangeList", sim)) {
+    sim$birdsRangeList <- createBirdsRangeRasters(birdSpecies = sim$birdSpecies)
   }
   return(invisible(sim))
 }

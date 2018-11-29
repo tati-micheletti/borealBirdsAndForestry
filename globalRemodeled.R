@@ -42,19 +42,19 @@ parameters <- list(
   glmerBirdModels = list(cropForModel = FALSE,
                          avoidAlbertosData = TRUE),
   prepTiles = list(testArea = TRUE, # Should a study area be used (i.e. boreal)?
-                        nx = 12, # mult 7
-                        ny = 5, # mult 3
-                        rType = "INT1U",
-                        buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
-                        .useCache = FALSE), # Should it override module's .useCache?
+                   nx = 12, # mult 7
+                   ny = 5, # mult 3
+                   rType = "INT1U",
+                   buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
+                   .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
-                           resampledRes = 250,
-                           focalDistance = 100, # To run for neighborhood, change to c(100, 500)
-                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
-                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
-                           useParallel = NULL), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
+                          resampledRes = 250,
+                          focalDistance = 100, # To run for neighborhood, change to c(100, 500)
+                          disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
+                          forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
+                          useParallel = NULL), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
   birdDensityTrends = list(plotting = FALSE)
-        )
+)
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
   mapSubset = NULL, # "Canada" or Provinces to run at once. Good to subset provinces still within the boreal
@@ -67,9 +67,9 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
                   #"BLPW"#,
                   # "BOCH",
                   # "BRCR",
-                   "BTNW",
-                   "CAWA",
-                   "CMWA"#,
+                  "BTNW",
+                  "CAWA",
+                  "CMWA"#,
                   # "CONW",
                   # "OVEN",
                   # "PISI",
@@ -78,7 +78,7 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
                   # "TEWA",
                   # "WETA",
                   # "YRWA"
-   ),
+  ),
   typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
   disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
   disturbancePredict = c("Transitional")#, # Needs to match disturbanceClass from prediction module. Type of disturbance we want to predict from.
@@ -101,4 +101,3 @@ mySimOut <- spades(mySim, debug = TRUE)
 
 # To load the outputs
 # mySimOut <- readRDS(file.path(outputPath(mySimOut), "backcast_10July2018.rds"))
-
