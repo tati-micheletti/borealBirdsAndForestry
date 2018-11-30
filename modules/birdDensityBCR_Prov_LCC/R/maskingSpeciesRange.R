@@ -20,7 +20,7 @@ maskingSpeciesRange <- function(densityRasters = spRas,
       spRange <- projectInputs(spRange, targetCRS = crs(densityRasters))# Need to reproject the SpRange as I want the same projection as the original trends raster in the end
       suppressWarnings(reproducible::postProcess(x = densityRasters, rasterToMatch = spRange,
                                                  maskWithRTM = TRUE, format = "GTiff", overwrite = TRUE, 
-                                                 filename2 = filenameRas))
+                                                 filename2 = filenameRas, useCache = FALSE))
       invisible(gc())
   return(filenameRas)
 }
