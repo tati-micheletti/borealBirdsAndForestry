@@ -86,8 +86,7 @@ fetchData <- function(pathData = dataPath(sim),
         message(crayon::yellow(paste0("Creating density rasters for ", sp)))
         cols <- c("LCC", "ID", "BCR", "D")
         densityEstimatesRed <- BCR_PROV_LCC_Estimates$densityEstimates[SPECIES == sp, ..cols]
-        vals <- Cache(plyr::join, BCR_PROV_LCC_Estimates$PROV_BCR_LCC, densityEstimatesRed,
-                      cacheId = paste0("estimateValues", sp)) # This vals should be a table with 463812869 rows & ID BCR LCC D cols
+        vals <- plyr::join(BCR_PROV_LCC_Estimates$PROV_BCR_LCC, densityEstimatesRed)
         rm(BCR_PROV_LCC_Estimates)
         invisible(gc())
         # Create raster
@@ -97,13 +96,11 @@ fetchData <- function(pathData = dataPath(sim),
         rm(vals)
         invisible(gc())
         #Mask raster birds range birdsRangeList
-        spRas <- Cache(maskingSpeciesRange, densityRasters = spRas,
+        spRas <- maskingSpeciesRange(densityRasters = spRas,
                        sp = sp, pathData = pathData,
                        studyArea = studyArea,
                        birdsRangeList = birdsRangeList,
-                       filenameRas = densityFiles[[sp]],
-                       length = TRUE,
-                       userTags = paste0("maskedSpRange", sp))
+                       filenameRas = densityFiles[[sp]])
         # Write density files to disk while
         invisible(gc())
         return(spRas)
