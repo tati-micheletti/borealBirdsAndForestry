@@ -1,22 +1,28 @@
 # Global script for the Backcasting Project REMODELED
 
-# FOR 500m
-# DOUBLE CHECK IF FOCAL WEIGHT WILL GET THE CACHE. IT SHOULD NOT!
-
 library(SpaDES.core)
 library(SpaDES.tools)
-tryCatch(library(unixtools),
-         error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
-options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
-unixtools::set.tempdir("/mnt/storage/temp")
 
+# Set a storage project folder, making sure you have writing access
+storageDir <- "/mnt/data/borealBirdsAndForestry"
+
+# Make a temporary folder for downloading files
+suppressWarnings(dir.create(file.path(storageDir, "temp")))
+
+# Set a temporary folder (Only done for Linux):
+if (Sys.info()['sysname'] == "Linux"){
+  tryCatch(library(unixtools),
+           error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
+  options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
+  unixtools::set.tempdir(file.path(storageDir, "temp"))
+}
 
 # set the directories
 workDirectory <- getwd()
 
 paths <- list(
   # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
-  cachePath = file.path("/mnt/storage/borealBirdsAndForestry", "cache"),
+  cachePath = file.path(storageDir, "cache"),
   # while the other folders are in the working directory
   modulePath = file.path(workDirectory, "modules"),
   inputPath = file.path(workDirectory, "inputs"),
@@ -27,8 +33,7 @@ options("reproducible.cachePath" = paths$cachePath)
 setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
-                "focalCalculation", "predictBirds", "birdDensityTrends")
+modules <- list("prepTiles")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 
