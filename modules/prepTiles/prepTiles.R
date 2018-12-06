@@ -95,10 +95,10 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       sim$Raster1 <- Cache(prepInputs, url = sim$urlRaster1,
                                  destinationPath = dataPath(sim),
                                  studyArea = sim$rP,
-                                 length = TRUE, useCache = TRUE,
+                                 length = TRUE, useCache = Inf,
                                  userTags = c("objectName:Raster1",
-                                              "fileName:C2C_change_type"),
-                           cacheId = "74286256127df354937f3d89fe187a4a") # Don't remember what length = TRUE is, but it was important at some point
+                                              "fileName:C2C_change_type"))#,
+ #                          cacheId = "74286256127df354937f3d89fe187a4a") # length = TRUE digests the whole 
       gc()
       
       message(crayon::yellow(paste0("Raster2 being prepared.",
@@ -111,10 +111,10 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                             destinationPath = dataPath(sim),
                             rasterToMatch = sim$Raster1,
                             studyArea = sim$rP,
-                            length = TRUE, useCache = TRUE,
+                            length = Inf, useCache = TRUE,
                             userTags = c("objectName:Raster2", 
-                                         "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"),
-                           cacheId = "af8ac2b611698d718c31a8f339ad1f07")
+                                         "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"))#,
+                           # cacheId = "af8ac2b611698d718c31a8f339ad1f07")
       gc()
       
       raster::extent(sim$Raster2) <- raster::alignExtent(extent = raster::extent(sim$Raster2), object = sim$Raster1, snap = "near")
@@ -130,10 +130,10 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       sim$Raster3 <- Cache(prepInputs, url = sim$urlRaster3,
                             destinationPath = dataPath(sim),
                             rasterToMatch = sim$Raster2,
-                            studyArea = sim$rP, length = TRUE, useCache = TRUE,
+                            studyArea = sim$rP, length = Inf, useCache = TRUE,
                             userTags = c("objectName:Raster3", 
-                                         "fileName:C2C_change_year"),
-                           cacheId = "c61d504bbb68d83f305d8f876b311c86")
+                                         "fileName:C2C_change_year"))#,
+                           # cacheId = "c61d504bbb68d83f305d8f876b311c86")
       gc()
  
       raster::extent(sim$Raster3) <- raster::alignExtent(extent = raster::extent(sim$Raster3), object = sim$Raster2, snap = "near")
@@ -158,7 +158,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceType Raster, write to disk,
                            rType = params(sim)$prepTiles$rType, 
                            path = file.path(cachePath(sim), "Raster1"),
-                           cacheId = "4ad1a58bca394fb20b45cb00c7462f72") # override the original in memory
+                           cacheId = "splitRaster1") # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster2 tiles", " (Time: "
@@ -170,7 +170,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
                            rType = params(sim)$prepTiles$rType,
                            path = file.path(cachePath(sim), "Raster2"),
-                           cacheId = "b872b52f5d3d9af78b740ca3b478c284") # override the original in memory
+                           cacheId = "splitRaster2") # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster3 tiles", " (Time: "
@@ -182,7 +182,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceYear Raster, write to disk,
                            rType = params(sim)$prepTiles$rType,
                            path = file.path(cachePath(sim), "Raster3"),
-                           cacheId = "e2e84d254bd8a8032c58263a11a23da3") # override the original in memory
+                           cacheId = "splitRaster3") # override the original in memory
       gc()
 
       sim$rastersList <- list("Raster1" = sim$Raster1, 
