@@ -1,44 +1,48 @@
 # Global script for the Backcasting Project REMODELED
 
+# Testing for install of GDAL / These scripts are temporarily in the 'inputs' folder. Should be pushed to 'pemisc' once it is working/passing again.
+source(file.path(getwd(), "inputs", "isGDALInstalled.R"))
+source(file.path(getwd(), "inputs", "defineStudyArea.R"))
+if (!isGDALInstalled()) message("GDAL was not found in your computer, please make sure you install it before running these modules.")
+if (!length(Sys.which("unzip")) > 0) message("unzip was not found in your computer, please make sure you install it before running these modules.")
+
 library(SpaDES.core)
 library(SpaDES.tools)
 
-# Set a storage project folder, making sure you have writing access
-storageDir <- "/mnt/data/borealBirdsAndForestry"
+# Set a storage project folder
+storageDir <- dirname(getwd())
 
 # Make a temporary folder for downloading files
-suppressWarnings(dir.create(file.path(storageDir, "temp")))
+suppressWarnings(dir.create(file.path(storageDir, "tmp")))
 
 # Set a temporary folder (Only done for Linux):
 if (Sys.info()['sysname'] == "Linux"){
   tryCatch(library(unixtools),
            error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
   options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
-  unixtools::set.tempdir(file.path(storageDir, "temp"))
+  unixtools::set.tempdir(file.path(storageDir, "tmp"))
 }
 
 # set the directories
 workDirectory <- getwd()
 
 paths <- list(
-  # As the project takes up a LOT of space, all mid steps will be saved inside the cache folder of another partition,
-  cachePath = file.path(storageDir, "cache"),
-  # while the other folders are in the working directory
+  cachePath = file.path(workDirectory, "cache"),
   modulePath = file.path(workDirectory, "modules"),
   inputPath = file.path(workDirectory, "inputs"),
   outputPath = file.path(workDirectory, "outputs")
 )
 
 options("reproducible.cachePath" = paths$cachePath)
-setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
+SpaDES.core::setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("prepTiles")
+modules <- list("birdDensityBCR_Prov_LCC")#, "loadOffsetsBAM", "prepTiles", "focalCalculation")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 2011, timeunit = "year") # Change back to 1985 2011. Just did 3-10 because of fake Rasters
+times <- list(start = 1985, end = 2011, timeunit = "year")
 parameters <- list(
   birdDensityBCR_Prov_LCC = list(extractFrom4kRasters = FALSE,
                                  avoidAlbertosData = TRUE,
@@ -62,18 +66,18 @@ parameters <- list(
 )
 
 objects <- list( # Possible to include 'rP' directly here as a shapefile!
-  mapSubset = NULL, # "Canada" or Provinces to run at once. Good to subset provinces still within the boreal
-  specificTestArea = "boreal", # "boreal",
+  mapSubset = "Canada", # "Canada" or Provinces to run at once. Good to subset provinces still within the boreal
+  specificTestArea = "boreal", # "boreal", or canadian provinces
   SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
   SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
   SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
   dataName = "Final_points_2010.csv", # Alberto's manuscript data to select points. Data are, however coming from SQL.
   birdSpecies = c("BBWA", # Bird species to run the models for
                   #"BLPW"#,
-                  # "BOCH",
+                  "BOCH",
                   # "BRCR",
                   "BTNW",
-                  "CAWA",
+                  # "CAWA",
                   "CMWA"#,
                   # "CONW",
                   # "OVEN",
@@ -97,8 +101,8 @@ clearPlot()
 #file.remove("/mnt/storage/borealBirdsAndForestry/cache/logParallel")
 
 ## Simulation setup
-mySim <- simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
-mySimOut <- spades(mySim, debug = TRUE)
+mySim <- SpaDES.core::simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
+mySimOut <- SpaDES.core::spades(mySim, debug = TRUE)
 
 # To save the outputs
 # localAUG16 <- as(mySimOut, "simList_")
