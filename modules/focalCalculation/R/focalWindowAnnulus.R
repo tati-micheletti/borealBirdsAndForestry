@@ -1,7 +1,7 @@
-focalWeightAnnulus <- function(focalDistance = focalDistance){
-  inMat <- raster::focalWeight(x = Raster2, d = min(focalDistance))
+focalWindowAnnulus <- function(focalDistance = focalDistance, ras = Raster2){
+  inMat <- focalWindow(x = Raster2[[1]], d = min(focalDistance))
   gc()
-  outMat <- raster::focalWeight(x = Raster2, d = max(focalDistance))
+  outMat <- focalWindow(x = Raster2[[1]], d = max(focalDistance))
   #inverse the inner matrix
   inMat[inMat == 0] <- 1
   gc()
