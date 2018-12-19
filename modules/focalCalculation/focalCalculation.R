@@ -67,7 +67,7 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
     focalOperations = {
       sim$focalYearList[[paste0("Year", time(sim))]] <- Cache(applyFocalToTiles,
                                                                 listTilePaths = sim$rastersList,
-                                                                pathData = cachePath(sim),
+                                                                pathData = dataPath(sim),
                                                                 forestClass = P(sim)$forestClass,
                                                                 focalDistance = P(sim)$focalDistance,
                                                                 disturbanceClass = P(sim)$disturbanceClass,

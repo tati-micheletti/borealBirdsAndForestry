@@ -79,6 +79,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
 }
 
 .inputObjects <- function(sim) {
+  
   if (!suppliedElsewhere("focalYearList", sim)){
     message(paste0("No disturbance list of rasters found.", 
                    "Using fake disturbance raster for years ", 
@@ -89,6 +90,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
                                crsRas = "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
     names(sim$focalYearList) <- paste0("Year", start(sim):end(sim))
   }
+  
   if (!suppliedElsewhere("birdDensityRasters", sim)){
     if (suppliedElsewhere("birdSpecies", sim)){
       stop(paste0("Bird list supplied, but density rasters not.",
@@ -126,6 +128,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
     names(sim$birdDensityRasters) <- sim$birdSpecies
     }
   }
+  
   if (!suppliedElsewhere("models", sim)){
     message("No models list found. Using fake generalized linear model for BBWA and BOCH")
     source(file = file.path(dataPath(sim), "fakeDataBirds.R"))
@@ -143,6 +146,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
   })
     names(sim$models) <- sim$birdSpecies
   }
+  
   if (!is.null(unlist(sim@params,
                       use.names = FALSE)[grepl(pattern = "focalDistance", 
                                                x = names(unlist(sim@params)))])){
@@ -150,5 +154,6 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
                                                use.names = FALSE)[grepl(pattern = "focalDistance", 
                                                                         x = names(unlist(sim@params)))]))
   }
+  
   return(invisible(sim))
 }

@@ -21,24 +21,8 @@ fetchData <- function(pathData = dataPath(sim),
                         studyArea = studyArea, fun = "raster::raster")
     })
   } else {
-    
-      # Need to create a raster with the densities based on LCC, PROV and BCR
-      # 1. Download data
-      if (!file.exists(file.path(pathData, "LandCoverOfCanada2005_V1_4.zip"))){
-        
-        invisible(readline(prompt=paste("Make dure you have the dataset 'LandCoverOfCanada2005_V1_4.zip' in Google Drives folder", 
-                                        "'BAM/Datasets/borealBirdsAndForestry', and press [enter] to continue",
-                                        "\nIf authentication fails, please manually place the dataset file in the folder: \n",
-                                        "~borealBirdsAndForestry/modules/birdDensityBCR_Prov_LCC/data")))
-        require(googledrive)
-        
-        drive_download(file.path("BAM/Datasets/borealBirdsAndForestry", "LandCoverOfCanada2005_V1_4.zip"), 
-                       path = file.path(pathData, "LandCoverOfCanada2005_V1_4.zip"), 
-                       overwrite = FALSE,
-                       verbose = FALSE)
-      }
-    
-    LCC05 <- Cache(prepInputs, targetFile = "LCC2005_V1_4a.tif",
+
+     LCC05 <- Cache(prepInputs, url = "https://drive.google.com/open?id=19rMA800ZFsKkXx-eqBcXdR84P9MQdCLX",
                      destinationPath = asPath(pathData),
                      studyArea = studyArea,
                      overwrite = TRUE,
@@ -49,6 +33,7 @@ fetchData <- function(pathData = dataPath(sim),
 
       BCR <- Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip", 
                    targetFile = "BCR_Terrestrial_master.shp",
+                   alsoExtract = "similar",
                    destinationPath = asPath(pathData),
                    studyArea = studyArea,
                    rasterToMatch = LCC05,

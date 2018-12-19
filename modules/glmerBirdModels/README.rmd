@@ -22,7 +22,7 @@ update.packages(oldPkgs = unlist(dependencies), ask = FALSE)
 
 Install the latest version of the SpaDES packages and any dependencies not yet installed:
 ```{r updateSpaDES}
-install.packages("SpaDES", dependencies = TRUE) # install "suggested" packages too
+install.packages("SpaDES", dependencies = TRUE) # install "suggested" packages too with TRUE
 ```
 
 Restart again your R session so it is clear and install `reproducible` and `SpaDES.core`.
@@ -30,7 +30,6 @@ Restart again your R session so it is clear and install `reproducible` and `SpaD
 reproducible::Require("devtools") # installs (if needed) and loads devtools
 devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development")
 ```
-
 ## To load previously saved outputs:
 
 To load previously saved outputs, run the following lines and see below how to access the results:
@@ -59,7 +58,7 @@ In order to run Alberto's models as they are, it is only necessary to run the fo
 source('global.R')
 ```
 
-It is possible to access the results by typing *`mySimList$`* appended with the following codes (or *`mySimList@.list$`* for using autocomplete when in RStudio):  
+It is possible to access the results by typing *`mySimOut$`* appended with the following codes:  
 
 \textcolor{blue}{data}: raw data used for the models  
 \textcolor{blue}{birdSpecies}`: species run for the models  
@@ -94,10 +93,7 @@ paths <- list(
   inputPath = file.path(workDirectory, "inputs"),
   outputPath = file.path(workDirectory, "outputs")
 )
-setPaths(modulePath = paths$modulePath, 
-         inputPath = paths$inputPath, 
-         outputPath = paths$outputPath, 
-         cachePath = paths$cachePath)
+setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 ```
 
 List the modules to use
@@ -130,9 +126,9 @@ mySim <- simInit(times = times, params = parameters, modules = modules, paths = 
 mySimOut <- spades(mySim, debug = TRUE)
 ```
 
-To save the outputs:
+To save the outputs
 
 ```{r save}
-mySimList <- as(mySimOut, "simList_")
-saveRDS(mySimList, file.path(outputPath(mySimOut), "Results_List.rds"))
+saveRDS(mySimOut, file.path(outputPath(mySimOut), "Results.rds"))
 ```
+
