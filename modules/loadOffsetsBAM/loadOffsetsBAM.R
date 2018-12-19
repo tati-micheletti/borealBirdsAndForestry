@@ -49,13 +49,15 @@ doEvent.loadOffsetsBAM = function(sim, eventTime, eventType) {
       sim$offsetFiles <- Cache(retrieveOffsets, urlOffsets = sim$urlOffsets, 
                                          pathData = dataPath(sim), 
                                          newestDataset = sim$newestDataset,
-                                         olderDataset = sim$olderDataset)
+                                         olderDataset = sim$olderDataset, 
+                                         userTags = "objectName:offsetFiles")
     },
     processingOffsets = {
 
       sim$offsetsBySpecies <- Cache(processOffsets, offsetFilesName = "offsetFiles", 
                                     envirSim = envir(sim),
-                                    birdSpecies = sim$birdSpecies)
+                                    birdSpecies = sim$birdSpecies, 
+                                    userTags = "objectName:offsetsBySpecies")
 
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],

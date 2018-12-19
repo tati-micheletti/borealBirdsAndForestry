@@ -20,77 +20,207 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                              extractFrom4kRasters = extractFrom4kRasters) {
   
   # ======================== STARTED GIS ===================================
-
+  
   if (extractFrom4kRasters == TRUE){
-    spName <- substr(birdDensityRasters@data@names, 6, 9) # SPECIES NAME
+    birdDensityRastersPath <- birdDensityRasters
+    birdDensityRasters <- raster::raster(birdDensityRasters)
+    spName <- substring(birdDensityRasters@data@names, 8) # [ FIX ] Need to move it to the end... Otherwise will do the operations at 30m for no reason? Needs to be checked if it is working properly!
   } else {
-    spName <- birdDensityRasters@data@names
+    birdDensityRastersPath <- birdDensityRasters
+    birdDensityRasters <- raster::raster(birdDensityRasters)
+    spName <- substring(birdDensityRasters@data@names, 8)
   }
   
   message(crayon::green(paste0("Initializing GIS operations for ", spName)))
-  
-  # Resample 4000m density rasters 
-  
-  message(crayon::yellow(paste0("Resampling density rasters to 30m resolution for ", spName)))
+  birdDensityResampled <- file.path(pathData, paste0("birdDensityResampled", spName, ".tif"))
+
   if (!all(raster::res(birdDensityRasters) == c(30, 30))){
-    templateRaster <- raster(resolution = c(30, 30), 
-                             crs = raster::crs(birdDensityRasters), 
-                             ext = extent(birdDensityRasters))
-    birdDensityRasters <- raster::resample(birdDensityRasters, templateRaster, method = "bilinear")
+    if (!file.exists(birdDensityResampled)) {
+      
+      # Bring original density raster to memory, and make it smaller, rewrite it
+      birdDensityRasters[] <- birdDensityRasters[]
+      birdDensityRasters[] <- round(birdDensityRasters[]*1000, 0)
+      storage.mode(birdDensityRasters[]) = "integer"
+      raster::writeRaster(x = birdDensityRasters, filename = birdDensityRastersPath, overwrite = TRUE)
+      
+      # Resample density rasters
+      templateRaster <- raster(resolution = c(30, 30),
+                               crs = raster::crs(birdDensityRasters),
+                               ext = extent(birdDensityRasters))
+      
+      crsTemplate <- as.character(raster::crs(templateRaster))
+      rP <- sf::st_as_sf(rP)
+      if (file.exists(file.path(pathData, "rP_sf.shp"))) file.remove(file.path(pathData, "rP_sf.shp"))
+      sf::st_write(obj = rP, dsn = file.path(pathData, "rP_sf.shp"))
+      tr <- c(30,30)
+      system( # This will be replaced by prepInputs when it can handle large files with gdalwarp system call
+        paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+               " -multi ",
+               "-wo NUM_THREADS=30 ",
+               "-ot UInt32 ",
+               "-overwrite ",
+               "-tr ", paste(tr, collapse = " "), " ",
+               "-crop_to_cutline ",
+               "-cutline ", file.path(pathData, "rP_sf.shp"), " ", 
+               birdDensityRastersPath, " ",
+               birdDensityResampled),
+        wait = TRUE)
+      birdDensityRasters <- raster::raster(birdDensityResampled) 
+      gc()
+    } else {
+      birdDensityRasters <- raster::raster(birdDensityResampled)
+      gc()
+    }
   }
-  birdDensityRasters[] <- round(birdDensityRasters[]*1000, 0)
-  storage.mode(birdDensityRasters[]) = "integer"
-  # birdDensityRasters <- reproducible::fastMask(birdDensityRasters, y = rP)
   
   # ~~~~~~~~~ LANDCOVER ~~~~~~~~~~~~
   # Load landCover
-  landCover <- prepInputs(targetFile = file.path(pathData, "CAN_NALCMS_LC_30m_LAEA_mmu12_urb05.tif"),
-                          destinationPath = pathData,
-                          rasterToMatch = birdDensityRasters,
-                          studyArea = rP)
-  landCover[] <- round(landCover[], 0)
-  storage.mode(landCover[]) = "integer"
+  landCoverPath <- landCover
+  landCover <- raster::raster(landCoverPath)
+  if (as.character(raster::crs(birdDensityRasters)) != as.character(raster::crs(landCover))){
+    # [ FIX ] Also test for aligment use a raster package function for it... raster::compareRaster(newTest, fakeBirdDensity, extent = TRUE)
+  savedReprojTile <- file.path(intermPath, "land", paste0(landCover@data@names, ".tif"))
+  tr <- res(birdDensityRasters)
+
+  system( # This will be replaced by prepInputs when it can handle large files with gdalwarp system call
+    paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+           "-s_srs \"", as.character(raster::crs(landCover)), "\"",
+           " -t_srs \"", as.character(raster::crs(birdDensityRasters)), "\"",
+           " -multi ",
+           "-wo NUM_THREADS=35 ",
+           "-ot Byte ",
+           "-overwrite ",
+           "-crop_to_cutline ",
+           "-cutline ", file.path(pathData, "rP_sf.shp"), " ", 
+           "-tr ", paste(tr, collapse = " "), " ",
+           landCoverPath, " ",
+           savedReprojTile),
+    wait = TRUE)
+  gc()
+  landCoverReproj <- raster::raster(savedReprojTile) %>%
+    raster::crop(birdDensityRasters)
+  raster::extent(landCoverReproj) <- raster::alignExtent(extent = raster::extent(landCoverReproj), 
+                                                         object = birdDensityRasters, snap = "near")
   
+#  CHECK IF THE RASTERS MATCH (EXT AND RES): ONLY PROCEED IF THEY DO!
+  
+  file.copy(from = savedReprojTile, to = landCoverPath, overwrite = TRUE)
+#  file.remove(savedReprojTile) # OBS. If I have any problems in the landcover raster, it might be due to 
+  landCover <- raster::raster(landCoverPath) # ancilary raster files that were not recreated, but kept (only the .tif was reproj and replaced)
+  
+    }
   # Split landCover
-  message(crayon::yellow(paste0("Splitting lanCover tiles for ", spName)))
+  message(crayon::yellow(paste0("Splitting landCover tiles for ", spName)))
   landCover <- Cache(splitRaster, r = landCover, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
                      rType = rType, path = file.path(intermPath, "land")) # override the original in memory
-  
+  gc()
   # ~~~~~~~~~ DISTURBANCE TYPE ~~~~~~~~~~~~
-  
   # Load disturbanceType
-  disturbanceType <- prepInputs(targetFile = file.path(pathData, "C2C_change_type.tif"), # If this is not wrking, might be becuse these objects were in sim and now they are not
-                                destinationPath = pathData,
-                                rasterToMatch = birdDensityRasters,
-                                studyArea = rP,
-                                length = TRUE)
+  # disturbanceType <- prepInputs(targetFile = file.path(pathData, "C2C_change_type.tif"), # If this is not wrking, might be becuse these objects were in sim and now they are not
+  #                               destinationPath = pathData,
+  #                               # rasterToMatch = birdDensityRasters,
+  #                               studyArea = rP,
+  #                               length = TRUE)
+  
+  disturbanceTypePath <- disturbanceType
+  disturbanceType <- raster::raster(disturbanceTypePath)
+  if (as.character(raster::crs(birdDensityRasters)) != as.character(raster::crs(disturbanceType))){
+    # [ FIX ] Also test for aligment use a raster package function for it...
+    savedReprojTile <- file.path(intermPath, "distType", paste0(disturbanceType@data@names, ".tif"))
+    tr <- res(birdDensityRasters)
+    
+    system( # This will be replaced by prepInputs when it can handle large files with gdalwarp system call
+      paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+             "-s_srs \"", as.character(raster::crs(disturbanceType)), "\"",
+             " -t_srs \"", as.character(raster::crs(birdDensityRasters)), "\"",
+             " -multi ",
+             "-wo NUM_THREADS=35 ",
+             "-ot Byte ",
+             "-overwrite ",
+             "-crop_to_cutline ",
+             "-cutline ", file.path(pathData, "rP_sf.shp"), " ", 
+             "-tr ", paste(tr, collapse = " "), " ",
+             disturbanceTypePath, " ",
+             savedReprojTile),
+      wait = TRUE)
+    gc()
+    distTypeReproj <- raster::raster(savedReprojTile) %>%
+      raster::crop(birdDensityRasters)
+    raster::extent(distTypeReproj) <- raster::alignExtent(extent = raster::extent(distTypeReproj), 
+                                                           object = birdDensityRasters, snap = "near")
+    
+    #  CHECK IF THE RASTERS MATCH (EXT AND RES): ONLY PROCEED IF THEY DO!
+    
+    file.copy(from = distTypeReproj, to = disturbanceTypePath, overwrite = TRUE)
+    #  file.remove(savedReprojTile) # OBS. If I have any problems in the landcover raster, it might be due to 
+    disturbanceType <- raster::raster(disturbanceTypePath) # ancilary raster files that were not recreated, but kept (only the .tif was reproj and replaced)
+    
+  }
   disturbanceType[] <- round(disturbanceType[], 0)
   storage.mode(disturbanceType[]) = "integer"
+
   # Split disturbanceType
   message(crayon::yellow(paste0("Splitting disturbanceType tiles for ", spName)))
-  disturbanceType <- Cache(splitRaster, r = disturbanceType, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
+  disturbanceType <- Cache(splitRaster, r = disturbanceType, nx = nx, ny = ny, buffer = buffer,  # Splitting disturbanceType Raster, write to disk,
                            rType = rType, path = file.path(intermPath, "distType")) # override the original in memory
-  
+  gc()
   # ~~~~~~~~~ DISTURBANCE YEAR ~~~~~~~~~~~~
   
   # Load disturbanceYear
-  disturbanceYear <- prepInputs(targetFile = file.path(pathData, "C2C_change_year.tif"),
-                                destinationPath = pathData,
-                                rasterToMatch = birdDensityRasters,
-                                studyArea = rP,
-                                quick = TRUE) # Keep the file in memory only if the file is small enough.
+  
+  # disturbanceYear <- prepInputs(targetFile = file.path(pathData, "C2C_change_year.tif"),
+  #                               destinationPath = pathData,
+  #                               # rasterToMatch = birdDensityRasters,
+  #                               studyArea = rP,
+  #                               quick = TRUE) # Keep the file in memory only if the file is small enough.
+  
+  disturbanceYearPath <- disturbanceYear
+  disturbanceYear <- raster::raster(disturbanceYearPath)
+  if (as.character(raster::crs(birdDensityRasters)) != as.character(raster::crs(disturbanceYear))){
+    # [ FIX ] Also test for aligment use a raster package function for it...
+    savedReprojTile <- file.path(intermPath, "disturbanceYear", paste0(disturbanceYear@data@names, ".tif"))
+    tr <- res(birdDensityRasters)
+    
+    system( # This will be replaced by prepInputs when it can handle large files with gdalwarp system call
+      paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp "),
+             "-s_srs \"", as.character(raster::crs(disturbanceYear)), "\"",
+             " -t_srs \"", as.character(raster::crs(birdDensityRasters)), "\"",
+             " -multi ",
+             "-wo NUM_THREADS=35 ",
+             "-ot Byte ",
+             "-overwrite ",
+             "-crop_to_cutline ",
+             "-cutline ", file.path(pathData, "rP_sf.shp"), " ", 
+             "-tr ", paste(tr, collapse = " "), " ",
+             disturbanceYearPath, " ",
+             savedReprojTile),
+      wait = TRUE)
+    gc()
+    disturbanceYearReproj <- raster::raster(savedReprojTile) %>%
+      raster::crop(birdDensityRasters)
+    raster::extent(distYearReproj) <- raster::alignExtent(extent = raster::extent(distYearReproj), 
+                                                          object = birdDensityRasters, snap = "near")
+    
+    #  CHECK IF THE RASTERS MATCH (EXT AND RES): ONLY PROCEED IF THEY DO!
+    
+    file.copy(from = distYearReproj, to = disturbanceYearPath, overwrite = TRUE)
+    #  file.remove(savedReprojTile) # OBS. If I have any problems in the landcover raster, it might be due to 
+    disturbanceYear <- raster::raster(disturbanceYearPath) # ancilary raster files that were not recreated, but kept (only the .tif was reproj and replaced)
+    
+  }
   disturbanceYear[] <- round(disturbanceYear[], 0)
   storage.mode(disturbanceYear[]) = "integer"
   
   # Split disturbanceYear
   message(crayon::yellow(paste0("Splitting disturbanceYear tiles for ", spName)))
-  disturbanceYear <- Cache(splitRaster, r = disturbanceYear, nx = nx, ny = ny, buffer = buffer,  # Splitting landCover Raster, write to disk,
+  disturbanceYear <- Cache(splitRaster, r = disturbanceYear, nx = nx, ny = ny, buffer = buffer,  # Splitting disturbanceYear Raster, write to disk,
                            rType = rType, path = file.path(intermPath, "distYear")) # override the original in memory
-  
+  gc()
   # ============ SPLIT ABUNDANCE ================
   # Split abundance raster
   message(crayon::yellow(paste0("Splitting density tiles for ", spName)))
   birdDensityRasters <- splitRaster(r = birdDensityRasters, nx = nx, ny = ny, buffer = buffer, rType = "INT2S") # Splitting density Raster, stays in memory, override the original
+  gc()
   
   # Tile's list
   newlist <- list("distType" = disturbanceType, "distYear" = disturbanceYear, "land" = landCover, "birdDensityRasters" = birdDensityRasters) # Splitted rasters' list
@@ -98,11 +228,11 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                  "landCover", "birdDensityRasters")
   
   message(crayon::green(paste0("GIS operations finalized for ", spName, "! :D")))
-
-  # ======================== FINISHED GIS ===================================
   
+  # ======================== FINISHED GIS ===================================
+browser()
   lengthvect <- 1:(nx * ny)
-
+  
   # Using parallel: Outlist is a list of all the tiles after running the predictions
   if (!length(useParallel) == 0){
     if (useParallel == "across"){ # then do "local" then NULL
@@ -119,29 +249,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
       }
       clusterCall(cl = cl, fun = loadAllPackagesInCluster)
       
-    outList <- parallel::clusterApplyLB(x = lengthvect,
-                                        fun = tileReorder,
-                                        cl = cl,
-                                        spName = spName,
-                                        inList = newlist,
-                                        origList = origNames,
-                                        startTime = startTime,
-                                        endTime = endTime,
-                                        forestClass = forestClass,
-                                        focalDistance = focalDistance,
-                                        disturbanceClass = disturbanceClass,
-                                        passedModel = models,
-                                        pathData = pathData,
-                                        intermPath = intermPath,
-                                        recoverTime = recoverTime,
-                                        maxTile = length(lengthvect))
-    parallel::stopCluster(cl)
-    
-  } else { # Outlist is a list of all the tiles after running the predictions
-    if (useParallel == "local"){
-      message(crayon::red(paste0("Paralellizing tiles LOCALLY. Messages will be suppressed until operation is complete")))
-      cl <- parallel::makeForkCluster(10, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
-      outList <- parallel::clusterApplyLB(x = lengthvect, 
+      outList <- parallel::clusterApplyLB(x = lengthvect,
                                           fun = tileReorder,
                                           cl = cl,
                                           spName = spName,
@@ -159,14 +267,36 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                                           maxTile = length(lengthvect))
       parallel::stopCluster(cl)
       
-    } else {
-      stop("Provide argument to useParallel: 'across', 'local' or NULL")
+    } else { # Outlist is a list of all the tiles after running the predictions
+      if (useParallel == "local"){
+        message(crayon::red(paste0("Paralellizing tiles LOCALLY. Messages will be suppressed until operation is complete")))
+        cl <- parallel::makeForkCluster(10, outfile = "/mnt/storage/borealBirdsAndForestry/cache/logParallel")
+        outList <- parallel::clusterApplyLB(x = lengthvect, 
+                                            fun = tileReorder,
+                                            cl = cl,
+                                            spName = spName,
+                                            inList = newlist,
+                                            origList = origNames,
+                                            startTime = startTime,
+                                            endTime = endTime,
+                                            forestClass = forestClass,
+                                            focalDistance = focalDistance,
+                                            disturbanceClass = disturbanceClass,
+                                            passedModel = models,
+                                            pathData = pathData,
+                                            intermPath = intermPath,
+                                            recoverTime = recoverTime,
+                                            maxTile = length(lengthvect))
+        parallel::stopCluster(cl)
+        
+      } else {
+        stop("Provide argument to useParallel: 'across', 'local' or NULL")
+      }
     }
-  }
-} else {
+  } else {
     
-  # Not using parallel: Outlist is a list of all the tiles after running the predictions
-  outList <- lapply(X = lengthvect,
+    # Not using parallel: Outlist is a list of all the tiles after running the predictions
+    outList <- lapply(X = lengthvect,
                       FUN = tileReorder,
                       spName = spName,
                       inList = newlist,
@@ -181,10 +311,10 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
                       intermPath = intermPath,
                       recoverTime = recoverTime,
                       maxTile = length(lengthvect))
-}
- 
+  }
+  
   outList <- plyr::compact(outList)
-
+  
   lengthResultRasters <- 1:length(outList[[1]])
   finalRasList <- lapply(lengthResultRasters, function(nRas){
     rasList <- lapply(X = outList, `[[`, nRas)
@@ -194,7 +324,7 @@ groupSplitRaster <- function(models = models, # This is already lapplying though
     ras <- SpaDES.tools::mergeRaster(x = rasList) # If at some point mergeRaster writes to disk, delete next 3 lines below.
     raster::writeRaster(x = ras, filename = finalRasPath, overwrite = FALSE)
     rm(ras) # Remove raster from memory
-    invisible(gc()) # Free up more space?
+    invisible(gc())
     return(finalRasPath)
   })
   

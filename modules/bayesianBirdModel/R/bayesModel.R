@@ -35,10 +35,8 @@ bayesModel <- function(birdData = sim$birdData,
     coordinates(BDFcoor)=~X+Y
     proj4string(BDFcoor)<- CRS("+proj=longlat +datum=WGS84") # Seems to be aligning, confirm data is only for boreal forest
     
-    #  birdShape <- SpaDES.tools::postProcess(x = BDFcoor, rasterToMatch = ageMap) #Failing silently! Need to fix it! [ FIX ]
-    birdShape <- spTransform(BDFcoor, CRSobj = crs(beads))
-    birdShape <- maskInputs(x = birdShape, studyArea = rP) # NOT ALIGNING PERFECTLY... WHY??? Still should be good enough to continue...? 
-    
+    birdShape <- SpaDES.tools::postProcess(x = BDFcoor, rasterToMatch = ageMap)
+
     # Crop and mask ageMap
     croppedAgeMap <- crop(ageMap, rP) %>%
       mask(rP)
@@ -98,8 +96,8 @@ bayesModel <- function(birdData = sim$birdData,
     coordinates(BDFcoor)=~X+Y
     proj4string(BDFcoor)<- CRS("+proj=longlat +datum=WGS84") # Seems to be aligning, confirm data is only for boreal forest
     
-    #  birdShape <- SpaDES.tools::postProcess(x = BDFcoor, rasterToMatch = ageMap) #Failing silently! Need to fix it! [ FIX ]
-    birdShape <- spTransform(BDFcoor, CRSobj = crs(beads))
+    birdShape <- SpaDES.tools::postProcess(x = BDFcoor, rasterToMatch = beads) #Originally it was ageMap, but the next line was beads
+    
   }
   
   # Adding forest age to the dataset 

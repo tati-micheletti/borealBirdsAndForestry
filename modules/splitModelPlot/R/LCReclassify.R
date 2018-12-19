@@ -74,6 +74,7 @@ LCReclassify <- function(inputTiles = tilelist,
   
   names(fDistanceLists) <- paste("focal", max(focalDistance)) # Unnecessary but left it in for browser transparency
   
+  browser() # Should I resample the tiles here? If the rasters are rasters here already, then resample, if paths, resample in next ()
   #Combine distance rasters by year
   newPlots <- MergeDistances(inList = fDistanceLists, 
                              times = times, 

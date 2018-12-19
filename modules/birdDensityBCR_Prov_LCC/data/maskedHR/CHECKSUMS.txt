@@ -1,0 +1,5 @@
+"file" "checksum" "filesize" "algorithm"
+"BBWA_corecurrmeanBSI.asc" "aabe73ddbf7a7450" "7982000" "xxhash64"
+"BTNW_corecurrmeanBSI.asc" "37ca1aac6cce7c8a" "7982487" "xxhash64"
+"CAWA_corecurrmeanBSI.asc" "06dac97e8519c904" "7983098" "xxhash64"
+"CMWA_corecurrmeanBSI.asc" "ce710ae5323c411a" "7982133" "xxhash64"
