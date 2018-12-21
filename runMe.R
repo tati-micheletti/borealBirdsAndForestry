@@ -37,7 +37,7 @@ options("reproducible.cachePath" = paths$cachePath)
 SpaDES.core::setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC")#, "loadOffsetsBAM", "prepTiles", "focalCalculation")
+modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "prepTiles", "focalCalculation")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
 

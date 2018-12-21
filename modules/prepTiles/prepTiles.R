@@ -113,6 +113,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            rasterToMatch = sim$Raster1,
                            studyArea = sim$rP,
                            length = Inf, useCache = TRUE,
+                           overwrite = TRUE,
                            userTags = c("objectName:Raster2", 
                                         "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"))#,
       # cacheId = "af8ac2b611698d718c31a8f339ad1f07")
