@@ -6,11 +6,11 @@ library(sf)
 library(data.table)
 
 # Test data
-valsYearO <- sample(x = c(rep(0, times =10), 85:111), size = 100, replace = TRUE)
-valsTypeO <- valsYearO
-valsTypeO[valsYearO > 0] <- sample(x = c(1:6), size = length(valsTypeO[valsYearO > 0]), replace = TRUE)
-valsYear <- valsYearO
-valsType <- valsTypeO
+# valsYearO <- sample(x = c(rep(0, times =10), 85:111), size = 100, replace = TRUE)
+# valsTypeO <- valsYearO
+# valsTypeO[valsYearO > 0] <- sample(x = c(1:6), size = length(valsTypeO[valsYearO > 0]), replace = TRUE)
+# valsYear <- valsYearO
+# valsType <- valsTypeO
 
 # ASSUMPTION: The polygons classified as pre2000 in Alberto's layer 
 # BAM_100_BEAD_single_merged (the ones where Year_dist == 1990, excluding 2011 and 2012)
@@ -54,10 +54,10 @@ pathToFiles <- file.path(getwd(), "analysisPre2000") %>%
 # This means: exclude 1 and 4. Maybe exclude 3 (low probability of forestry)
 # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
 disturbanceYear <- prepInputs(url = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Year.zip",
-                                    destinationPath = dataPath(sim))
+                                    destinationPath = pathToFiles)
 storage.mode(disturbanceYear[]) <- "integer"
 disturbanceType <- prepInputs(url = "https://opendata.nfis.org/downloads/forest_change/C2C_Change_Type.zip",
-                              destinationPath = dataPath(sim))
+                              destinationPath = pathToFiles)
 storage.mode(disturbanceType[]) <- "integer"
 
 # 3. Convert all values of WW that are not of interest to 0
