@@ -1,4 +1,7 @@
 # Global script for the Backcasting Project REMODELED
+# devtools::load_all("/mnt/data/Micheletti/reproducible") # For debugging
+# devtools::install_github("tati-micheletti/reproducible", ref = "development") # Before PR's
+# devtools::install_github("PredictiveEcology/reproducible", ref = "development") # After PR's are accepted
 
 # Testing for install of GDAL / These scripts are temporarily in the 'inputs' folder. Should be pushed to 'pemisc' once it is working/passing again.
 source(file.path(getwd(), "inputs", "isGDALInstalled.R"))
