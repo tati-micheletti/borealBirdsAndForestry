@@ -1,23 +1,39 @@
 library(reproducible)
 library(SpaDES.shiny)
+library(raster)
+library(viridisLite)
 destPath <- file.path(getwd(), "shiny") %>%
   checkPath(create = TRUE)
 mySimOut <- reproducible::prepInputs(url = "https://drive.google.com/open?id=1qIqZ0tHAsQUdfNMZji5jsmV6zZorsa6I",
                                     targetFile = "resultsShiny.rds", destinationPath = destPath)
-shine(mySimOut)
+# shine(mySimOut) # Should be running mySim, not mySimOut!
 source('~/Documents/GitHub/borealBirdsAndForestry/shiny/fitModel.R')
+source('~/Documents/GitHub/borealBirdsAndForestry/shiny/predictDensities.R')
 pathToData <- file.path(destPath, "data")
 
 # Do this for 1999 and 2011 too.
 predictions <- lapply(X = c(1985, 1999, 2011), FUN = function(year){
-  predictions <- predictDensities(birdSpecies = mySimOut$birdSpecies, 
+  predictions <- Cache(predictDensities, birdSpecies = mySimOut$birdSpecies, 
                                   disturbanceRas = raster::raster(
                                     file.path(pathToData, paste0("mergedFocal",year,"-100Res250m.tif"))), 
                                   birdDensityRasters = mySimOut$birdDensityRasters, currentTime = year, 
                                   modelList = mySimOut$models$localTransitional, pathData = pathToData)
 return(predictions)  
 })
-names(predictions) <- c(1985, 1999, 2011)
+names(predictions) <- c(1985, 1998, 2011)
+
+repPredictions <- lapply(X = names(predictions), FUN = function(year){
+  predSp <- lapply(X = names(predictions[[year]]), FUN = function(species){
+    ras <- projectInputs(x = predictions[[year]][[species]], 
+                         targetCRS = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs",
+                         method = "bilinear")
+    return(ras)
+  })
+  names(predSp) <- names(predictions[[year]])
+  return(predSp)
+})
+names(repPredictions) <- names(predictions)
+#"EPSG:3857" = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"
 
 # This is a Shiny web application to display the BAM densities with offsets.
 
@@ -29,14 +45,9 @@ names(predictions) <- c(1985, 1999, 2011)
 #          4. Predictions + uncertainty for the whole boreal using the data selected (species)
 # Inputs: species, survey years, scale, disturbance type
 
-# Need: 
-# 1. data: cache -> run on 388 and cache, add the shiny app as a module 
-# 2. Still need to work on the prediction module. Only for one year!
-# 3. Canada's shapefile
-
-# 1. Construct the structure of the models;
-# 3. Add raster layers: https://rstudio.github.io/leaflet/raster.html
-# 4. Add tables
+# Need:
+# 2. Fix scrolldown for webpage
+# 3. Fix the raster layer on top of the map: https://rstudio.github.io/leaflet/raster.html
 
 library(shiny)
 library(shinythemes)
@@ -59,71 +70,66 @@ maptypes <- c("MapQuestOpen.Aerial", # nope
               "Stamen.Watercolor", # really cool!
               "Stamen.TonerLite")
 
-# Set colours for rasters # RColorBrewer
-pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(r),
-                    na.color = "transparent")
-
+allStack <- raster::stack(repPredictions[['1985']][['BBWA']], repPredictions[['1998']][['BBWA']], repPredictions[['2011']][['BBWA']],
+                          repPredictions[['1985']][['BTNW']], repPredictions[['1998']][['BTNW']], repPredictions[['2011']][['BTNW']],
+                          repPredictions[['1985']][['CAWA']], repPredictions[['1998']][['CAWA']], repPredictions[['2011']][['CAWA']],
+                          repPredictions[['1985']][['CMWA']], repPredictions[['1998']][['CMWA']], repPredictions[['2011']][['CMWA']])
 
 # Define UI for application that draws a histogram
 ui <- fillPage(
+  
   theme = shinytheme("slate"),
-  # leafletOutput("mymap"),
-  
-  br(),
-  leafletOutput("mymap", height="350px"),
-  absolutePanel(top=20, left=70, textInput("target_zone", "" , "Canada")),
-  br(),
-  
+
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
       sliderInput(inputId = "year", label = "Year", min = 1985, max = 2011,
                   value = 1985, step = 13),
+      hr(),
       selectInput(multiple = FALSE, inputId = "species", label = "Choose Species", 
-                  choices = list("CMWA", "BOCH", "BBWA", "BTNW")),
+                  choices = list("CMWA", "CAWA", "BBWA", "BTNW"), selected = "BBWA"),
+      hr(),
       radioButtons(inputId = "scale", label = "Spatial scale", 
-                   choices = list("Local", "Neighborhood")),
+                   choices = list("Local", "Neighborhood"), selected = "Neighborhood"),
+      hr(),
       checkboxGroupInput(inputId = "typeDisturbance", label = "Type of disturbance", 
-                         choices = c("Alienating", "Successional")),
-      submitButton(text = "Calculate", icon = icon("refresh"))
-    ),
+                         choices = c("Alienating", "Successional"), selected = "Successional")
+     ),
     
     # Show a plot of the generated distribution
-    mainPanel(
-      plotOutput("modelSummary")
+    mainPanel(tabsetPanel(
+      tabPanel(
+        title = "Abundance predictions", leafletOutput(outputId = "mymap", height = 600)
+      ),
+      tabPanel(
+        title = "Model summary", verbatimTextOutput("modelSummary")
+      )
     ),
     position = "left")
+  )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  
-  
+
   output$mymap <- renderLeaflet({
-    if(input$target_zone=="Canada"){
+    ras <- repPredictions[[as.character(input$year)]][[input$species]]
+    # Set colours for rasters # RColorBrewer
+    pal <- colorNumeric(palette = "inferno", domain = ras[], na.color = "#00000000")
       ZOOM=3.7
-      LAT=57.304897
-      LONG=-102.262423
-    }else{
-      target_pos=geocode(input$target_zone)
-      LAT=target_pos$lat
-      LONG=target_pos$lon
-      ZOOM=12
-    }
+      LAT=57.2
+      LONG=-95
     leaflet() %>% addTiles() %>%
-      # The ras will depend on the species/type/scale choices
-      addRasterImage(raster::plot(predictions[[as.character(input$year)]][[input$species]]), opacity = 0.8) %>%
-      addLegend(pal = colorNumeric(), values = values(predictions[[as.character(input$year)]][[input$species]]),
-                 title = "Predicted abundance") %>%
       setView(lng=LONG, lat=LAT, zoom=ZOOM ) %>%
       addProviderTiles(maptypes[5],
-                       options = providerTileOptions(noWrap = TRUE)
-      )
+                       options = providerTileOptions(noWrap = TRUE))%>%
+      addRasterImage(x = ras, colors = pal, opacity = 1, project = FALSE) %>%
+      addLegend(pal = pal, values = ras[],
+                title = paste0("Predicted abundance <br>in ", input$year, " for ", input$species), bins = 10)
   })
   
-  output$modelSummary <- renderPlot({
-    
-    # THIS WILL BE A TABLE OF summary(model)
+  output$modelSummary <- renderPrint({
+    # This is a table of the model summary
     summary(mySimOut$models$localTransitional[[input$species]])
   })
 }
