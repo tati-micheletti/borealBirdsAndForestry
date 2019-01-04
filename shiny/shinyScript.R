@@ -1,21 +1,45 @@
+# Please install the development version of reproducible from github if you don't have it
+devtools::install_github("PredictiveEcology/reproducible", ref = "development")
 library(reproducible)
-library(SpaDES.shiny)
-library(raster)
-library(viridisLite)
+
+Require(SpaDES.shiny)
+Require(raster)
+Require(viridisLite)
+Require(lme4)
+
 destPath <- file.path(getwd(), "shiny") %>%
   checkPath(create = TRUE)
-mySimOut <- reproducible::prepInputs(url = "https://drive.google.com/open?id=1qIqZ0tHAsQUdfNMZji5jsmV6zZorsa6I",
-                                    targetFile = "resultsShiny.rds", destinationPath = destPath)
-# shine(mySimOut) # Should be running mySim, not mySimOut!
-source('~/Documents/GitHub/borealBirdsAndForestry/shiny/fitModel.R')
-source('~/Documents/GitHub/borealBirdsAndForestry/shiny/predictDensities.R')
-pathToData <- file.path(destPath, "data")
+pathToData <- file.path(destPath, "data") %>%
+  checkPath(create = TRUE)
+url1985 <- "https://drive.google.com/open?id=13ll_52ktGGCbn_1a_oz2zZN8--vdkZOl"
+url1999 <- "https://drive.google.com/open?id=1P71cQmUUHNX-WFAAeHxF99-ggMiYo0tA"
+url2011 <- "https://drive.google.com/open?id=17w8NmnGJSQNhxRxH_Vgr_qAM_3uVcCQZ"
+yearsToShow <- c(1985, 1999, 2011)
 
-# Do this for 1999 and 2011 too.
+mySimOut <- reproducible::prepInputs(url = "https://drive.google.com/open?id=1qIqZ0tHAsQUdfNMZji5jsmV6zZorsa6I",
+                                    targetFile = "resultsShiny.rds", destinationPath = pathToData)
+
+rastersList <- lapply(X = yearsToShow, FUN = function(year){
+  url <- get(paste0("url", year))
+  assign(paste0("year", year), value = preProcess(url = url, 
+                                                  destinationPath = pathToData, 
+                                                  targetFile = paste0("mergedFocal",year,"-100Res250m.tif")))
+})
+names(rastersList) <- paste0("year", yearsToShow)
+
+listFiles <- lapply(X = names(rastersList), FUN = function(year){
+  filePath <- rastersList[[year]]$targetFilePath
+  return(filePath)
+})
+names(listFiles) <- yearsToShow
+
+# shine(mySimOut) # Should be running mySim, not mySimOut!
+source(file.path(getwd(), 'shiny/fitModel.R'))
+source(file.path(getwd(), 'shiny/predictDensities.R'))
+
 predictions <- lapply(X = c(1985, 1999, 2011), FUN = function(year){
   predictions <- Cache(predictDensities, birdSpecies = mySimOut$birdSpecies, 
-                                  disturbanceRas = raster::raster(
-                                    file.path(pathToData, paste0("mergedFocal",year,"-100Res250m.tif"))), 
+                                  disturbanceRas = raster::raster(listFiles[[as.character(year)]]), 
                                   birdDensityRasters = mySimOut$birdDensityRasters, currentTime = year, 
                                   modelList = mySimOut$models$localTransitional, pathData = pathToData)
 return(predictions)  

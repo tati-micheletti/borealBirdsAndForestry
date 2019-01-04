@@ -1,0 +1,4 @@
+"file" "checksum" "filesize" "algorithm"
+"mergedFocal1985-100Res250m.tif" "fa9eb3f264ac511d" "27365389" "xxhash64"
+"mergedFocal1999-100Res250m.tif" "07ccdb79387473a9" "56489355" "xxhash64"
+"mergedFocal2011-100Res250m.tif" "a6743d7d9690924c" "73336105" "xxhash64"
