@@ -90,10 +90,8 @@ ui <- fillPage(
                   choices = list("CMWA", "CAWA", "BBWA", "BTNW"), selected = "BBWA"),
       hr(),
       radioButtons(inputId = "scale", label = "Spatial scale", 
-                   choices = list("Local", "Neighborhood"), selected = "Neighborhood"),
-      hr(),
-      checkboxGroupInput(inputId = "typeDisturbance", label = "Type of disturbance", 
-                         choices = c("Alienating", "Successional"), selected = "Successional")
+                   choices = list("Local", "Neighborhood"), selected = "Local"),
+      hr()
      ),
     
     # Show a plot of the generated distribution
@@ -130,7 +128,15 @@ server <- function(input, output) {
   
   output$modelSummary <- renderPrint({
     # This is a table of the model summary
-    summary(mySimOut$models$localTransitional[[input$species]])
+    
+    # scale <- if (input$scale == "Local") "localTransitional" else "neighborhoodTransitional" # When all neighborhood results are ready
+    # summary(mySimOut$models[[scale]][[input$species]]) # When neigh ready, uncomment these lines and delete the next if statement
+    
+    if (input$scale == "Local") {
+      summary(mySimOut$models[["localTransitional"]][[input$species]])
+    } else {
+      print("Neighborhood models not yet implemented")
+    }
   })
 }
 
