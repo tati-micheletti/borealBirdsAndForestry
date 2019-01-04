@@ -4,7 +4,6 @@ predictDensities <- function(birdSpecies = sim$birdSpecies,
                              currentTime = time(sim),
                              modelList = sim$models,
                              pathData = cachePath(sim)) {
-  
   predictionPerSpecies <-  lapply(birdSpecies, function(spName){ # I can paralellize the predictions up to 3 times safely apparently. It in only consuming 16Gb per species
     message(crayon::yellow("Stacking rasters for ", spName , " prediction"))
     suppressWarnings(dir.create(file.path(pathData, "predicted")))
@@ -21,7 +20,7 @@ predictDensities <- function(birdSpecies = sim$birdSpecies,
     focDis <- as.numeric(gsub("[^\\d]+", "", nameStackRas1, perl=TRUE))
     predictedName <- file.path(pathData, paste0("predicted/predictedFocal", focDis, "m", spName, currentTime, ".tif"))
     if (!file.exists(predictedName)){
-      birdD <- raster::raster(birdDensityRasters[[spName]])
+      birdD <- if (is.character(birdDensityRasters[[spName]])) raster::raster(birdDensityRasters[[spName]]) else birdDensityRasters[[spName]]
       valsD <- log(raster::getValues(birdD)) # log the value of densities so it is the same of the original model
       valsD[valsD < -0.99] <- -1
       birdD <- raster::setValues(birdD, valsD)
