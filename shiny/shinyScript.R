@@ -11,14 +11,31 @@ destPath <- file.path(getwd(), "shiny") %>%
   checkPath(create = TRUE)
 pathToData <- file.path(destPath, "data") %>%
   checkPath(create = TRUE)
+predictedFolder <- file.path(destPath, "predicted") %>%
+  checkPath(create = TRUE)
+
+# Download model results
+mySimOut <- reproducible::prepInputs(url = "https://drive.google.com/open?id=1qIqZ0tHAsQUdfNMZji5jsmV6zZorsa6I",
+                                    targetFile = "resultsShiny.rds", destinationPath = pathToData)
+
+# Download bird density rasters
+urlBBWA <- "https://drive.google.com/open?id=1ajv5eVhGyE2WQXhfB0Pf6fz33W8lEBBk"
+urlCAWA <- "https://drive.google.com/open?id=16RCWfGauWIgjh_9HjyvyfsPjpCdVcobs"
+urlCMWA <- "https://drive.google.com/open?id=1Rj0Nx8idK7rnnJYh2RAQ18gLBaWyiYnO"
+urlBTNW <- "https://drive.google.com/open?id=1V7JDtkDglaxk6BSFBgAdqFsTJWd6yAI_"
+densityRasList <- lapply(mySimOut$birdSpecies, FUN = function(sp){
+  rasSp <- reproducible::prepInputs(url = get(paste0("url", sp)),
+                                          targetFile = paste0("density", sp,".tif"), 
+                                          destinationPath = pathToData)
+  return(rasSp)
+})
+names(densityRasList) <- mySimOut$birdSpecies
+
+# Download focal rasters
 url1985 <- "https://drive.google.com/open?id=13ll_52ktGGCbn_1a_oz2zZN8--vdkZOl"
 url1999 <- "https://drive.google.com/open?id=1P71cQmUUHNX-WFAAeHxF99-ggMiYo0tA"
 url2011 <- "https://drive.google.com/open?id=17w8NmnGJSQNhxRxH_Vgr_qAM_3uVcCQZ"
 yearsToShow <- c(1985, 1999, 2011)
-
-mySimOut <- reproducible::prepInputs(url = "https://drive.google.com/open?id=1qIqZ0tHAsQUdfNMZji5jsmV6zZorsa6I",
-                                    targetFile = "resultsShiny.rds", destinationPath = pathToData)
-
 rastersList <- lapply(X = yearsToShow, FUN = function(year){
   url <- get(paste0("url", year))
   assign(paste0("year", year), value = preProcess(url = url, 
@@ -26,12 +43,11 @@ rastersList <- lapply(X = yearsToShow, FUN = function(year){
                                                   targetFile = paste0("mergedFocal",year,"-100Res250m.tif")))
 })
 names(rastersList) <- paste0("year", yearsToShow)
-
-listFiles <- lapply(X = names(rastersList), FUN = function(year){
+focalRas <- lapply(X = names(rastersList), FUN = function(year){
   filePath <- rastersList[[year]]$targetFilePath
   return(filePath)
 })
-names(listFiles) <- yearsToShow
+names(focalRas) <- yearsToShow
 
 # shine(mySimOut) # Should be running mySim, not mySimOut!
 source(file.path(getwd(), 'shiny/fitModel.R'))
@@ -40,7 +56,7 @@ source(file.path(getwd(), 'shiny/predictDensities.R'))
 predictions <- lapply(X = c(1985, 1999, 2011), FUN = function(year){
   predictions <- Cache(predictDensities, birdSpecies = mySimOut$birdSpecies, 
                                   disturbanceRas = raster::raster(listFiles[[as.character(year)]]), 
-                                  birdDensityRasters = mySimOut$birdDensityRasters, currentTime = year, 
+                                  birdDensityRasters = densityRasList, currentTime = year, 
                                   modelList = mySimOut$models$localTransitional, pathData = pathToData)
 return(predictions)  
 })
@@ -48,8 +64,9 @@ names(predictions) <- c(1985, 1998, 2011)
 
 repPredictions <- lapply(X = names(predictions), FUN = function(year){
   predSp <- lapply(X = names(predictions[[year]]), FUN = function(species){
+    EPSG.3857 <- "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"
     ras <- projectInputs(x = predictions[[year]][[species]], 
-                         targetCRS = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs",
+                         targetCRS = EPSG.3857,
                          method = "bilinear")
     return(ras)
   })
@@ -57,21 +74,12 @@ repPredictions <- lapply(X = names(predictions), FUN = function(year){
   return(predSp)
 })
 names(repPredictions) <- names(predictions)
-#"EPSG:3857" = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"
 
-# This is a Shiny web application to display the BAM densities with offsets.
+# This is a Shiny web application to display the BAM predicted densities based on Suarez et al. (in review) models.
 
 # Data: https://drive.google.com/open?id=18TeNsWmtNwe3CR39b28G042Q9RgrhQxJ
 
-# Outputs: 1. Where are the point counts (Sp + Years)
-#          2. Histogram of data distribution per BCR and per province; (Sp + Years)
-#          3. Alberto's Model resuls (species + scale + disturbance type)
-#          4. Predictions + uncertainty for the whole boreal using the data selected (species)
 # Inputs: species, survey years, scale, disturbance type
-
-# Need:
-# 2. Fix scrolldown for webpage
-# 3. Fix the raster layer on top of the map: https://rstudio.github.io/leaflet/raster.html
 
 library(shiny)
 library(shinythemes)
