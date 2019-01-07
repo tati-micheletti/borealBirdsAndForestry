@@ -55,7 +55,7 @@ source(file.path(getwd(), 'shiny/predictDensities.R'))
 
 predictions <- lapply(X = c(1985, 1999, 2011), FUN = function(year){
   predictions <- Cache(predictDensities, birdSpecies = mySimOut$birdSpecies, 
-                                  disturbanceRas = raster::raster(listFiles[[as.character(year)]]), 
+                                  disturbanceRas = raster::raster(focalRas[[as.character(year)]]), 
                                   birdDensityRasters = densityRasList, currentTime = year, 
                                   modelList = mySimOut$models$localTransitional, pathData = pathToData)
 return(predictions)  
