@@ -79,14 +79,14 @@ names(repPredictions) <- names(predictions)
 
 # Data: https://drive.google.com/open?id=18TeNsWmtNwe3CR39b28G042Q9RgrhQxJ
 
-# Inputs: species, survey years, scale, disturbance type
+# Inputs: species, survey years, scale, disturbance type* (only forestry for now)
 
-library(shiny)
-library(shinythemes)
-library(leaflet)
-library(RColorBrewer)
-library(ggmap)
-library(raster)
+Require(shiny)
+Require(shinythemes)
+Require(leaflet)
+Require(RColorBrewer)
+Require(ggmap)
+Require(raster)
 
 options(browser = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe")
 
