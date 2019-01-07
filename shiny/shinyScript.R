@@ -2,7 +2,6 @@
 devtools::install_github("PredictiveEcology/reproducible", ref = "development")
 library(reproducible)
 
-Require(SpaDES.shiny)
 Require(raster)
 Require(viridisLite)
 Require(lme4)
@@ -86,7 +85,6 @@ Require(shinythemes)
 Require(leaflet)
 Require(RColorBrewer)
 Require(ggmap)
-Require(raster)
 
 options(browser = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe")
 
@@ -101,11 +99,6 @@ maptypes <- c("MapQuestOpen.Aerial", # nope
               "OpenStreetMap", # nope
               "Stamen.Watercolor", # really cool!
               "Stamen.TonerLite")
-
-allStack <- raster::stack(repPredictions[['1985']][['BBWA']], repPredictions[['1998']][['BBWA']], repPredictions[['2011']][['BBWA']],
-                          repPredictions[['1985']][['BTNW']], repPredictions[['1998']][['BTNW']], repPredictions[['2011']][['BTNW']],
-                          repPredictions[['1985']][['CAWA']], repPredictions[['1998']][['CAWA']], repPredictions[['2011']][['CAWA']],
-                          repPredictions[['1985']][['CMWA']], repPredictions[['1998']][['CMWA']], repPredictions[['2011']][['CMWA']])
 
 # Define UI for application that draws a histogram
 ui <- fillPage(
