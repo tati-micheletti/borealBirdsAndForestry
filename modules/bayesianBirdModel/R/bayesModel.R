@@ -10,6 +10,7 @@
 # Obvious outcomes
 #   NN > NL
 
+
 #   # Assumptions
 # 1. Bird density might vary depending on cluster (RE)
 # 2. Bird density might vary depending on the year (RE)
@@ -22,7 +23,7 @@ bayesModel <- function(birdData = sim$birdData,
                        dataPath = dataPath(sim),
                        rP = sim$rP){
   
-  
+  browser()
   # Subsetting to avoid using data from other types of disturbance
   birdDataN <- birdData[Agent_500=="Forestry" | Agent_500==""]
   birdDataFinal <- birdDataN[Agent_100=="Forestry" | Agent_100==""]
@@ -190,7 +191,7 @@ bayesModel <- function(birdData = sim$birdData,
       betaN[k] <- rnorm(1, 0, 1)}
     for (k in 1:2) {  # regression params in lambda L
       betaL[k] <- rnorm(1, 0, 1)}
-    for (k in 1:5) {  # regression params in lambda L
+    for (k in 1:5) {  # regression params in alpha
       alpha[k] <- rnorm(1, 0, 1)}
     
     nyears <- sort(unique(Year))
