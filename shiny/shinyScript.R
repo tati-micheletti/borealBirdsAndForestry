@@ -79,14 +79,13 @@ names(repPredictions) <- names(predictions)
 
 # Data: https://drive.google.com/open?id=18TeNsWmtNwe3CR39b28G042Q9RgrhQxJ
 
-# Inputs: species, survey years, scale, disturbance type
+# Inputs: species, survey years, scale, disturbance type* (only forestry for now)
 
-library(shiny)
-library(shinythemes)
-library(leaflet)
-library(RColorBrewer)
-library(ggmap)
-library(raster)
+Require(shiny)
+Require(shinythemes)
+Require(leaflet)
+Require(RColorBrewer)
+Require(ggmap)
 
 options(browser = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe")
 
@@ -101,11 +100,6 @@ maptypes <- c("MapQuestOpen.Aerial", # nope
               "OpenStreetMap", # nope
               "Stamen.Watercolor", # really cool!
               "Stamen.TonerLite")
-
-allStack <- raster::stack(repPredictions[['1985']][['BBWA']], repPredictions[['1998']][['BBWA']], repPredictions[['2011']][['BBWA']],
-                          repPredictions[['1985']][['BTNW']], repPredictions[['1998']][['BTNW']], repPredictions[['2011']][['BTNW']],
-                          repPredictions[['1985']][['CAWA']], repPredictions[['1998']][['CAWA']], repPredictions[['2011']][['CAWA']],
-                          repPredictions[['1985']][['CMWA']], repPredictions[['1998']][['CMWA']], repPredictions[['2011']][['CMWA']])
 
 # Define UI for application that draws a histogram
 ui <- fillPage(
