@@ -2,10 +2,10 @@
 devtools::install_github("PredictiveEcology/reproducible", ref = "development")
 library(reproducible)
 
-Require(SpaDES.shiny)
-Require(raster)
-Require(viridisLite)
-Require(lme4)
+Require("SpaDES.shiny")
+Require("raster")
+Require("viridisLite")
+Require("lme4")
 
 destPath <- file.path(getwd(), "shiny") %>%
   checkPath(create = TRUE)
