@@ -56,7 +56,7 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
     
     fetchData = {
       
-      sim$birdDensityRasters <- fetchData(pathData = dataPath(sim), 
+      sim$birdDensityRasters <- Cache(fetchData, pathData = dataPath(sim), 
                                           birdSp = sim$birdSpecies, 
                                           birdsRangeList = sim$birdsRangeList,
                                           studyArea = sim$rP, 
@@ -64,7 +64,8 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
                                           densityEstimatesURL = sim$densityEstimatesURL,
                                           densityEstimatesFileName = sim$densityEstimatesFileName,
                                           avoidAlbertosData = P(sim)$avoidAlbertosData,
-                                          simEnv = envir(sim))
+                                          simEnv = envir(sim),
+                                      userTags = "objectName:birdDensityRasters")
       
       sim$birdDensityDS <- birdDensityDS # Being created in the previous function and assigned to sim. Here just for a matter of transparency.
       
@@ -94,75 +95,12 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
   }
   
   if (!suppliedElsewhere("rP", sim)) {
-    if (any(is.null(P(sim)$testArea), (!is.null(P(sim)$testArea) &
-                                       P(sim)$testArea == FALSE))) {
-      if (!is.null(sim$specificTestArea)) {
-        sim$rP <- NULL
-        message(crayon::yellow(paste0(
-          "Test area is FALSE or NULL, but specificTestArea is not. Ignoring 'specificTestArea' and running the analysis for the whole country. ",
-          "To set a study area, use testArea == TRUE.")))
-      } else {
-        sim$rP <- NULL
-        message(crayon::yellow("Test area is FALSE or NULL. Running the analysis for the whole country."))
-      }
-    } else {
-      if (is.null(sim$specificTestArea)) {
-        sim$polyMatrix <- matrix(c(-79.471273, 48.393518), ncol = 2) 
-        sim$areaSize <- 10000000
-        set.seed(1234)
-        sim$rP <- randomPolygon(x = polyMatrix, hectares = areaSize) # Create Random polygon
-        message(crayon::yellow("Test area is TRUE, specificTestArea is 'NULL'. Cropping and masking to an area in south Ontario."))
-      } else {
-        if (sim$specificTestArea == "boreal") {
-          if (!is.null(sim$mapSubset)) {
-            sArP <- Cache(prepInputs,
-                          url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
-                          targetFile = "gpr_000b11a_e.shp",
-                          # Subsetting to specific Provinces
-                          archive = "gpr_000b11a_e.zip",
-                          destinationPath = dataPath(sim), 
-                          userTags = "objectName:sArP") %>%
-              raster::subset(PRENAME %in% sim$mapSubset)
-            if (nrow(sArP@data) == 0) {
-              stop(paste0("There is no Canadian Province called ",
-                          sim$mapSubset,
-                          ". Please provide a Canadian province name in English for subsetMap, ",
-                          "or use 'NULL' (does not subset boreal, dangerous when dealing with higher resolution)."))
-            }
-          } else {
-            sArP <- NULL
-          }
-            message(crayon::yellow("Test area is TRUE. Cropping and masking to the Canadian Boreal."))
-            sim$rP <- prepInputs(archive = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.zip"),  # [ FIX ] Needs a URL to make it more reproducible!
-                                 targetFile = file.path(dataPath(sim), "BRANDT_OUTLINE_Dissolve.shp"),
-                                 studyArea = sArP,
-                                 destinationPath = dataPath(sim)
-            )
-        } else {
-          if (!is.null(sim$specificTestArea)) {
-            sim$rP <- Cache(prepInputs,
-                            url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
-                            targetFile = "gpr_000b11a_e.shp",
-                            # Subsetting to a specific Province
-                            archive = "gpr_000b11a_e.zip",
-                            destinationPath = dataPath(sim),
-                            userTags = "objectName:rP") %>%
-              raster::subset(PRENAME == sim$specificTestArea)
-            if (nrow(sim$rP@data) == 0) {
-              stop(paste0("There is no Canadian Province called ",
-                          sim$specificTestArea,
-                          ". Please provide a Canadian province name in English for specificTestArea, ",
-                          "use 'boreal', or use 'NULL' (creates a random area in South Ontario)."))
-            } else {
-              message(crayon::yellow(paste0("Test area is TRUE. Cropped and masked to ",
-                                            sim$specificTestArea)))
-              
-            }
-          }
-        }
-      }
-    }
+    sim$rP <- defineStudyArea(testArea = P(sim)$testArea, 
+                              specificTestArea = sim$specificTestArea, 
+                              mapSubset = sim$mapSubset, 
+                              destinationFolder = dataPath(sim))
   }
+  
   if (!suppliedElsewhere("birdsRangeList", sim)) {
     sim$birdsRangeList <- createBirdsRangeRasters(birdSpecies = sim$birdSpecies)
   }
