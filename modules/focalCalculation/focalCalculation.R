@@ -33,7 +33,9 @@ defineModule(sim, list(
     defineParameter(".useCache", "logical", FALSE, NA, NA,
                     "Should this entire module be run with caching activated?"),
     defineParameter("useParallel", "character", NULL, NA, NA, 
-                    "Should we parallelize tile processing?") # Check if I am actually gonna use it
+                    "Should we parallelize tile processing?"),
+    defineParameter("nNodes", "numeric", 2, NA, NA, 
+                    "How many nodes to use when parallelizing?")
     ),
   inputObjects = bind_rows(
     expectsInput(objectName = "rastersList", objectClass = "character", 
@@ -65,16 +67,20 @@ doEvent.focalCalculation = function(sim, eventTime, eventType) {
     },
     
     focalOperations = {
+      
       sim$focalYearList[[paste0("Year", time(sim))]] <- Cache(applyFocalToTiles,
-                                                                listTilePaths = sim$rastersList,
-                                                                pathData = dataPath(sim),
-                                                                forestClass = P(sim)$forestClass,
-                                                                focalDistance = P(sim)$focalDistance,
-                                                                disturbanceClass = P(sim)$disturbanceClass,
-                                                                recoverTime = P(sim)$recoverTime,
-                                                                resampledRes = P(sim)$resampledRes,
-                                                                currentYear = time(sim),
-                                                              cacheId = paste0("focalToTiles", max(sim$focalDistance),
+                                                              listTilePaths = sim$rastersList,
+                                                              pathData = dataPath(sim),
+                                                              pathCache = cachePath(sim),
+                                                              forestClass = P(sim)$forestClass,
+                                                              focalDistance = P(sim)$focalDistance,
+                                                              disturbanceClass = P(sim)$disturbanceClass,
+                                                              recoverTime = P(sim)$recoverTime,
+                                                              resampledRes = P(sim)$resampledRes,
+                                                              useParallel = P(sim)$useParallel,
+                                                              nNodes = P(sim)$nNodes,
+                                                              currentYear = time(sim), 
+                                                              cacheId = paste0("focalToTiles", max(P(sim)$focalDistance),
                                                                                "m", time(sim)))
       
       sim <- scheduleEvent(sim, time(sim) + 1, "focalCalculation", "focalOperations")
