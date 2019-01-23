@@ -70,7 +70,7 @@ parameters <- list(
   prepTiles = list(testArea = TRUE, # Should a study area be used (i.e. boreal)?
                    nx = 3, # mult 7
                    ny = 3, # mult 3
-                   useParallel = "local",
+                   useParallel = NULL,
                    rType = "INT1U",
                    buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
                    .useCache = FALSE), # Should it override module's .useCache?
@@ -80,7 +80,7 @@ parameters <- list(
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
                           useParallel = NULL, #"local", # Local parallel for 500m not working apparently
-                          nNodes = 5), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
+                          nNodes = 1), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
   birdDensityTrends = list(plotting = FALSE)
 )
 
