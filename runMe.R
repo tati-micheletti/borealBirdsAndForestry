@@ -1,7 +1,15 @@
 # Global script for the Backcasting Project REMODELED
 # devtools::load_all("/mnt/data/Micheletti/reproducible") # For debugging
 # devtools::install_github("tati-micheletti/reproducible", ref = "development") # Before PR's
-# devtools::install_github("PredictiveEcology/reproducible", ref = "development") # After PR's are accepted
+# devtools::install_github("PredictiveEcology/reproducible", ref = "development") # After PR's are accepted [ from 4th Jan on ]
+
+# If using parallel, to view messages (in BorealCloud): tail -f /mnt/data/Micheletti/borealBirdsAndForestry/cache/logParallelFocal
+
+
+# NEWS: 500m was run only for year 1985 and a few tiles for year 1986. These are cached. It stopped working out of nowhere
+# on Jan 19th early morning @6am. Didn't put it to run again to prioritize NWT project in the BorealCloud. Will put it back 
+# to run when not running NWT anymore. [ 23rd Jan 19 ]
+
 
 # Testing for install of GDAL / These scripts are temporarily in the 'inputs' folder. Should be pushed to 'pemisc' once it is working/passing again.
 source(file.path(getwd(), "inputs", "isGDALInstalled.R"))
@@ -36,8 +44,14 @@ paths <- list(
   outputPath = file.path(workDirectory, "outputs")
 )
 
+options('reproducible.useNewDigestAlgorithm' = FALSE) 
 options("reproducible.cachePath" = paths$cachePath)
 SpaDES.core::setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
+
+# Check for any log leftovers
+leftoverLogs <- list.files(paths$cachePath, pattern = "logParallel")
+if (length(leftoverLogs) != 0)
+  unlink(file.path(paths$cachePath, leftoverLogs))
 
 ## list the modules to use
 modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "prepTiles", "focalCalculation")
@@ -54,17 +68,19 @@ parameters <- list(
   glmerBirdModels = list(cropForModel = FALSE,
                          avoidAlbertosData = TRUE),
   prepTiles = list(testArea = TRUE, # Should a study area be used (i.e. boreal)?
-                   nx = 12, # mult 7
-                   ny = 5, # mult 3
+                   nx = 3, # mult 7
+                   ny = 3, # mult 3
+                   useParallel = "local",
                    rType = "INT1U",
                    buffer = c(1300,1300), # Buffer to make sure that when rasters are slip, they won't have edge effects
                    .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
                           resampledRes = 250,
-                          focalDistance = 100, # To run for neighborhood, change to c(100, 500)
+                          focalDistance = c(100, 500), # To run for neighborhood, change to c(100, 500)
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
-                          useParallel = NULL), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
+                          useParallel = NULL, #"local", # Local parallel for 500m not working apparently
+                          nNodes = 5), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
   birdDensityTrends = list(plotting = FALSE)
 )
 
