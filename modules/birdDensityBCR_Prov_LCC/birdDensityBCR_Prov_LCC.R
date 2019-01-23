@@ -56,7 +56,7 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
     
     fetchData = {
       
-      sim$birdDensityRasters <- fetchData(pathData = dataPath(sim), 
+      sim$birdDensityRasters <- Cache(fetchData, pathData = dataPath(sim), 
                                           birdSp = sim$birdSpecies, 
                                           birdsRangeList = sim$birdsRangeList,
                                           studyArea = sim$rP, 
@@ -64,7 +64,8 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
                                           densityEstimatesURL = sim$densityEstimatesURL,
                                           densityEstimatesFileName = sim$densityEstimatesFileName,
                                           avoidAlbertosData = P(sim)$avoidAlbertosData,
-                                          simEnv = envir(sim))
+                                          simEnv = envir(sim),
+                                      userTags = "objectName:birdDensityRasters")
       
       sim$birdDensityDS <- birdDensityDS # Being created in the previous function and assigned to sim. Here just for a matter of transparency.
       
