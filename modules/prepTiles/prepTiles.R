@@ -96,11 +96,11 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       sim$Raster1 <- Cache(prepInputs, url = sim$urlRaster1,
                            destinationPath = dataPath(sim),
                            studyArea = sim$rP,
-                           length = TRUE, useCache = Inf,
+                           length = TRUE,
                            filename2 = "Raster1.tif",
                            userTags = c("objectName:Raster1",
-                                        "fileName:C2C_change_type"))#,
-      #                          cacheId = "74286256127df354937f3d89fe187a4a") # length = TRUE digests the whole 
+                                        "fileName:C2C_change_type"),
+                           cacheId = "d7ad428c01272d1c7644fdb791b86b41") # cacheId updated for BorealCloud cache / artifact = "547733c53ee1357531bb0a719d1c68c4"
       gc()
       message(crayon::yellow(paste0("Raster2 being prepared.",
                                     " This might take a few hours depending on",
@@ -112,11 +112,11 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            destinationPath = dataPath(sim),
                            rasterToMatch = sim$Raster1,
                            studyArea = sim$rP,
-                           length = Inf, useCache = TRUE,
+                           length = Inf,
                            overwrite = TRUE,
                            userTags = c("objectName:Raster2", 
-                                        "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"))#,
-      # cacheId = "af8ac2b611698d718c31a8f339ad1f07")
+                                        "fileName:CAN_NALCMS_LC_30m_LAEA_mmu12_urb05"),
+                           cacheId = "fe11c655c67b9d944887ced25485d420") # cacheId updated for BorealCloud cache / artifact = "647e1f196179fced807792b58ef82baa"
       gc()
       
       raster::extent(sim$Raster2) <- raster::alignExtent(extent = raster::extent(sim$Raster2), object = sim$Raster1, snap = "near")
@@ -130,12 +130,13 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                                     " (Time: "
                                     , Sys.time(), ")")))
       sim$Raster3 <- Cache(prepInputs, url = sim$urlRaster3,
+                           # targetFile = "C2C_change_year.tif",
                            destinationPath = dataPath(sim),
                            rasterToMatch = sim$Raster2,
-                           studyArea = sim$rP, length = Inf, useCache = TRUE,
+                           studyArea = sim$rP, length = Inf,
                            userTags = c("objectName:Raster3", 
-                                        "fileName:C2C_change_year"))#,
-      # cacheId = "c61d504bbb68d83f305d8f876b311c86")
+                                        "fileName:C2C_change_year"),
+                           cacheId = "1c0e7e96060ed5ae8ce71fbc236ed74c") # cacheId updated for BorealCloud cache / artifact = "61d45d480f63e3fe2ac7fd8e77b30abc"
       gc()
       
       raster::extent(sim$Raster3) <- raster::alignExtent(extent = raster::extent(sim$Raster3), object = sim$Raster2, snap = "near")
@@ -154,45 +155,60 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Splitting Raster1 tiles", " (Time: "
                                     , Sys.time(), ")")))
       suppressWarnings(dir.create(file.path(dataPath(sim), "Raster1")))
-      browser()
-      sim$Raster1 <- Cache(splitRaster, r = sim$Raster1, 
+      
+      if (P(sim)$useParallel == "local"){
+        message(crayon::red(paste0("Paralellizing tiles LOCALLY. Messages will be suppressed until operation is complete")))
+        cl <- parallel::makeForkCluster(5, outfile = file.path(cachePath(sim), "logParallelSplit"))
+      } else {
+        cl <- NULL
+      }
+        
+      sim$Raster1 <- Cache(splitRaster, r = sim$Raster1,
+                           cl = cl,
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
                            buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceType Raster, write to disk,
                            rType = params(sim)$prepTiles$rType, 
                            path = file.path(dataPath(sim), "Raster1"),
-                           cacheId = "splitRaster1") # override the original in memory
+                           cacheId = paste0("splitRaster1_x", params(sim)$prepTiles$nx, "y", params(sim)$prepTiles$ny)) # artifact = ce7b8b4924445f0431cc2d72f5ca0fcb
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster2 tiles", " (Time: "
                                     , Sys.time(), ")")))
       suppressWarnings(dir.create(file.path(dataPath(sim), "Raster2")))
       sim$Raster2 <- Cache(splitRaster, r = sim$Raster2,
+                           cl = cl,
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
                            buffer = params(sim)$prepTiles$buffer,  # Splitting landCover Raster, write to disk,
                            rType = params(sim)$prepTiles$rType,
                            path = file.path(dataPath(sim), "Raster2"),
-                           cacheId = "splitRaster2") # override the original in memory
+                           cacheId = paste0("splitRaster2_x", params(sim)$prepTiles$nx, "y", params(sim)$prepTiles$ny)) # override the original in memory
       gc()
       
       message(crayon::yellow(paste0("Splitting Raster3 tiles", " (Time: "
                                     , Sys.time(), ")")))
       suppressWarnings(dir.create(file.path(dataPath(sim), "Raster3")))
-      sim$Raster3 <- Cache(splitRaster, r = sim$Raster3, 
+      sim$Raster3 <- Cache(splitRaster, r = sim$Raster3,
+                           cl = cl,
                            nx = params(sim)$prepTiles$nx, 
                            ny = params(sim)$prepTiles$ny, 
                            buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceYear Raster, write to disk,
                            rType = params(sim)$prepTiles$rType,
                            path = file.path(cachePath(sim), "Raster3"),
-                           cacheId = "splitRaster3") # override the original in memory
+                           cacheId = paste0("splitRaster3_x", params(sim)$prepTiles$nx, "y", params(sim)$prepTiles$ny)) # override the original in memory
       gc()
+      
+      if (!is.null(cl)){
+          parallel::stopCluster(cl)
+      }
       
       sim$rastersList <- list("Raster1" = sim$Raster1, 
                               "Raster2" = sim$Raster2, 
                               "Raster3" = sim$Raster3) # Splitted rasters' list
       
-      message(crayon::green("All rasters tiled!"))
+      message(crayon::green("All rasters tiled! (Time: "
+                                    , Sys.time(), ")"))
       
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -212,10 +228,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
   
   if (!suppliedElsewhere(object = "urlRaster2", sim = sim)) {
     if (!suppliedElsewhere(object = "Raster2", sim = sim)) {
-      message(crayon::yellow(paste0("Neither its url or Raster2 were provided. Using default.",
-                                    " ATTENTION: The default url for this raster downloads a .rar file.",
-                                    " prepInputs doesn't deal with .rar for now. Please unrar it",
-                                    " manually once it is downloaded."))) # Is this really true?
+      message("Neither its url or Raster2 were provided. Using default")
       sim$urlRaster2 <- extractURL(objectName = "urlRaster2", sim = sim)
       
     }
