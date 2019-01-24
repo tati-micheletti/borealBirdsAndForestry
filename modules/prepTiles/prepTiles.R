@@ -157,7 +157,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Splitting Raster1 tiles", " (Time: "
                                     , Sys.time(), ")")))
       suppressWarnings(dir.create(file.path(dataPath(sim), "Raster1")))
-      
+      browser()
       if (P(sim)$useParallel == "local"){
         message(crayon::red(paste0("Paralellizing tiles LOCALLY. Messages will be suppressed until operation is complete")))
         cl <- parallel::makeForkCluster(5, outfile = file.path(cachePath(sim), "logParallelSplit"))
