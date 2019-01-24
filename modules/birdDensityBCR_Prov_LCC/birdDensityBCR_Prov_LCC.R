@@ -67,7 +67,7 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
                                           simEnv = envir(sim),
                                       userTags = "objectName:birdDensityRasters")
       
-      sim$birdDensityDS <- birdDensityDS # Being created in the previous function and assigned to sim. Here just for a matter of transparency.
+      # sim$birdDensityDS <- birdDensityDS # Being created in the previous function and assigned to sim. Here just for a matter of transparency.
       
     },
     
