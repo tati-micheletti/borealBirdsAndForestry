@@ -17,8 +17,10 @@ defineModule(sim, list(
     defineParameter("ny", "numeric", 2, 1, NA, "the number of tiles to split raster into, along vertical axis"),
     defineParameter("rType", "character", "FLT4S", NA, NA, "pixel data type for splitRaster"),
     defineParameter("buffer", "numeric", 3, 0, NA, "the number of cells to buffer tiles during splitRaster. Measured in cells, not distance"),
-    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
-  ),
+    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant"),
+    defineParameter("useParallel", "character", NULL, NA, NA, 
+                    "Should we parallelize tile processing?")
+    ),
   inputObjects = bind_rows(
     expectsInput(objectName = "urlRaster1", objectClass = "character", 
                  desc = paste0("URL for the first raster that will be prepared.",
@@ -155,8 +157,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
       message(crayon::yellow(paste0("Splitting Raster1 tiles", " (Time: "
                                     , Sys.time(), ")")))
       suppressWarnings(dir.create(file.path(dataPath(sim), "Raster1")))
-      
-      if (P(sim)$useParallel == "local"){
+      if (!is.null(P(sim)$useParallel) && P(sim)$useParallel == "local"){
         message(crayon::red(paste0("Paralellizing tiles LOCALLY. Messages will be suppressed until operation is complete")))
         cl <- parallel::makeForkCluster(5, outfile = file.path(cachePath(sim), "logParallelSplit"))
       } else {
