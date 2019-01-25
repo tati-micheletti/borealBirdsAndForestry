@@ -1,0 +1,123 @@
+---
+title: "New Analysis Suarez et al."
+author: "Tati Micheletti"
+date: "January 24, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### New analysis for manuscript reviewers
+
+After the first round of reviews, these concerns came back as major revisions:
+
+1. lines 119-121: I disagree with your assumption that Boreal Ecosystem
+  Anthropogenic Disturbance polygons that did not intersect with the Global
+  Forest Change maps were disturbances that happened before 2000 (the first
+  year of the latter data set), just because the two products were mapped
+  at the same spatial resolution. This is problematic because it also means
+  you are implicitly assuming zero (or negligible) classification error in
+  each data set.  A lack of intersection could also occur because of
+  omission/commission classification errors in the data sets. The methods
+  used to classify disturbance and forest loss in these data sets,
+  respectively, are very different. Thus I think it reasonable to expect
+  that classification errors would differ between the two data sets. At
+  minimum, I think there needs to be more thought (and discussion in the
+  paper) about this assumption and how it could potentially impact the
+  results. I also recommend you conduct supplementary analyses to
+  demonstrate that your results are robust to this assumption.
+  
+2. lines 204-208: I assume that you used different subsets of your data
+  to evaluate the relative importance of successional and alienating
+  disturbances in an attempt to disentangle their effects (i.e. combat high
+  collinearity between these disturbance types); this reasoning should be
+  made more clear in the methods. Based on this assumption, I have two main
+  concerns with this approach. First, it is not clear whether successional
+  and alienating disturbances were also highly correlated in your two data
+  subsets. This is because your subsetting process could still allow for
+  enough variation in both alienating and successional disturbances across
+  the subset of landscapes to have correlations between the two variables.
+  For example, if a buffer had 51% alienating disturbance (the predominant
+  disturbance type) it could still have up to 49% successional disturbance.
+  If these are still correlated in your subsets, then interpretation of the
+  relative importance is problematic because you have not controlled for
+  the collinearity in your analysis. Second, even if this approach reduced
+  the correlation between the two types of disturbance, I am concerned that
+  subsetting the data introduces factors that could confound your
+  interpretation of the relative importance of alienating and successional
+  disturbances, because you are testing these effects with different data
+  sets. For example, all else being equal, you'd expect to be less likely
+  to detect a significant effect when using a smaller data set than using a
+  larger one. Also, subsetting the data reduced the range of variation in
+  your variables and this could affect the relative importance estimates if
+  subsetting resulted in a larger decline in the range of variation in the
+  target disturbance measure in one subset vs. the other. This is because,
+  all else being equal, you'd expect to detect a stronger effect when the
+  range of variation is larger. I suggest you consider these issues, and
+  suggest that it would likely be better to test for relative importance by
+  modeling bird density as a function of both alienating and successional
+  disturbance using the full data set. Previous study suggests that
+  standardized partial regression coefficients generally provide unbiased
+  estimates of the relative importance of two predictor variables, even
+  when predictors are correlated: see Smith et al. 2009. Confronting
+  collinearity: comparing methods for disentangling the effects of habitat
+  loss and fragmentation, Landscape Ecology 24:1271-1285.
+  
+*In a nutshell...*
+
+### Question 1
+
+**Question 1)**: Was the assumption that any disturbance polygons  Boreal Ecosystem 
+Anthropogenic Disturbance polygons that did not intersect with the 
+Global Forest Change maps were disturbances that happened before 2000 
+reasonable?
+
+**Method:** We aligned Alberto's We overlayed Alberto's GIS with White 
+and Wulder product and the Calling Lake Fiona provided us with.
+
+**Results**:
+[Gif showing the thee datasets overlay](https://raw.githubusercontent.com/tati-micheletti/borealBirdsAndForestry/finalAdjustments/outputs/Tati_SuarezWW.gif)
+
+**Conclusion**: We found that at least for Calling Lake the areas that were defined 
+as 'pre 2000' in Alberto's GIS (the one used for the submitted manuscript) 
+match relatively well with White and Wulder's disturbance product 
+(which covers 1985-2011) for the same period as well as the map Fiona 
+sent us with the dated disturbances there.
+
+### Question 2
+
+**Question 2)**: (i) Are successional and alienating disturbances highly 
+correlated?; (ii) Even if not, was the range of variation in
+  the variables reduced? (iii) modeling bird density as a function of 
+  both alienating and successional disturbance using the full data set 
+  (to test for relative importance).
+
+**Method:** i) We aligned Alberto's We overlayed Alberto's GIS with White 
+and Wulder product and the Calling Lake Fiona provided us with. 
+ii) 
+iii) We will not be able to redo the models for this paper, but this will 
+be taken into account on future works.
+
+**Results**:
+i)
+```{r Q2i}
+library("data.table")
+newDataset <- fread(file = file.path(getwd(), "modules/glmerBirdModels/data/Minidataset_master.csv"))
+
+# Testing for correlation between both disturbances
+local <- newDataset[,.(Success_L_A, Alien_L_A)]
+localCorr <- cor.test(local$Success_L_A, local$Alien_L_A) # NOT THE BEST TEST! Sample is way too big, it will always be significant...
+```
+
+ii)
+```{r Q2ii}
+
+```
+
+**Conclusion**: We found that: 
+i)
+ii) 
+iii) We should deprecate claims about "relative importance" in the text.
+
