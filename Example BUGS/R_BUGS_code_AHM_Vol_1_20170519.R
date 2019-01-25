@@ -5,7 +5,7 @@
 #   Modeling distribution, abundance and species richness using R and BUGS
 #   Volume 1: Prelude and Static models
 #
-#   Marc Kéry & J. Andy Royle
+#   Marc K?ry & J. Andy Royle
 #
 #   *** This is the text file with all R and BUGS code from the book ***
 #
@@ -414,13 +414,13 @@ Mhlik <- function(parms){
 (SE <- sqrt( (exp(tmp$estimate[3])^2)* diag(solve(tmp$hessian))[3] ) )
 
 
-# 2.4.7 The R package ‘unmarked’
+# 2.4.7 The R package ?unmarked?
 # ------------------------------------------------------------------------
 
 # 2.5 Bayesian Inference
 # ------------------------------------------------------------------------
 
-# 2.5.1 Bayes’ rule
+# 2.5.1 Bayes? rule
 # ------------------------------------------------------------------------
 
 # 2.5.2 Principles of Bayesian inference
@@ -1372,7 +1372,7 @@ plot(forest, Cmean)
 
 # Package the data needed in a bundle
 win.data <- list(Cmean = Cmean, M = length(Cmean), elev = elev, forest = forest)
-str(win.data)                    # Check what’s in win.data
+str(win.data)                    # Check what?s in win.data
 
 
 # Write text file with model description in BUGS language
@@ -1668,7 +1668,7 @@ win.data <- list(Cmean = Cm, M = length(Cm), elev = elev, forest = forest)
 # Parameters monitored (i.e., for which estimates are saved)
 params <- c("alpha0", "alpha1", "alpha2", "alpha3", "sd", "Cmean", "mu")
 
-# … or this to get a subset of the parameters
+# ? or this to get a subset of the parameters
 params <- c("alpha0", "alpha1", "alpha2", "alpha3", "sd", "Cmean[1:10]", "mu[1:10]")
 
 # Call WinBUGS or JAGS from R (ART <1 min) and summarize posteriors
@@ -2669,7 +2669,7 @@ cor(C)[1,2]
 library(unmarked)                  # Load package
 umf <- unmarkedFramePCount(y = C)  # Create um data frame
 summary(umf)                       # Summarize
-(fm1 <- pcount(~1 ~1, data = umf)) # Fit model: get estimates on link scale
+fm1 <- pcount(~1 ~1, data = umf) # Fit model: get estimates on link scale
 backTransform(fm1, "state")        # Get estimates on natural scale
 backTransform(fm1, "det")
 
@@ -2713,6 +2713,53 @@ fm2 <- jags(win.data, inits, params, "model1.txt", n.chains = nc,
 print(fm2, dig = 3)
 
 
+# With nimble 
+library(nimble)
+Section6p3_code <- nimble::nimbleCode({
+  # Priors
+  lambda ~ dgamma(0.001, 0.001)
+  p ~ dunif(0, 1)
+  # Likelihood
+  for (i in 1:M) {
+    N[i] ~ dpois(lambda)      # State model
+    for (j in 1:J) {
+      C[i,j] ~ dbin(p, N[i]) # Observation model
+    }}
+})
+
+# Initial values
+Nst <- apply(C, 1, max)       # Avoid data/model/inits conflict
+inits <- function(){list(N = Nst)}
+
+# Parameters monitored
+params <- c("lambda", "p")
+
+# MCMC settings
+ni <- 25000   ;   nt <- 20   ;   nb <- 5000   ;   nc <- 3
+
+# Parameters monitored
+params <- c("lambda", "p")
+
+fm2 <- nimbleMCMC(code = Section6p3_code, 
+                  constants = win.data, 
+                  inits = inits,
+                  monitors = params,
+                  niter = ni, 
+                  nburnin = nb,
+                  samplesAsCodaMCMC = TRUE)
+
+Section6p3_compare <- compareMCMCs(
+  modelInfo = list(
+    code = Section6p3_code,
+    data = win.data,
+    inits = inits()
+  ),
+  monitors = params,
+  MCMCs = c("nimble", "jags"),
+  summary = FALSE,
+  burnin = nb,
+  niter = ni
+)
 
 # 6.4 A slightly more complex N-mixture model with covariates
 # ------------------------------------------------------------------------
@@ -2739,7 +2786,7 @@ N <- rpois(M, lambda)
 points(vegHt, N)              # Add realized abundance to plot
 table(N)
 
-# Plot the true system state (Fig. 6–2, left)
+# Plot the true system state (Fig. 6?2, left)
 par(mfrow = c(1, 3), mar = c(5,5,2,2), cex.axis = 1.5, cex.lab = 1.5)
 plot(vegHt, N, xlab="Vegetation height", ylab="True abundance (N)", frame = F, cex = 1.5)
 lines(seq(-1,1,,100), exp(beta0 + beta1* seq(-1,1,,100)), lwd=3, col = "red")
@@ -2759,7 +2806,7 @@ for(j in 1:J) {
     C[,j] <- rbinom(M, N, p[,j])
 }
 
-# Plot observed data and effect of wind on det. probability (Fig. 6–2, middle)
+# Plot observed data and effect of wind on det. probability (Fig. 6?2, middle)
 plot(wind, C/max(C), xlab="Wind", ylab="Scaled counts: C/max(C)", frame = F, cex = 1.5)
 lines(seq(-1,1,,100), plogis(alpha0 + alpha1*seq(-1,1,,100)), lwd=3, col="red")
 
@@ -2814,7 +2861,7 @@ newdat <- data.frame(wind=seq(-1, 1, 0.1))
 pred.det <- predict(fm.Nmix1, type="det", newdata=newdat)
 
 
-# Fit detection-naive GLM to counts and plot comparison (Fig. 6–2, right)
+# Fit detection-naive GLM to counts and plot comparison (Fig. 6?2, right)
 summary(fm.glm <- glm(c(C) ~ rep(vegHt, 3), family=poisson)) # p-naive  model
 matplot(vegHt, C, xlab="Vegetation height", ylab="Counts", frame = F, cex = 1.5, pch = 1, col = "black")
 lines(seq(-1,1,,100), exp(beta0 + beta1* seq(-1,1,,100)), lwd=3, col = "red")
@@ -3007,7 +3054,7 @@ str(data <- simNmix(beta.p.N = 1))       # Positive density-dep. in p
 str(data <- simNmix(beta.p.N = -1))      # Negative density-dep. in p
 # Same covariate in suitab. and abund. (see Phillips & Elith, Ecology, 2014 !)
 str(data <- simNmix(mean.theta = 0.5, beta2.theta = 1, beta2.lam = -1))
-# Same covariate in abundance and detection (see Kéry, Auk, 2008)
+# Same covariate in abundance and detection (see K?ry, Auk, 2008)
 str(data <- simNmix(beta3.lam = 1, beta3.p = -1))
 # Same covariate in all three levels of model (ouch !)
 str(data <- simNmix(mean.theta = 0.5, beta3.theta = 1, beta3.lam = 1, beta3.p = -1))
@@ -3200,7 +3247,7 @@ fm <- jags(win.data, inits, params, "model.txt", n.chains = nc,
    n.thin = nt, n.iter = ni, n.burnin = nb)
 print(fm, dig = 3)
 
-ppc.plot(fm)               # Produces Fig. 6–7
+ppc.plot(fm)               # Produces Fig. 6?7
 
 
 
@@ -3324,7 +3371,7 @@ gof.P   ;   gof.NB   ;   gof.ZIP                        # print results
 
 # Look at data, fitted values and residuals and produce plots
 print(cbind(y, fitted(fm5), residuals(fm5)), 2)  # For Poisson model
-plot_Nmix_resi(fm5, fm5NB, fm5ZIP)               # Produces Fig. 6–10 ## function renamed
+plot_Nmix_resi(fm5, fm5NB, fm5ZIP)               # Produces Fig. 6?10 ## function renamed
 
 plot_Nmix_resi <- function(fmP, fmNB, fmZIP){
 # Function does diagnostic plots for one Nmix model fitted with all three
@@ -3774,7 +3821,7 @@ for (i in 1:nsite){
    a[i] ~ dbern(phi)
    eps.lam[i] ~ dnorm(0, tau.lam)       # Random site effects in log(abundance)
    loglam[i] <- beta0 + inprod(beta[], lamDM[i,]) + eps.lam[i] * hlam.on
-   loglam.lim[i] <- min(250, max(-250, loglam[i]))  # ‘Stabilize’ log
+   loglam.lim[i] <- min(250, max(-250, loglam[i]))  # ?Stabilize? log
    lam[i] <- exp(loglam.lim[i])
    mu.poisson[i] <- a[i] * lam[i]
    N[i] ~ dpois(mu.poisson[i])
@@ -3786,7 +3833,7 @@ for (i in 1:nsite){
   for (j in 1:nrep){
     y[i,j] ~ dbin(p[i,j], N[i])
     p[i,j] <- 1 / (1 + exp(-lp.lim[i,j]))
-    lp.lim[i,j] <- min(250, max(-250, lp[i,j]))  # ‘Stabilize’ logit
+    lp.lim[i,j] <- min(250, max(-250, lp[i,j]))  # ?Stabilize? logit
     lp[i,j] <- alpha0[j] + alpha[1] * elev[i] + alpha[2] * elev2[i] +
       alpha[3] * date[i,j] + alpha[4] * date2[i,j] +
       alpha[5] * dur[i,j] + alpha[6] * dur2[i,j] +
@@ -4062,7 +4109,7 @@ sd.p.survey ~ dunif(0, 1) # site-survey heterogeneity in p
 for (i in 1:nsite){
    eps.lam[i] ~ dnorm(0, tau.lam[i]) # Random site effects in log(abundance)
    loglam[i] <- beta0 + inprod(beta[], lamDM[i,]) + eps.lam[i]
-   loglam.lim[i] <- min(250, max(-250, loglam[i]))  # ‘Stabilize’ log
+   loglam.lim[i] <- min(250, max(-250, loglam[i]))  # ?Stabilize? log
    mu.poisson[i] <- exp(loglam.lim[i])
    N[i] ~ dpois(mu.poisson[i])
 }
@@ -4072,7 +4119,7 @@ for (i in 1:nsite){
   for (j in 1:nrep){
     y[i,j] ~ dbin(p[i,j], N[i])
     p[i,j] <- 1 / (1 + exp(-lp.lim[i,j]))
-    lp.lim[i,j] <- min(250, max(-250, lp[i,j]))  # ‘Stabilize’ logit
+    lp.lim[i,j] <- min(250, max(-250, lp[i,j]))  # ?Stabilize? logit
     lp[i,j] <- alpha0[j] + alpha[1] * elev[i] + alpha[2] * elev2[i] +
       alpha[3] * date[i,j] + alpha[4] * date2[i,j] +
       alpha[5] * dur[i,j] + alpha[6] * dur2[i,j] +
@@ -4952,7 +4999,7 @@ crPiFun(p)
 (pi0 <- 1 - rowSums(crPiFun(p)))
 
 
-# 7.8.1 Example 2: Fitting Models M0, Mt, and Mx to Chandler’s Flycatcher data
+# 7.8.1 Example 2: Fitting Models M0, Mt, and Mx to Chandler?s Flycatcher data
 # ------------------------------------------------------------------------
 alfl <- read.csv(system.file("csv", "alfl.csv", package="unmarked"))
 head(alfl, 5)
@@ -5586,7 +5633,7 @@ elev[elev > 2250] <- NA
 r1 <- mask(r1, elev)
 r2 <- mask(r2, elev)
 
-# Draw maps of jay density and standard error of density (Fig. 7–11)
+# Draw maps of jay density and standard error of density (Fig. 7?11)
 par(mfrow = c(1,2), mar = c(1,2,3,5))
 plot(r1, col = mapPalette1(100), axes = FALSE, box = FALSE, main = "Density of European Jay", zlim = c(0, 10))
 plot(rivers, col = "dodgerblue", add = TRUE)
@@ -5889,7 +5936,7 @@ round(p, 2)
 interval.width <- diff(dist.breaks)
 psi <- interval.width/strip.width
 pi <- p * psi
-sum(pi)                 # This is 1 – pi(0) from above
+sum(pi)                 # This is 1 ? pi(0) from above
 (pi0.exact <- 1-sum(pi))
 
 # Method 2: Use rmultinom to simulate binned observations directly
@@ -7599,7 +7646,7 @@ backTransform(fm0.haz, type="lambda")
 
 backTransform(fm0.haz, type="det")
 
-plot(1:300, gxhaz(1:300, shape = exp(5.13), scale=1.59), frame = F, type = "l", xlab = "Distance Wagtail–Observer (metres)", ylab = "Detection probability", lwd=3)
+plot(1:300, gxhaz(1:300, shape = exp(5.13), scale=1.59), frame = F, type = "l", xlab = "Distance Wagtail?Observer (metres)", ylab = "Detection probability", lwd=3)
 
 
 # Model with time-dependent phi
@@ -8830,7 +8877,7 @@ str(tmp <-sim.spatialHDS(lam0 = 3, sigma = 1.5, B = 3, nsites = 100))
 
 # Process the simulated data set
 data <- tmp$data
-# To make it a ‘real’ data set:
+# To make it a ?real? data set:
 data <- data[!is.na(data[,2]),] # Get rid of the 0 sites
 data <- data[data[,"y"]==1,]    # Only keep detected individuals
 
@@ -8856,7 +8903,7 @@ for(i in 1:nind){
    pixel[i] <- (1:ncol(D))[D[i,]==min(D[i,])]
 }
 
-# Do data augmentation of data from each site “S-fold” DA. Three objects need
+# Do data augmentation of data from each site ?S-fold? DA. Three objects need
 # to have DA applied to them: Ymat, umat, pixmat
 Msite <- 2*max(nobs)  # Perhaps use a larger value
 Ymat <- matrix(0,nrow=Msite,ncol=nsites)
@@ -10153,7 +10200,7 @@ p.pred2 <- 1 - exp(-exp(log(mean(sex.mean))) * duration)
 par(mfrow = c(2,2), mar = c(5,5,3,2), cex.lab = 1.5, cex.axis = 1.5)
 hist(data$ttd, breaks = 40, col = "grey", xlab = "Time to first detection (min)", main = "")
 plot(table(out2$sims.list$n.occ)/length(out2$sims.list$n.occ), xlab = "Number of occupied sites", ylab = "Density", frame = F)
-plot(minutes, p.pred1, xlab = "Minutes after 6.00 hours (i.e., 7.00 – 19.00h)", ylab = "Detection prob.", ylim = c(0.6, 1), type = "l", col = "blue", lwd = 3, frame = F)
+plot(minutes, p.pred1, xlab = "Minutes after 6.00 hours (i.e., 7.00 ? 19.00h)", ylab = "Detection prob.", ylim = c(0.6, 1), type = "l", col = "blue", lwd = 3, frame = F)
 plot(duration, p.pred2, xlab = "Survey duration (min)", ylab = "Detection prob.", ylim = c(0, 1), type = "l", col = "blue", lwd = 3, frame = F)
 
 
@@ -10586,7 +10633,7 @@ lines(orig.pred.forest, apply(pred.forest, 1, mean), lwd = 3, col = "blue")
 # Get observed species richness per site and rep and plot
 CC <- apply(y, c(1,2), sum, na.rm = TRUE)
 CC[CC == 0] <- NA            # 0 means not surveyed
-matplot(t(CC), type = 'l', lty = 1, lwd = 2, xlab = "First to third survey", ylab = "Number of species detected", frame = F)  # Fig. 11–6 right
+matplot(t(CC), type = 'l', lty = 1, lwd = 2, xlab = "First to third survey", ylab = "Number of species detected", frame = F)  # Fig. 11?6 right
 
 # Get survey date and survey duration and standardise both
 # Survey date (this is Julian date, with day 1 being April 1)
@@ -11424,7 +11471,7 @@ for (i in 1:nsite){
 n0 <- sum(w[(nspec+1):(nspec+nz)]) # Number of unseen species
 Ntotal <- sum(w[])                 # Total metacommunity size
 
-# Vectors to save (S for ‘save’; discard posterior samples for
+# Vectors to save (S for ?save?; discard posterior samples for
 # all minus 1 of the potential species to save disk space)
 # we do this for nz = 250 (i.e., M = 395)
 lpsiS[1:(nspec+1)] <- lpsi[1:(nspec+1)]
@@ -11524,7 +11571,7 @@ for(i in 1:nsamp){
    predC[,i,4] <- plogis(tmp$mu.lp[i] + tmp$mu.betalp3[i] * dur.pred)
 }
 
-# Get posterior means and 95% CRIs and plot (Fig. 11–17)
+# Get posterior means and 95% CRIs and plot (Fig. 11?17)
 pmC <- apply(predC, c(1,3), mean)
 criC <- apply(predC, c(1,3), function(x) quantile(x, prob = c(0.025, 0.975)))
 
@@ -11576,7 +11623,7 @@ cri <- apply(all10, 2, function(x) quantile(x, prob = c(0.025, 0.975))) # CRIs
 # Effects of date (linear and quadratic) and of duration on detection
 #par(mfrow = c(1,3), cex.lab = 1.3, cex.axis = 1.3) # Can put all three in one
 par(mfrow = c(1,2), cex.lab = 1.3, cex.axis = 1.3)
-# Date linear (Fig. 11 – 20 left)
+# Date linear (Fig. 11 ? 20 left)
 plot(pm[1:145], 1:145, xlim = c(-1.5, 1.5), xlab = "Parameter estimate", ylab = "Species number", main = "Effect of date (linear) on detection", pch = 16)
 abline(v = 0, lwd = 2, col = "black")
 segments(cri[1, 1:145], 1:145, cri[2, 1:145], 1:145, col = "grey", lwd = 1)

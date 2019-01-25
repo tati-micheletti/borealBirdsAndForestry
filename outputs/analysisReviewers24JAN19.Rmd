@@ -2,11 +2,13 @@
 title: "New Analysis Suarez et al."
 author: "Tati Micheletti"
 date: "January 24, 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,  message = FALSE,  warning = FALSE)
 ```
 
 ### New analysis for manuscript reviewers
@@ -88,36 +90,113 @@ sent us with the dated disturbances there.
 
 ### Question 2
 
-**Question 2)**: (i) Are successional and alienating disturbances highly 
-correlated?; (ii) Even if not, was the range of variation in
-  the variables reduced? (iii) modeling bird density as a function of 
+**Question 2)**:  
+i) Are successional and alienating disturbances highly 
+correlated?  
+ii) Even if not, was the range of variation in
+  the variables reduced?  
+iii) modeling bird density as a function of 
   both alienating and successional disturbance using the full data set 
-  (to test for relative importance).
+  (to test for relative importance).  
 
-**Method:** i) We aligned Alberto's We overlayed Alberto's GIS with White 
-and Wulder product and the Calling Lake Fiona provided us with. 
-ii) 
+**Method:** 
+i) I tried both the `cor.test` function and a linear model with one 
+disturbance as the predictor, and the other as the response `lm`.  
+ii) For checking the range of variation, I plotted the distribution of both
+variables, for both the whole dataset and for the subsets. At laste, I 
+plotted the difference between the variables, excluding when both are 0.  
 iii) We will not be able to redo the models for this paper, but this will 
 be taken into account on future works.
 
 **Results**:
-i)
-```{r Q2i}
+i and ii) The p-values for both correlation test and the linear model were significant. 
+The R^2, however was low on both cases (`lm` = 0.0229; `cor.test` = -0.15). 
+
+```{r Q2i, echo=FALSE}
 library("data.table")
-newDataset <- fread(file = file.path(getwd(), "modules/glmerBirdModels/data/Minidataset_master.csv"))
+newDataset <- fread(file = file.path(getwd(), "Minidataset_master.csv"))
 
 # Testing for correlation between both disturbances
-local <- newDataset[,.(Success_L_A, Alien_L_A)]
-localCorr <- cor.test(local$Success_L_A, local$Alien_L_A) # NOT THE BEST TEST! Sample is way too big, it will always be significant...
+newDataset[, c("percSuccess", "percAliena") := list(Success_L_A/Area_100, Alien_L_A/Area_100)]
+local <- newDataset[, .(percSuccess, percAliena)]
+summary(local)
+library("GGally")
+ggpairs(local)
+
+localCorr <- cor.test(local$percSuccess, local$percAliena) # Probably not the best test! Sample is way too big, it will always be significant... But the R2 = -0.1514545
+mod <- lm(formula = percAliena ~ percSuccess, data = local)
+summary(mod) # Note R-squared of 0.0229
+
+# After subsetting
+combinations <- c("localTransitional", "neighborhoodTransitional", "LocalUndisturbedTransitional", 
+"localPermanent", "neighborhoodPermanent", "LocalUndisturbedPermanent", 
+"localBoth", "neighborhoodBoth", "LocalUndisturbedBoth")
+
+   sDataset <- lapply(
+    X = combinations,
+    FUN = function(x) {
+      state <- ifelse(grepl("local", x), "State_P_100", "State_P_500")
+      stateLetter <- ifelse(state == "State_P_100", "L", "N")
+      agent <- ifelse(grepl("Permanent", x),
+                      "Permanent",
+                      ifelse(grepl("Transitional", x), "Transitional", "Both"))
+      undist <- ifelse(grepl("Undisturbed", x), TRUE, FALSE)
+      both <- ifelse(grepl("Both", x), TRUE, FALSE)
+      dataUploaded <- if (undist == TRUE & both == TRUE) {
+        newDataset[State_P_100 == 0]
+      } else {
+        if (undist == TRUE & both == FALSE) {
+          newDataset[State_P_100 == 0 &
+                     (get(paste0("Agent_", stateLetter)) == agent |
+                        get(paste0("Agent_", stateLetter)) == "")]
+        } else {
+          if (undist == FALSE & both == TRUE) {
+            newDataset
+          } else {
+            newDataset[get(state) == 0 |
+                       get(paste0("Agent_", stateLetter)) == agent]
+          }
+        }
+      }
+      return(dataUploaded)
+    }
+  )
+   names(sDataset) <- combinations
+   
+listSubset <- lapply(X = sDataset, FUN = function(subs){
+graph <- ggpairs(subs[,.(subs$percSuccess, subs$percAliena)])
+cor.val <- localCorr <- cor.test(subs$percSuccess, subs$percAliena) 
+mod <- lm(formula = percAliena ~ percSuccess, data = subs)
+
+return(list(graph = graph, correlation = cor.val, linearModel = summary(mod)))
+})
+names(listSubset) <- combinations
+
+tableCor <- data.frame()
+tableCor <- lapply(X = seq(1:length(listSubset)), FUN = function(subs){
+   tableCor[1, "subset"] <- names(listSubset)[[subs]]
+   tableCor[1, "corr"] <- listSubset[[subs]]$correlation$estimate
+   tableCor[1, "corr.sign"] <- listSubset[[subs]]$correlation$p.value
+   tableCor[1, "r2.linMod"] <- listSubset[[subs]]$linearModel$adj.r.squared
+   tableCor[1, "signif.linMod"] <- tryCatch(listSubset[[subs]]$linearModel$coefficients["percSuccess", "Pr(>|t|)"], 
+                                               error = function(e) NA)
+   return(tableCor)
+})
+tableCor <- rbindlist(tableCor)
+knitr::kable(tableCor)
 ```
 
-ii)
-```{r Q2ii}
+iii) Was not performed.
 
-```
 
-**Conclusion**: We found that: 
-i)
-ii) 
-iii) We should deprecate claims about "relative importance" in the text.
+**Conclusion**: We found that  
+i) The R^2 of both the correlation test and the linear model were low for 
+both the whole dataset and the subsets, but still significant. It would be, 
+however, hard not to have significancy considering the size of the dataset.
+I believe we can trust the R^2 value in this sense.  
+ii) The range of both disturbances was similar (they were similarly distributed as well)  
+iii) We should deprecate claims about "relative importance" in the text.  
+
+
+
 
