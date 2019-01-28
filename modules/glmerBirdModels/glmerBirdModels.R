@@ -19,7 +19,8 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant"),
+    defineParameter("plot", "logical", FALSE, NA, NA, "Should plots be made?")
   ),
   inputObjects = bind_rows(
     expectsInput(objectName = "birdData", objectClass = "data.table", desc = "Bird data assembled by the BAM (Boreal Avian Modelling Project)", sourceURL = NA),
@@ -52,13 +53,15 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
   switch(
     eventType,
     init = {
-      
+
       sim <- Init(sim)
       
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "dataUploading")
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "birdModels")
-      # sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "plots") # Commented to avoid all plotting!
+      if (P(sim)$plot == TRUE) {
+        sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "plots")
+      }
       sim <- scheduleEvent(sim, start(sim), "glmerBirdModels", "save")
     },
     
@@ -100,30 +103,30 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
       
       sim$plotDistSec <- plotDisturbanceSector(dataset = sim$data,
                                                types = sim$typeDisturbance,
-                                               outputPath = outputPath(sim))
+                                               outputPath = mod$saveOut)
       
       sim$plotList <- plotList(dataset = sim$models,
                                combinations = sim$combinations,
                                birdSp = sim$birdSpecies,
-                               outputPath = outputPath(sim))
+                               outputPath = mod$saveOut)
       
       sim$plotCoeff <- plotCoefficients(plotList = sim$plotList,
-                                        outputPath = outputPath(sim))
+                                        outputPath = mod$saveOut)
       
       sim$plotAbundDist <- plotAbundanceDisturbance(plotList = sim$plotList,
-                                                    outputPath = outputPath(sim))
+                                                    outputPath = mod$saveOut)
       
     },
     save = {
       
       sim$tableSampling <- tableSampling(dataName = sim$dataName,
                                          dataset = sim$data,
-                                         outputPath = outputPath(sim))
-      
+                                         outputPath = mod$saveOut)
+
       sim$AIC <- tableAIC(models = sim$models,
                           birdSp = sim$birdSpecies,
                           combinations = sim$combinations,
-                          outputPath = outputPath(sim))
+                          outputPath = mod$saveOut)
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -133,6 +136,11 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
 }
 
 Init <- function(sim) {
+  
+  # Create a specific output folder
+  mod$saveOut <- reproducible::checkPath(file.path(outputPath(sim),
+                                                   toupper(format(Sys.time(), "%d%b%y"))),
+                                         create = TRUE)
   
   sim$models <- list()
   sim$combinations <- expand.grid(sim$disturbanceDimension, sim$typeDisturbance) %>%
