@@ -89,7 +89,7 @@ plotCoefficients <- function(outputPath = outputPath(sim),
       geom_vline(xintercept = 0, linetype="dashed", color="darkgrey")
 
     png(file.path(outputPath,"plotCoefficients.png"), width = 1500, height = 863)
-    plot
+    print(plot)
     dev.off()
     
     return(plot)

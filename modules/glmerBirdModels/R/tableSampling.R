@@ -17,7 +17,7 @@ tableSampling <- function(outputPath = outputPath(sim), dataName = sim$dataName,
                     list(Cluster, Surveys, L_Disturbed, L_Undisturbed, N_Disturbed, N_Undisturbed))
   names(tableS2)[1] <- "Year"
   
-  write.csv(tableS2, file.path(outputPath, "TableS2.csv"))
+  write.csv(tableS2, file.path(outputPath, "TableS2-sampling.csv"))
   
   return(tableS2)
   

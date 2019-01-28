@@ -70,7 +70,7 @@ tableAIC <- function(outputPath = outputPath(sim),
   }
 
   tableS1.withUndis <- cbind(Species = finalTable[,1], partTableAll)
-  write.csv(tableS1.withUndis, file.path(outputPath, "TableS1-1.csv"))
+  write.csv(tableS1.withUndis, file.path(outputPath, "TableS1-1-AIC-withUndist.csv"))
   
   # WITHOUT UNDISTURBED
 
@@ -95,7 +95,7 @@ tableAIC <- function(outputPath = outputPath(sim),
   }
   
   tableS1.withoutUndis <- cbind(Species = finalTable[,1], partTableUndis, tabUndist)
-  write.csv(tableS1.withUndis, file.path(outputPath, "TableS1-2.csv"))
+  write.csv(tableS1.withUndis, file.path(outputPath, "TableS1-2-AIC-withoutUndist.csv"))
   
   return(tableS1.withoutUndis)
 }
