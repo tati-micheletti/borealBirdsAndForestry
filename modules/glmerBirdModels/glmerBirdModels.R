@@ -83,6 +83,17 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                                   avoidAlbertosData = P(sim)$avoidAlbertosData,
                                   SQLTableName = "SQLData",
                                   envirSim = envir(sim))
+        # Clean some of the data: Apparently in this new DS (29JAN19 - "Minidataset_master29JAN19.csv"), there are some 
+        # really small "disturbances" in State_P_500 (10^-7) which are probably just
+        # GIS overlay problems. They are classified as "" in Agent_500
+        # Here they are converted to 0. Might help models' convergence
+        rename <- names(sim$data)
+        sim$data <- lapply(X = sim$data, FUN = function(ds){
+          ds$State_P_100[ds[, State_P_100 > 0 & Agent_100 == ""]] <- 0
+          ds$State_P_500[ds[, State_P_500 > 0 & Agent_500 == ""]] <- 0
+          return(ds)
+        })
+        names(sim$data) <- rename
         }
     },
     birdModels = {
