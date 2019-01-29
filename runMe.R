@@ -87,7 +87,7 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
   SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
   SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
   SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
-  dataName = "Minidataset_master_withAgent.csv", # Alberto's manuscript data to select points and GIS. Data are, however coming from SQL.
+  dataName = "Minidataset_master29JAN19.csv", # Alberto's manuscript data to select points and GIS. Data are, however coming from SQL.
   birdSpecies = c("BBWA", # Bird species to run the models for
                   "BLPW",
                   "BOCH",
