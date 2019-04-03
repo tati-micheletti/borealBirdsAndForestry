@@ -2,7 +2,6 @@ retrieveSQLData <- function(SQLtableVersion = sim$SQLtableVersion,
                             SQLServer = sim$SQLServer,
                             SQLDatabase = sim$SQLDatabase,
                             birdSpecies = sim$birdSpecies){
-  
   reproducible::Require("DBI")
   reproducible::Require("odbc")
   #reproducible::Require("RODBC") # Not sure it is needed. If anything fails, use it

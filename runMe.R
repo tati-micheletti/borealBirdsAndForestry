@@ -13,24 +13,28 @@ if (!length(Sys.which("unzip")) > 0) message("unzip was not found in your comput
 invisible(sapply(X = list.files(file.path(getwd(), "functions"), full.names = TRUE), FUN = source))
 
 # Make sure all packages are updated
-devtools::install_github("PredictiveEcology/LandR")
-devtools::install_github("PredictiveEcology/reproducible@development")
-devtools::install_github("PredictiveEcology/map")
-devtools::install_github("PredictiveEcology/quickPlot@development")
-devtools::install_github("PredictiveEcology/SpaDES.core@development")
-devtools::install_github("PredictiveEcology/SpaDES.tools@development")
-devtools::install_github("PredictiveEcology/pemisc@development")
+# devtools::install_github("PredictiveEcology/LandR")
+# devtools::install_github("PredictiveEcology/reproducible@development")
+# devtools::install_github("PredictiveEcology/map")
+# devtools::install_github("PredictiveEcology/quickPlot@development")
+# devtools::install_github("PredictiveEcology/SpaDES.core@development")
+# devtools::install_github("PredictiveEcology/SpaDES.tools@development")
+# devtools::install_github("PredictiveEcology/pemisc@development")
 
 library(SpaDES.core)
 library(SpaDES.tools)
 reproducible::Require(ggplot2)
 reproducible::Require(ggalt)
 
-# Which computer is this being run on?
-# Options are: BorealCloud, LocalMachine, 388
-whichComputer <- "388"
+workDirectory <- getwd()
 
-paths <- pathsSetup(whichComputer = whichComputer, whichProject = "borealBirdsAndForestry", setTmpFolder = TRUE) 
+Paths <- list(
+  cachePath = file.path("/mnt/storage/borealBirdsAndForestry/cache/"),
+  modulePath = file.path(workDirectory, "modules"),
+  inputPath = file.path(workDirectory, "inputs"),
+  outputPath = file.path(workDirectory, "outputs")
+)
+
 # If setTmpFolder == TRUE, a temporary folder will be created inside the cache folder set. 
 # This can/should be changed later for other projects using:
 # ===> In Windows:
@@ -51,8 +55,9 @@ if (length(leftoverLogs) != 0)
 
 ## list the modules to use
 modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels")
+# modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "predictBirds", "birdDensityTrends")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
-# "focalCalculation", "predictBirds", "birdAbundanceTrends", "finalRasterPlots
+# "focalCalculation", "predictBirds", "birdDensityTrends", "finalRasterPlots"
 
 ## Set simulation and module parameters
 times <- list(start = 1985, end = 2011, timeunit = "year")
@@ -73,7 +78,7 @@ parameters <- list(
                    .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
                           resampledRes = 250,
-                          focalDistance = c(100, 500), # To run for neighborhood, change to c(100, 500)
+                          focalDistance = 100, # To run for neighborhood, change to c(100, 500)
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
                           useParallel = NULL, #"local", # Local parallel for 500m not working apparently
@@ -81,7 +86,7 @@ parameters <- list(
   birdDensityTrends = list(plotting = FALSE)
 )
 
-objects <- list( # Possible to include 'rP' directly here as a shapefile!
+.objects <- list( # Possible to include 'rP' directly here as a shapefile!
   mapSubset = "Canada", # "Canada" or Provinces to run at once. Good to subset provinces still within the boreal
   specificTestArea = "boreal", # "boreal", or canadian provinces
   SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
@@ -116,10 +121,23 @@ clearPlot()
 
 #file.remove("/mnt/storage/borealBirdsAndForestry/cache/logParallel")
 
-## Simulation setup
-mySim <- SpaDES.core::simInit(times = times, params = parameters, modules = modules, paths =  paths, objects = objects)
-mySimOut <- SpaDES.core::spades(mySim, debug = TRUE)
+outputsGLMER <- data.frame(
+  objectName = c("models",
+                     "data"),
+  saveTime = c(rep(times$end, 2))
+)
 
+## Simulation setup
+borealBirds100 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
+                                       modules = modules, paths =  Paths, outputs = outputsGLMER,
+                                       objects = .objects, debug = 2)
+
+reproducible::Require(googledrive)
+googledrive::drive_upload(file.path(getwd(), "outputs/models.rds"), 
+                          path = as_id("1exnvJfgiRdTLN-RGpqxmVfZcssnDvY5Z"))
+
+googledrive::drive_upload(file.path(getwd(), "outputs/data.rds"), 
+                          path = as_id("1exnvJfgiRdTLN-RGpqxmVfZcssnDvY5Z"))
 # To save the outputs
 # localAUG16 <- as(mySimOut, "simList_")
 # saveRDS(localAUG16, file.path(outputPath(mySimOut), "localAUG16.rds"))

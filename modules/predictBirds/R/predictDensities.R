@@ -30,10 +30,21 @@ predictionPerSpecies <-  lapply(birdSpecies, function(spName){ # I can paralelli
   if (any(!identical(round(raster::extent(x = disturbanceRas), 10^-100), round(raster::extent(birdD), 10^-100)),
           !identical(raster::res(x = disturbanceRas), raster::res(birdD)),
           !identical(raster::crs(x = disturbanceRas), raster::crs(birdD)))){
-    disturbanceRas <- postProcess(x = disturbanceRas, rasterToMatch = birdD,
-                                 maskWithRTM = TRUE, 
-                                 filename2 = file.path(pathData, "predicted", paste0(disturbanceRas@data@names, "Fixed")),
-                                 format = "GTiff", overwrite = TRUE, useCache = FALSE)
+    fixedDensityRas <- file.path(pathData, paste0("density", spName, "res", res(disturbanceRas)[1], "m.tif"))
+    if (file.exists(fixedDensityRas)){
+      birdD <- raster::raster(fixedDensityRas)
+    } else {
+      birdD <- postProcess(x = birdD, rasterToMatch = disturbanceRas,
+                           filename2 = tools::file_path_sans_ext(fixedDensityRas),
+                           format = "GTiff", overwrite = TRUE, useCache = FALSE)
+      raster::extent(birdD) <- raster::alignExtent(extent = raster::extent(birdD), 
+                                                   object = disturbanceRas, snap = "near")
+      # Don't think I will need the one below anymore.
+      # disturbanceRas <- postProcess(x = disturbanceRas, rasterToMatch = birdD,
+      #                              maskWithRTM = TRUE, 
+      #                              filename2 = file.path(pathData, "predicted", paste0(disturbanceRas@data@names, "Fixed")),
+      #                              format = "GTiff", overwrite = TRUE, useCache = FALSE)
+    }
   }
   stackRas <- raster::stack(disturbanceRas, birdD) # Might need to remove individual rasters here
     names(stackRas)[1] <- nameStackRas1

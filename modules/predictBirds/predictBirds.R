@@ -80,15 +80,39 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
 
 .inputObjects <- function(sim) {
   
+  if (!is.null(unlist(sim@params,
+                      use.names = FALSE)[grepl(pattern = "focalDistance", 
+                                               x = names(unlist(sim@params)))])){
+    sim$focalDistance <- max(as.numeric(unlist(sim@params, 
+                                               use.names = FALSE)[grepl(pattern = "focalDistance", 
+                                                                        x = names(unlist(sim@params)))]))
+  }
   if (!suppliedElsewhere("focalYearList", sim)){
     message(paste0("No disturbance list of rasters found.", 
-                   "Using fake disturbance raster for years ", 
+                   "Will try checking on focalCalculation folder and creating it... ", 
                    start(sim), ":", end(sim)))
-    sim$focalYearList <- Cache(fakeFocalRasterYears, st = start(sim),
-                               ed = end(sim),
-                               res = c(250, 250),
-                               crsRas = "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+    if (file.exists(paste0("modules/focalCalculation/data/mergedFocal1985-", 
+                           sim$focalDistance, "Res250m.tif"))){
+    sim$focalYearList <- list()
+    sim$focalYearList <- lapply(X = start(sim):end(sim), FUN = function(yr){
+      ras <- paste0("modules/focalCalculation/data/mergedFocal", 
+                    yr, "-", sim$focalDistance, "Res250m.tif")
+      doesIt <- file.exists(ras)
+      if (doesIt) return(raster::raster(ras)) else return(NULL)
+    })
     names(sim$focalYearList) <- paste0("Year", start(sim):end(sim))
+    if (any(is.null(unlist(sim$focalYearList)))) message("At least one focal raster is null, this year will not be 
+                                                         predicted for or will return error")
+    } else {
+      message(paste0("No disturbance list of rasters found.", 
+                     "Using fake disturbance raster for years ", 
+                     start(sim), ":", end(sim)))
+      sim$focalYearList <- Cache(fakeFocalRasterYears, st = start(sim),
+                                 ed = end(sim),
+                                 res = c(250, 250),
+                                 crsRas = "+proj=utm +zone=15 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+      names(sim$focalYearList) <- paste0("Year", start(sim):end(sim))
+    }
   }
   
   if (!suppliedElsewhere("birdDensityRasters", sim)){
@@ -146,14 +170,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
   })
     names(sim$models) <- sim$birdSpecies
   }
-  
-  if (!is.null(unlist(sim@params,
-                      use.names = FALSE)[grepl(pattern = "focalDistance", 
-                                               x = names(unlist(sim@params)))])){
-    sim$focalDistance <- max(as.numeric(unlist(sim@params, 
-                                               use.names = FALSE)[grepl(pattern = "focalDistance", 
-                                                                        x = names(unlist(sim@params)))]))
-  }
+
   
   return(invisible(sim))
 }
