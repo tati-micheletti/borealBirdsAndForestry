@@ -5,7 +5,6 @@
 
 # If using parallel, to view messages (in BorealCloud): tail -f /mnt/data/Micheletti/borealBirdsAndForestry/cache/logParallelFocal
 
-
 # NEWS: 500m was run only for year 1985 and a few tiles for year 1986. These are cached. It stopped working out of nowhere
 # on Jan 19th early morning @6am. Didn't put it to run again to prioritize NWT project in the BorealCloud. Will put it back 
 # to run when not running NWT anymore. [ 23rd Jan 19 ]
@@ -16,35 +15,37 @@ source(file.path(getwd(), "inputs", "isGDALInstalled.R"))
 source(file.path(getwd(), "inputs", "defineStudyArea.R"))
 if (!isGDALInstalled()) message("GDAL was not found in your computer, please make sure you install it before running these modules.")
 if (!length(Sys.which("unzip")) > 0) message("unzip was not found in your computer, please make sure you install it before running these modules.")
+invisible(sapply(X = list.files(file.path(getwd(), "functions"), full.names = TRUE), FUN = source))
+
+# Make sure all packages are updated
+devtools::install_github("PredictiveEcology/LandR")
+devtools::install_github("PredictiveEcology/reproducible@development")
+devtools::install_github("PredictiveEcology/map")
+devtools::install_github("PredictiveEcology/quickPlot@development")
+devtools::install_github("PredictiveEcology/SpaDES.core@development")
+devtools::install_github("PredictiveEcology/SpaDES.tools@development")
+devtools::install_github("PredictiveEcology/pemisc@development")
 
 library(SpaDES.core)
 library(SpaDES.tools)
+reproducible::Require(ggplot2)
+reproducible::Require(ggalt)
 
-# Set a storage project folder
-storageDir <- dirname(getwd())
+# Which computer is this being run on?
+# Options are: BorealCloud, LocalMachine, 388
+whichComputer <- "388"
 
-# Make a temporary folder for downloading files
-suppressWarnings(dir.create(file.path(storageDir, "tmp")))
-
-# Set a temporary folder (Only done for Linux):
-if (Sys.info()['sysname'] == "Linux"){
-  tryCatch(library(unixtools),
-           error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
-  options("reproducible.useMemoise" = FALSE) # Avoids bringing cache to memory
-  unixtools::set.tempdir(file.path(storageDir, "tmp"))
-}
-
-# set the directories
-workDirectory <- getwd()
-
-paths <- list(
-  cachePath = file.path(workDirectory, "cache"),
-  modulePath = file.path(workDirectory, "modules"),
-  inputPath = file.path(workDirectory, "inputs"),
-  outputPath = file.path(workDirectory, "outputs")
-)
-
-options('reproducible.useNewDigestAlgorithm' = FALSE) 
+paths <- pathsSetup(whichComputer = whichComputer, whichProject = "borealBirdsAndForestry", setTmpFolder = TRUE) 
+# If setTmpFolder == TRUE, a temporary folder will be created inside the cache folder set. 
+# This can/should be changed later for other projects using:
+# ===> In Windows:
+# write(TMPDIR = '<path/to/tempFolder>'), file = file.path(Sys.getenv('R_USER'), '.Renviron'))
+# ===> In Linux/MacOS:
+# tryCatch(library(unixtools),
+#   error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
+#   unixtools::set.tempdir(<path/to/tempFolder>)
+options('spades.moduleCodeChecks' = FALSE)
+options('reproducible.useNewDigestAlgorithm' = FALSE)
 options("reproducible.cachePath" = paths$cachePath)
 SpaDES.core::setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, 
                       outputPath = paths$outputPath, cachePath = paths$cachePath)
@@ -55,8 +56,12 @@ if (length(leftoverLogs) != 0)
   unlink(file.path(paths$cachePath, leftoverLogs))
 
 ## list the modules to use
+<<<<<<< HEAD
 modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "prepTiles", "focalCalculation", "glmerBirdModels",
                 "predictBirds", "birdDensityTrends")
+=======
+modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels")
+>>>>>>> a6c4330cc04183f19b938c7aae12abc0d9723aee
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdDensityTrends", "finalRasterPlots
 
@@ -68,7 +73,8 @@ parameters <- list(
                                  testArea = TRUE),
   bayesianBirdModel = list(testArea = TRUE), # FALSE means using boral shapefile to crop and mask
   glmerBirdModels = list(cropForModel = FALSE,
-                         avoidAlbertosData = TRUE),
+                         avoidAlbertosData = TRUE,
+                         plot = TRUE),
   prepTiles = list(testArea = TRUE, # Should a study area be used (i.e. boreal)?
                    nx = 3, # mult 7
                    ny = 3, # mult 3
@@ -92,8 +98,9 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
   SQLtableVersion = "V4_2015", # Data retrieving from SQL: specific versions
   SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
   SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
-  dataName = "Final_points_2010.csv", # Alberto's manuscript data to select points. Data are, however coming from SQL.
+  dataName = "Minidataset_master29JAN19.csv", # Alberto's manuscript data to select points and GIS. Data are, however coming from SQL.
   birdSpecies = c("BBWA", # Bird species to run the models for
+<<<<<<< HEAD
                   # "BLPW"#,
                   # "BOCH",
                   # "BRCR",
@@ -107,6 +114,21 @@ objects <- list( # Possible to include 'rP' directly here as a shapefile!
                   # "SWTH",
                   # "TEWA",
                   # "WETA",
+=======
+                  "BLPW",
+                  "BOCH",
+                  "BRCR",
+                  "BTNW",
+                  "CAWA",
+                  "CMWA",
+                  "CONW",
+                  "OVEN",
+                  "PISI",
+                  "RBNU",
+                  "SWTH",
+                  "TEWA",
+                  "WETA",
+>>>>>>> a6c4330cc04183f19b938c7aae12abc0d9723aee
                   "YRWA"
   ),
   typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"

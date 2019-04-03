@@ -24,13 +24,12 @@ plotDisturbanceSector <- function(outputPath = outputPath(sim),
                                    ifelse(grepl(pattern = "Permanent", x = name),"ALIENATING DISTURBANCES",
                                           "COMBINED DISTURBANCES"))
   }
-  
   # Subsetting to values that compose the graph and add column with State_P_X depending on the list Scale
   plotDT <- lapply(X = listNames, FUN = function(x){
     state <- ifelse(grepl("local", x),"100","500")
-    DT <- subset(dataset[[x]], eval(parse(text = paste0("State_P_",state)))>0)
-    DT$disturbedArea <- eval(parse(text = paste0("DT$","State_P_",state)))
-    DT$agentDisturbance <- eval(parse(text = paste0("DT$","Agent_",state)))
+    DT <- subset(dataset[[x]], eval(parse(text = paste0("State_P_", state)))>0)
+    DT$disturbedArea <- eval(parse(text = paste0("DT$","State_P_", state)))
+    DT$agentDisturbance <- eval(parse(text = paste0("DT$","Agent_", state)))
     return(DT)})
   names(plotDT) <- listNames
   
@@ -48,7 +47,7 @@ plotDisturbanceSector <- function(outputPath = outputPath(sim),
   if(length(unique(dataset$TYPE))*length(unique(dataset$DIMENSION)) == 9){
         dataset$DIMENSION2 <- factor(dataset$DIMENSION, levels = c("LOCAL SCALE", "NEIGHBORHOOD SCALE", "LOCAL UNDISTURBED"))
         dataset$TYPE2 <- factor(dataset$TYPE, levels = c("SUCCESSIONAL DISTURBANCES", "ALIENATING DISTURBANCES", "COMBINED DISTURBANCES"))
-        graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset #Canged back datasetNoBoth
+        graph <- ggplot(dataset, aes(x = disturbedArea, fill=agentDisturbance)) + #Changed dataset #Can change back to datasetNoBoth if it is wanted
         facet_grid(DIMENSION2 ~ TYPE2, scales = "free_y") +
         #facet_wrap(DISTURBANCE ~ TYPE, scales = "free_y") +
         geom_histogram(binwidth = 0.05) +
@@ -86,7 +85,7 @@ plotDisturbanceSector <- function(outputPath = outputPath(sim),
   }
   
   png(file.path(outputPath,"plotDisturbanceSector.png"), width = 1500, height = 863)
-  graph
+  print(graph)
   dev.off()
   
   return(graph)
