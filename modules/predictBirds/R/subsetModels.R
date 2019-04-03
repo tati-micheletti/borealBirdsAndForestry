@@ -1,7 +1,7 @@
 subsetModels <- function(disturbancePredict = sim$disturbancePredict,
                          prmt = sim@params,
                          models = sim$models){
-  
+  browser()
   if(any(grepl(pattern = "focalDistance", names(unlist(prmt))))){
     rw <- which(grepl(pattern = "focalDistance", names(unlist(prmt))))
     focalDistance <- as.numeric(unlist(prmt)[rw])
@@ -18,6 +18,9 @@ subsetModels <- function(disturbancePredict = sim$disturbancePredict,
           }
       }
     slct <- which(names(models) %in% comb)
+    if (is.null(slct))
+      stop("The correct models were not found. The most likely reason:
+           the 'glmerBirdModels' is missing from the call")
     models <- models[[slct]]
   }
   return(models)

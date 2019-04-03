@@ -55,19 +55,23 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, time(sim), "predictBirds", "predictBirdsDensities")
     },
     predictBirdsDensities = {
-      
+      browser()
       sim$predictModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
                                         prmt = sim@params,
                                         models = sim$models)
+  browser() # check that sim$birdSpecies, sim$predictModels, sim$birdDensityRasters, sim$predictModels are at the same order for all birds
+  if (!identical(sim$predictModels, names(sim$predictModels), names(sim$birdDensityRasters)))
+      sim$focalYearList[[paste0("Year", time(sim))]][] <- sim$focalYearList[[paste0("Year", time(sim))]][]
       
-      sim$predictRas[[paste0("Year", time(sim))]] <- Cache(predictDensities, birdSpecies = sim$birdSpecies,
-                                                           disturbanceRas = sim$focalYearList[[paste0("Year", time(sim))]],
-                                                           birdDensityRasters = sim$birdDensityRasters,
-                                                           currentTime = time(sim),
-                                                           modelList = sim$predictModels,
-                                                           pathData = cachePath(sim), 
-                                                           cacheId = paste0("predicted", max(sim$focalDistance), 
-                                                                            "m", time(sim)))
+      sim$predictRas[[paste0("Year", time(sim))]] <- pemisc::Map2(f = corePrediction, bird = sim$birdSpecies, model = sim$predictModels,
+                                                                  birdDensityRas = sim$birdDensityRasters,
+                                                                  moreArgs = list(pathData = dataPath(sim),
+                                                                                  disturbanceRas = sim$focalYearList[[paste0("Year", time(sim))]],
+                                                                                  currentTime = time(sim)))
+      # SAVE THE PREDICTED RASTERS
+                                                           # pathData = cachePath(sim), 
+                                                           # cacheId = paste0("predicted", max(sim$focalDistance), 
+                                                           #                  "m", time(sim)))
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + 1, "predictBirds", "predictBirdsDensities")
       

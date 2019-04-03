@@ -7,19 +7,14 @@ maskingSpeciesRange <- function(densityRasters = spRas,
       pathHR <- file.path(pathData, "maskedHR") %>%
         checkPath(create = TRUE)
       spRangePath <- birdsRangeList[[sp]]
-<<<<<<< HEAD
-      spRange <- prepInputs(url = spRangePath,
-                            targetFile = paste0(sp, "_corecurrmeanBSI.asc"),
-                            destinationPath = pathHR, fun = "raster::raster")
-=======
+
       if (!file.exists(file.path(pathHR, paste0(sp, "_corecurrmeanBSI.asc")))){
         spRange <- prepInputs(url = spRangePath,
                               targetFile = paste0(sp, "_corecurrmeanBSI.asc"),
-                              destinationPath = pathHR, fun = raster)
+                              destinationPath = pathHR, fun = "raster::raster")
       } else {
         spRange <- raster::raster(file.path(pathHR, paste0(sp, "_corecurrmeanBSI.asc")))
       }
->>>>>>> a6c4330cc04183f19b938c7aae12abc0d9723aee
       crs(spRange) <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs" #Had to "guess" the crs, its not in the original files!
       if (!file.exists(file.path(pathData, paste0(sp, "unmasked.tif")))){
         spRange <- postProcess(spRange, studyArea = studyArea, format = "GTiff", datatype = "INT1U", filename2 = paste0(sp, "unmasked.tif"), 
