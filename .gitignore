@@ -125,5 +125,9 @@ borealBirdsAndForestryManuscripts
 !Minidataset_master.csv
 !Minidataset_master_withAgent.csv
 !Minidataset_master29JAN19.csv
+!connectionSQL.rds
+./outputs/*.*
+outputs/*.*
+
 
 

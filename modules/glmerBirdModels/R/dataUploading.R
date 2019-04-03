@@ -63,6 +63,7 @@ if (avoidAlbertosData == FALSE){
   
   # Preparing Expected densities
   birdnames <- unique(birdDensityDS$SPECIES)
+  browser()
   birdDensityDS$LCC_PROV_B <-
     paste0(birdDensityDS$LCC, birdDensityDS$PROV, birdDensityDS$BCR)
   birdDensityDS_cast <- dcast.data.table(
