@@ -1,0 +1,2 @@
+"file" "checksum" "filesize" "algorithm"
+"Minidataset_master29JAN19.csv" "2e6fa50887f5034d" "4826366" "xxhash64"
