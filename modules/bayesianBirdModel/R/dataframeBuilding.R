@@ -1,26 +1,7 @@
-# Observations
-#   Not sure negative binomial is the best one… Maybe ZIP would be better? 
-#   We can try extra-Poisson dispersion model (ie. 12.3.3. Kery and Schaub 2012), 
-#   negative binomial (Kery and Royle 2016) or even regular Poisson (depends really 
-#   on the species we are dealing with… I don’t think Poisson is the best for old-forest 
-#   associated birds!).
-#   
-#   We could eventually model time (HH MM) as RE of propability of observation
-
-# Obvious outcomes
-#   NN > NL
-
-
-#   # Assumptions
-# 1. Bird density might vary depending on cluster (RE)
-# 2. Bird density might vary depending on the year (RE)
-
 dataframeBuilding <- function(birdData,
                               birdSpecies, 
-                              ageMap,
-                              currentTime,
-                              pathData,
-                              rP){
+                              ageMap
+                              ){
 
   forestListName <- grepMulti(x = names(birdData), patterns = c("Transitional"))
   forestList <- rbindlist(birdData[names(birdData) %in% forestListName])
@@ -56,24 +37,19 @@ dataframeBuilding <- function(birdData,
   # 4. dataframeBuilding function needs to make a list with copies of all the values of the model 
   # and the specific bird sp offset and log and count (bird names on the cols): each element of 
   # the named list is a data.frame with all info for one bird species
+  # What I need from the data.table here:
+  # X, Y, BIRD, YYYY, ClusterSP, State_P_100, State_P_500, OFFSET_BIRD, logDENSITY_BIRD, correctedAge
   
-
-  browser()
+  listOfTables <- lapply(X = birdSpecies, FUN = function(sp){
+    birdDependentVars <- grepMulti(x = names(birdDataFinal), patterns = sp)[-2] # Hack for excluding DENSITY (keep logDENSITY)
+    IndependentVars <- c("X", "Y", "State_P_100", "State_P_500", "correctedAge") #"YYYY", "ClusterSP", [ FIX ] TO ADD RE ADD THESE
+    varsToKeep <- c(IndependentVars, birdDependentVars)
+    spDT <- birdDataFinal[, ..varsToKeep]
+    return(spDT)
+  })
+  names(listOfTables) <- birdSpecies
   
-  # 5. Create the data.frame that I want to populate: - NEXT FUNCTION. 
-  # This one should be cached just to be added every year to the one I really want to monitor
-  # 
-  # Abundance = NA (the one parameter to monitor!),
-  # estimate = log of estimate based on LCC_BCR (I have this table somewhere!),
-  # age = corrected growth 1985-2011 based off of 2004 layer (and maybe double check the disturbances?! See item 5.),
-  # disturbance = values from the focal rasterstack, 
-  # X = coordenadas X from "template raster" (one of the mergedFocal?) for all pixels to 
-  # forecast (maybe would be smart to crop to only the pixels that are within Sp distribution for computation time?),
-  # Y = same as x,
-  # offsets = NA
-  # 
-  # 6. Put the DF in the model and figure out after that...  
-  
+return(listOfTables)
 }
 
 

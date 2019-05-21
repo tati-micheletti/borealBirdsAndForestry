@@ -38,7 +38,7 @@ times <- list(start = 1985, end = 1985)
 parameters <- list(
 )
 
-modules <- list("birdDensityBCR_Prov_LCC", "bayesianBirdModel")
+modules <- list("bayesianBirdModel")
 
 rp <- Cache(defineStudyArea, testArea = TRUE, 
                           specificTestArea = "boreal",
@@ -54,30 +54,21 @@ bayes <- simInitAndSpades(times = times, params = parameters, modules = modules,
 
 ```
 
-# Events
-
-Describe what happens for each event type.
-
-## Plotting
-
-Write what is plotted.
-
-## Saving
-
-Write what is saved.
-
-# Data dependencies
-
-## Input data
-
-How to obtain input data, and a description of the data required by the module.
-If `sourceURL` is specified, `downloadData("bayesianBirdModel", "path/to/modules/dir")` may be sufficient.
-
-## Output data
-
-Description of the module outputs.
-
-# Links to other modules
-
-Describe any anticipated linkages to other modules.
+      # Observations
+      #   Not sure negative binomial is the best one… Maybe ZIP would be better? 
+      #   We can try extra-Poisson dispersion model (ie. 12.3.3. Kery and Schaub 2012), 
+      #   negative binomial (Kery and Royle 2016) or even regular Poisson (depends really 
+      #   on the species we are dealing with… I don’t think Poisson is the best for old-forest 
+      #   associated birds!).
+      #   
+      #   We could eventually model time (HH MM) as RE of propability of observation
+      
+      # Obvious outcomes
+      #   NN > NL
+      
+      
+      #   # Assumptions
+      # 1. Bird density might vary depending on cluster (RE)
+      # 2. Bird density might vary depending on the year (RE)
+      
 

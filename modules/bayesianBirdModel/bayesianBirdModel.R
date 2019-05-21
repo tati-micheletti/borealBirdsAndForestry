@@ -17,6 +17,7 @@ defineModule(sim, list(
     defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
   ),
   inputObjects = bind_rows(
+    expectsInput(objectName = "birdDensityRasters", objectClass = "RasterStack", desc = "Raster stack of expected density of all birdSpecies", sourceURL = NA),
     expectsInput(objectName = "focalRasters", objectClass = "RasterStack", desc = "Raster stack of all disturbances 100 and 500m for all years", sourceURL = NA),
     expectsInput(objectName = "dataName", objectClass = "character", desc = "File name of used dataset", sourceURL = NA),
     expectsInput(objectName = "ageMap", objectClass = "RasterLayer", desc = "Age class map raster", sourceURL = "ftp://ftp.daac.ornl.gov/data/nacp/NA_TreeAge//data/can_age04_1km.tif"),
@@ -25,7 +26,8 @@ defineModule(sim, list(
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "data", objectClass = "data.table", desc = "Bird dataset: Minidataset_master29JAN19.csv"),
-    createsOutput(objectName = "df", objectClass = "list", desc = "Dataframe used for the bayesian model"),
+    createsOutput(objectName = "fixedDT", objectClass = "list", desc = "Data.table of fixed values (model values) for the bayesian DT"),
+    createsOutput(objectName = "yearDT", objectClass = "list", desc = "Data.table of yearly values (for prediction values) for the bayesian DT"),
     createsOutput(objectName = "ageMap", objectClass = "RasterLayer", desc = "Age class map raster (LCC05)")
   )
 ))
@@ -47,20 +49,46 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                                          projection = "+proj=longlat +datum=WGS84",
                                          filename2 = "ageMap2004")
       
-      
-      
-    
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "bayesianBirdModel", "model")
     },
     model = {
       
-      sim$df <- dataframeBuilding(birdData = sim$data, 
+      sim$fixedDT <- dataframeBuilding(birdData = sim$data, 
                                   birdSpecies = sim$birdSpecies,
-                                  ageMap = sim$ageMap,
-                                  currentTime = time(sim),
+                                  ageMap = sim$ageMap)
+      
+      browser() # Need to build the next function
+      # Don't forget:
+      # Need to add the expected age at the time currentTime (similar to what I did in dataframeBuilding)
+      # Need to crop, mask and extract the values from the rasters to a DT:
+      #     ageMap (YES, this too!)
+      #     focalRasters: need to grep which ones are currentYear
+      #     birdDensityRasters: don't forget to log these!
+      # Think about cummulative disturbance: should this be per year? (i.e. dist1986 = dist1986-dist1985) THINK THIS WOULD COMPLICATE TOO MUCH!
+      # I would just keep it as is (cumm dist) and just age the forest 
+      sim$yearDT <- buildYearlyDT(currentTime = time(sim),
                                   pathData = dataPath(sim),
-                                  rP = sim$rP)
+                                  rP = sim$rP,
+                                  ageMap = sim$ageMap,
+                                  fixedDT = sim$fixedDT,
+                                  focalRasters = sim$focalRasters,
+                                  birdDensityRasters = sim$birdDensityRasters)
+
+
+      # 5. Create the data.frame that I want to populate: - NEXT FUNCTION. 
+      # This one should be cached just to be added every year to the one I really want to monitor
+      # 
+      # Abundance = NA (the one parameter to monitor!),
+      # estimate = log of estimate based on LCC_BCR (I have this table somewhere!),
+      # age = corrected growth 1985-2011 based off of 2004 layer (and maybe double check the disturbances?! See item 5.),
+      # disturbance = values from the focal rasterstack, 
+      # X = coordenadas X from "template raster" (one of the mergedFocal?) for all pixels to 
+      # forecast (maybe would be smart to crop to only the pixels that are within Sp distribution for computation time?),
+      # Y = same as x,
+      # offsets = NA
+      # 
+      # 6. Put the DF in the model and figure out after that...  
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -88,7 +116,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
     sim$focalRasters <- raster::stack(lapply(focalRastersPaths, FUN = raster))
     
   } else {
-    sim$focalRasters <- raster::stack(focalYearList)
+    sim$focalRasters <- raster::stack(sim$focalYearList)
     warning("Is the focalRasters stack really a stack that has both 100 and 500m focal calculations?
             if not, please DO NOT provide the file name (i.e. do not add the module focalCalculations). 
             This will be fixed in future versions")
@@ -106,6 +134,20 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                                    "BTNW", "CAWA", "CMWA","CONW",
                                    "OVEN", "PISI", "RBNU", "SWTH",
                                    "TEWA", "WETA", "YRWA")
+  }
+  if (!suppliedElsewhere("birdDensityRasters", sim)){
+    sim$birdDensityRasters <- raster::stack(lapply(X = sim$birdSpecies, FUN = function(sp){
+      fileToLoad <- grepMulti(x = list.files(path = dataPath(sim), full.names = TRUE), 
+                              patterns = c("density", sp, ".tif"))
+      if (length(fileToLoad) == 0){
+        preProcess(url = "https://drive.google.com/open?id=1Htxc5Wv-30B0nJGpIyKa711x8cfGFrac", 
+                   destinationPath = dataPath(sim))
+        fileToLoad <- grepMulti(x = list.files(path = dataPath(sim), full.names = TRUE), 
+                                patterns = c("density", sp, ".tif"))
+      }
+      ras <- raster::raster(fileToLoad)
+    })
+    )
   }
   
   return(invisible(sim))
