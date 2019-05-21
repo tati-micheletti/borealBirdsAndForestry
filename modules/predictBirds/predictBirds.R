@@ -15,6 +15,10 @@ defineModule(sim, list(
   documentation = list("README.txt", "predictBirds.Rmd"),
   reqdPkgs = list("raster"),
   parameters = rbind(
+    defineParameter("useParallel", "logical", FALSE, NA, NA, 
+                    paste0("Use parallel? Especifically for this module, when using a 1TB 56cores BorealCloud",
+                           "not using paralell was 43% faster than using it, even if passing all rasters in memory,",
+                           " and not writing nor reading from disk")),
     defineParameter("focalDistance", "numeric", 100, NA, NA, 
                     paste0("The distance at which to compute focal statistics, in units of", 
                            " the input rastesr CRS. This will be used to ", 
@@ -36,13 +40,22 @@ defineModule(sim, list(
                  desc = "list of boreal bird models"),
     expectsInput(objectName = "birdDensityRasters", objectClass = "list", 
                  desc = paste0("list of rasters with information",
-                               " on species densities based on LCC and BCR/Prov"))
+                               " on species densities based on LCC and BCR/Prov")),
+    expectsInput(objectName = "disturbancePredict", objectClass = "character", 
+                 desc = paste0("Which type of disturbance will",
+                               " be considered")),
+    expectsInput(objectName = "predictModels", objectClass = "list",
+                  desc = paste0("list of models for prediction. might be created or passed")),
+    expectsInput(objectName = "nCores", objectClass = "character",
+                 desc = paste0("Number of cores to use for parallel. Possible values: auto, numeric, NULL")),
+    expectsInput(objectName = "predictModels", objectClass = "list",
+                  desc = paste0("list of models for prediction. might be created or passed"))
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "predictRas", objectClass = "list", 
                   desc = "List of years, which is a list of species with density rasters"),
     createsOutput(objectName = "predictModels", objectClass = "list",
-                  desc = paste0("list of models for prediction"))
+                  desc = paste0("list of models for prediction. might be created or passed"))
   )
 ))
 
@@ -50,28 +63,126 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
-      
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "predictBirds", "predictBirdsDensities")
     },
     predictBirdsDensities = {
-      browser()
-      sim$predictModels <- subsetModels(disturbancePredict = sim$disturbancePredict,
-                                        prmt = sim@params,
-                                        models = sim$models)
-  browser() # check that sim$birdSpecies, sim$predictModels, sim$birdDensityRasters, sim$predictModels are at the same order for all birds
-  if (!identical(sim$predictModels, names(sim$predictModels), names(sim$birdDensityRasters)))
-      sim$focalYearList[[paste0("Year", time(sim))]][] <- sim$focalYearList[[paste0("Year", time(sim))]][]
+
+      if (is.null(sim$predictModels)){ # Data sanity check
+          stop("PredictModels was not found and default did not load test data. Revise code")
+        }
+        if (!identical(sim$birdSpecies, names(sim$predictModels)) | 
+            !identical(sim$birdSpecies, names(sim$birdDensityRasters))){ # Data sanity check
+          stop("birdSpecies, predictModels and densityRasters don't match the species' order. Revise code")
+        }
       
-      sim$predictRas[[paste0("Year", time(sim))]] <- pemisc::Map2(f = corePrediction, bird = sim$birdSpecies, model = sim$predictModels,
-                                                                  birdDensityRas = sim$birdDensityRasters,
-                                                                  moreArgs = list(pathData = dataPath(sim),
-                                                                                  disturbanceRas = sim$focalYearList[[paste0("Year", time(sim))]],
-                                                                                  currentTime = time(sim)))
-      # SAVE THE PREDICTED RASTERS
-                                                           # pathData = cachePath(sim), 
-                                                           # cacheId = paste0("predicted", max(sim$focalDistance), 
-                                                           #                  "m", time(sim)))
+      predictedName <- as.list(file.path(dataPath(sim), paste0("predicted", sim$birdSpecies, max(sim$focalDistance),
+                                                               "mYear", time(sim), ".tif")))
+      names(predictedName) <- sim$birdSpecies
+      
+        allPredictionsExist <- all(unlist(lapply(predictedName, FUN = function(yearSpPrediction){
+          fileExists <- file.exists(yearSpPrediction)
+          return(fileExists)
+        })))
+        
+        if (allPredictionsExist){
+          sim$predictRas[[paste0("Year", time(sim))]] <- lapply(X = sim$birdSpecies, FUN = function(bird){
+            ras <- raster::raster(predictedName[[bird]])
+          })
+          names(sim$predictRas[[paste0("Year", time(sim))]]) <- sim$birdSpecies      
+          
+        } else {
+          
+          if (sim$nCores == "auto") {
+            sim$nCores <- pemisc::optimalClusterNum(70000, maxNumClusters = length(birdSpecies))
+          }
+          if (all(.Platform$OS.type != "windows", isTRUE(P(sim)$useParallel))) {
+            cl <- parallel::makeForkCluster(sim$nCores, outfile = file.path(dataPath(sim), "logParallelBirdPrediction")) # Tried, works, too slow
+            # cl <- parallel::makePSOCKcluster(sim$nCores, outfile = file.path(dataPath(sim), "logParallelBirdPrediction")) # Tried, also works, also slow
+            
+            on.exit(try(parallel::stopCluster(cl), silent = TRUE))
+          } else {
+            cl <- NULL
+          }
+          
+          sim$focalYearList[[paste0("Year", time(sim))]][] <- sim$focalYearList[[paste0("Year", time(sim))]][]
+          sim$birdDensityRasters <- lapply(sim$birdDensityRasters, function(r){
+            r <- raster::raster(r)
+            r[] <- r[]
+            return(r)
+          })
+          
+          # Snapping layers to make sure it will work
+          sim$birdDensityRasters <- lapply(X = sim$birdDensityRasters, FUN = function(lay){
+            raster::extent(lay) <- raster::alignExtent(extent = raster::extent(lay),
+                                                       object = sim$focalYearList[[paste0("Year", time(sim))]],
+                                                       snap = "near")
+            return(lay)
+          })
+          
+          birdDensityVectors <- lapply(sim$birdDensityRasters, FUN = function(ras){
+            vec <- raster::getValues(ras)
+            return(vec)
+          })
+          disturbanceRasVector <- raster::getValues(sim$focalYearList[[paste0("Year", time(sim))]])
+          
+          if (var(c(sapply(birdDensityVectors, length), length(disturbanceRasVector))) == 0){ # Data sanity check
+            if (!is.null(cl)){
+              message(crayon::red(paste0("Paralellizing for:\n", paste(sim$birdSpecies, collapse = "\n"),
+                                         "\nUsing ", sim$nCores, " cores \n",
+                                         "\nMessages will be suppressed until done")))
+              predictVec <- clusterApplyLB(seq_along(sim$birdSpecies),
+                                           cl = cl, function(index) {
+                                             corePrediction(bird = sim$birdSpecies[[index]],
+                                                            model = sim$predictModels[[index]],
+                                                            predictedName = predictedName[[index]],
+                                                            birdDensityRas = birdDensityVectors[[index]],
+                                                            pathData = dataPath(sim),
+                                                            disturbanceRas = disturbanceRasVector,
+                                                            currentTime = time(sim))
+                                           })
+            } else {
+              predictVec <- lapply(seq_along(sim$birdSpecies),
+                                   function(index) {
+                                     corePrediction(bird = sim$birdSpecies[[index]], 
+                                                    model = sim$predictModels[[index]], 
+                                                    predictedName = predictedName[[index]],
+                                                    birdDensityRas = birdDensityVectors[[index]],
+                                                    pathData = dataPath(sim),
+                                                    disturbanceRas = disturbanceRasVector,
+                                                    currentTime = time(sim))
+                                   })
+            }
+            
+            # Reconvert vectors into rasters
+            rm(disturbanceRasVector)
+            rm(birdDensityVectors)
+            invisible(gc())
+            sim$predictRas[[paste0("Year", time(sim))]] <- lapply(predictVec, FUN = function(spVec){
+              rasName <- paste0("prediction", attributes(spVec)[["prediction"]])
+              birdRas <- raster(sim$birdDensityRasters[[1]]) # Using the first as a template. All should be the same.
+              birdRas <- raster::setValues(x = birdRas, values = as.numeric(spVec))
+              return(birdRas)
+            })
+            names(sim$predictRas[[paste0("Year", time(sim))]]) <- sim$birdSpecies      
+            rm(predictVec)
+            invisible(gc())
+            
+          } else {
+            stop("There is a mismatch among the birdDensityRasters and/or the disturbance raster. Please revise the code.")
+          }
+          
+          # SAVE THE PREDICTED RASTERS
+          sim$predictRas[[paste0("Year", time(sim))]] <- lapply(names(predictedName), function(bird){
+            writeRaster(sim$predictRas[[paste0("Year", time(sim))]][[bird]], 
+                        filename = predictedName[[bird]], format = "GTiff")
+            return(predictedName[[bird]])
+          })
+          names(sim$predictRas[[paste0("Year", time(sim))]]) <- sim$birdSpecies
+          
+          invisible(gc())
+        }
+      
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + 1, "predictBirds", "predictBirdsDensities")
       
@@ -83,6 +194,10 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
 }
 
 .inputObjects <- function(sim) {
+
+  if (!suppliedElsewhere("nCores", sim)){
+    sim$nCores <- "auto"
+  }
   
   if (!is.null(unlist(sim@params,
                       use.names = FALSE)[grepl(pattern = "focalDistance", 
@@ -96,11 +211,11 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
                    "Will try checking on focalCalculation folder and creating it... ", 
                    start(sim), ":", end(sim)))
     if (file.exists(paste0("modules/focalCalculation/data/mergedFocal1985-", 
-                           sim$focalDistance, "Res250m.tif"))){
+                           max(sim$focalDistance), "Res250m.tif"))){
     sim$focalYearList <- list()
     sim$focalYearList <- lapply(X = start(sim):end(sim), FUN = function(yr){
       ras <- paste0("modules/focalCalculation/data/mergedFocal", 
-                    yr, "-", sim$focalDistance, "Res250m.tif")
+                    yr, "-", max(sim$focalDistance), "Res250m.tif")
       doesIt <- file.exists(ras)
       if (doesIt) return(raster::raster(ras)) else return(NULL)
     })
@@ -157,11 +272,11 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
     }
   }
   
-  if (!suppliedElsewhere("models", sim)){
+  if (!suppliedElsewhere("predictModels", sim)){
     message("No models list found. Using fake generalized linear model for BBWA and BOCH")
     source(file = file.path(dataPath(sim), "fakeDataBirds.R"))
     sim$data <- data
-    sim$models <- lapply(X = sim$birdSpecies, FUN = function(sp){
+    sim$predictModels <- lapply(X = sim$birdSpecies, FUN = function(sp){
       if (!max(P(sim)$focalDistance) %in% c(100, 500)) {
         stop("At the moment, fake models can only be generated with focalDistances of 100 or 500.")
       } else {
@@ -172,7 +287,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
         return(get(sp))
       }
   })
-    names(sim$models) <- sim$birdSpecies
+    names(sim$predictModels) <- sim$birdSpecies
   }
 
   

@@ -20,32 +20,26 @@ corePrediction <- function(bird, model, birdDensityRas,
     } else {
       if ("gbm" %in% class(model)){ # If gbm, do everything in here, else, do outside
         browser() # NEED TO DEBUG HERE FOR BIRDS PARALLEL IN NWT PROJECT...
-        tryCatch({
-          stkLays <- raster::stack(successionLayers, staticLayers)
-        }, error = function(e){
-          stop("crs and or extents don't align. Check you layers have the same crs and projection before this call")
-        })
+        stkLays <- cbind(successionLayers, staticLayers) #raster::stack(successionLayers, staticLayers) # MIGHT NEED row.names = TRUE?!
         if (isTRUE(overwritePredictions)||!file.exists(predictedName)){
           message(crayon::yellow(paste0(" Starting prediction raster for ", bird, ". This might take some time... [", Sys.time(),"]")))
-          startTime <- Sys.time()
-          predicted <- gbm::predict.gbm(object = model, newdata = raster::as.data.frame(stkLays, row.names = TRUE),
+          predicted <- gbm::predict.gbm(object = model, newdata = stkLays,
                                         type = "response",
                                         n.trees = model$n.trees)
           message(crayon::green(paste0("Prediction finalized for ", bird, ". [", Sys.time(),"]. Total time elapsed: ", 
                                        Sys.time() - startTime)))
-          startTime <- Sys.time()
-          message(crayon::green("Masking ", bird , " prediction to ", crayon::red("studyArea"), " for time ", currentTime))
-          basePlot <- stkLays[[1]]
-          basePlot <- setValues(basePlot, predicted)
-          basePlot <- reproducible::fastMask(basePlot, y = studyArea)
-          
-          names(basePlot) <- paste0("predicted", bird)
-          message(crayon::green("Masking ", bird , " prediction to ", crayon::red("uplands"), " for time ", currentTime))
-          predictedMasked <- reproducible::postProcess(x = basePlot, rasterToMatch = uplandsRaster, 
-                                                       maskWithRTM = TRUE, destinationPath = pathData, filename2 = NULL)
-          
+          # startTime <- Sys.time()
+          # message(crayon::green("Masking ", bird , " prediction to ", crayon::red("studyArea"), " for time ", currentTime))
+          # basePlot <- stkLays[[1]]
+          # basePlot <- setValues(basePlot, predicted)
+          # basePlot <- reproducible::fastMask(basePlot, y = studyArea) # ALL THIS NEEDS TO HAPPEN OUTSIDE OF CORE PREDICTION...
+          # 
+          # names(basePlot) <- paste0("predicted", bird)
+          # message(crayon::green("Masking ", bird , " prediction to ", crayon::red("uplands"), " for time ", currentTime))
+          # predictedMasked <- reproducible::postProcess(x = basePlot, rasterToMatch = uplandsRaster, 
+          #                                              maskWithRTM = TRUE, destinationPath = pathData, filename2 = NULL)
         }
-        predicted <- raster(predictedName)
+        predicted <- raster(predicted)
         gc()
         return(predicted)
       }
@@ -54,34 +48,11 @@ corePrediction <- function(bird, model, birdDensityRas,
   focDis <- as.numeric(gsub("[^\\d]+", "", nameStackRas1, perl=TRUE))
   
   if (isTRUE(overwritePredictions)||!file.exists(predictedName)){
-    valsD <- log(raster::getValues(birdDensityRas)) # log the value of densities so it is the same of the original model
-    valsD[valsD < -0.99] <- -1
-    birdDensityRas <- raster::setValues(birdDensityRas, valsD)
-    rm(valsD)
-    gc()
-    tryCatch({
-      stkLays <- raster::stack(disturbanceRas, birdDensityRas)
-    }, error = function(e){
-      tryCatch({
-        problem <- if (unique(raster::res(birdDensityRas[[1]])) != unique(raster::res(disturbanceRas))) 
-          " different resolution" else if (raster::extent(birdDensityRas[[1]]) != raster::extent(disturbanceRas)) 
-            " different extents" else " possibly alignment"
-        message("At least one birdDensityRaster can't be stacked with disturbanceRaster. The probably problem is: ", problem)
-        warning("The density raster used has originally a resolution of ", raster::res(birdDensityRas[[1]]), 
-                "")
-        birdDensityRas <- reproducible::postProcess(birdDensityRas, rasterToMatch = disturbanceRas, 
-                                                    destinationPath = tempdir(), filename2 = NULL)
-        raster::extent(birdDensityRas) <- raster::alignExtent(extent = raster::extent(birdDensityRas),
-                                                   object = disturbanceRas,
-                                                   snap = "near")
-        stkLays <- raster::stack(disturbanceRas, birdDensityRas)
-      }, error = function(e){
-        stop("Please make sure the disturbanceRaster has the same crs, projection and alignment of the birdDensityRaster")
-      })
-    })
-    names(stkLays)[1] <- nameStackRas1
-    names(stkLays)[2] <- nameStackRas2
-    predicted <- suppressWarnings(fitModel(inRas = stkLays, 
+    birdDensityRas <- log(birdDensityRas) # log the value of densities so it is the same of the original model
+    birdDensityRas[birdDensityRas < -0.99] <- -1
+    vecDF <- data.frame(disturbanceRas, birdDensityRas)
+    colnames(vecDF) <- c(nameStackRas1, nameStackRas2)
+    predicted <- suppressWarnings(fitModel(inRas = vecDF, 
                                            inputModel = model, 
                                            x = bird, 
                                            tileYear = currentTime))

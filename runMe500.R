@@ -61,7 +61,7 @@ if (length(leftoverLogs) != 0)
   unlink(file.path(Paths$cachePath, leftoverLogs))
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels")#"predictBirds", "birdDensityTrends")
+modules <- list("birdDensityBCR_Prov_LCC", "predictBirds")#, "birdDensityTrends")
 # modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "predictBirds", "birdDensityTrends")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdDensityTrends", "finalRasterPlots"
@@ -85,12 +85,13 @@ parameters <- list(
                    .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
                           resampledRes = 250,
-                          focalDistance = 100, # To run for neighborhood, change to c(100, 500)
+                          focalDistance = c(100, 500), # To run for neighborhood, change to c(100, 500)
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
                           useParallel = NULL, #"local", # Local parallel for 500m not working apparently
                           nNodes = 1), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
-  predictBirds = list(useParallel = FALSE),
+  predictBirds = list(focalDistance = c(100, 500),
+                      useParallel = FALSE),
   birdDensityTrends = list(plotting = FALSE)
 )
 
@@ -147,7 +148,7 @@ clearPlot()
 #file.remove("/mnt/storage/borealBirdsAndForestry/cache/logParallel")
 
 ## Simulation setup
-borealBirds100 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
+borealBirds500 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
                                                 modules = modules, paths =  Paths,
                                                 objects = .objects, debug = 2)
 

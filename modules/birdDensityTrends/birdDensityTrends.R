@@ -46,13 +46,16 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, end(sim), "birdDensityTrends", "plot", eventPriority = .last())
     },
     fitTrend = {
+      browser() # Not trendPerSpecies. Way too slow... Package trends. sens.slope and mk.test
+      # EcoGenetics::eco.theilsen :: use with rasterbrick
+
       sim$trends <- Cache(trendPerSpecies, birdSpecies = sim$birdSpecies,
                                     focalDistance = sim$focalDistance,
                                     predictRas = sim$predictRas,
                                     startTime = start(sim),
                                     endTime = end(sim),
                                     outPath = cachePath(sim),
-                                    cacheId = paste0("trendYears", sim$focalDistance,"TS:",
+                                    userTags = paste0("trendYears", sim$focalDistance,"TS:",
                                                       start(sim), ":",
                                                       end(sim)))
     },
