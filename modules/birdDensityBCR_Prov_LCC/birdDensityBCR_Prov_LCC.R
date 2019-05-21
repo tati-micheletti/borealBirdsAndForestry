@@ -55,8 +55,7 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
     },
     
     fetchData = {
-      
-      sim$birdDensityRasters <- Cache(fetchData, pathData = dataPath(sim), 
+      fetchedData <- Cache(fetchData, pathData = dataPath(sim), 
                                           birdSp = sim$birdSpecies, 
                                           birdsRangeList = sim$birdsRangeList,
                                           studyArea = sim$rP, 
@@ -64,11 +63,14 @@ doEvent.birdDensityBCR_Prov_LCC = function(sim, eventTime, eventType, debug = FA
                                           densityEstimatesURL = sim$densityEstimatesURL,
                                           densityEstimatesFileName = sim$densityEstimatesFileName,
                                           avoidAlbertosData = P(sim)$avoidAlbertosData,
-                                          simEnv = envir(sim),
                                       userTags = "objectName:birdDensityRasters")
+      sim$birdDensityRasters <- fetchedData$densityRasList
+      sim$birdDensityDS <- fetchedData$birdDensityDS
       
-      # sim$birdDensityDS <- birdDensityDS # Being created in the previous function and assigned to sim. Here just for a matter of transparency.
-      
+      # schedule future event(s)
+      sim <- scheduleEvent(sim, time(sim) + 1, "birdDensityBCR_Prov_LCC", "fetchData") 
+      # Need to do this because the prediction with things in memory is for some reason 
+      # converting all values to NA after 1st year
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],

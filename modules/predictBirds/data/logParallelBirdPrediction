@@ -1,0 +1,493 @@
+starting worker pid=37768 on localhost:11188 at 22:46:18.927
+starting worker pid=37769 on localhost:11188 at 22:46:19.710
+starting worker pid=37770 on localhost:11188 at 22:46:20.310
+starting worker pid=37775 on localhost:11188 at 22:46:22.699
+starting worker pid=37776 on localhost:11188 at 22:46:23.116
+starting worker pid=37781 on localhost:11188 at 22:46:25.299
+starting worker pid=37782 on localhost:11188 at 22:46:25.729
+starting worker pid=37783 on localhost:11188 at 22:46:26.163
+starting worker pid=37790 on localhost:11188 at 22:46:29.311
+starting worker pid=37791 on localhost:11188 at 22:46:29.752
+starting worker pid=37792 on localhost:11188 at 22:46:30.188
+starting worker pid=37799 on localhost:11188 at 22:46:33.319
+starting worker pid=37800 on localhost:11188 at 22:46:33.759
+Predicting for BBWA. Prediction for time 1985
+BBWA prediction finalized for year 1985
+Predicting for BLPW. Prediction for time 1985
+Predicting for BOCH. Prediction for time 1985
+BLPW prediction finalized for year 1985
+Predicting for BRCR. Prediction for time 1985
+BOCH prediction finalized for year 1985
+Predicting for BTNW. Prediction for time 1985
+BRCR prediction finalized for year 1985
+Predicting for CAWA. Prediction for time 1985
+BTNW prediction finalized for year 1985
+CAWA prediction finalized for year 1985
+Predicting for CMWA. Prediction for time 1985
+Predicting for CONW. Prediction for time 1985
+CMWA prediction finalized for year 1985
+Predicting for OVEN. Prediction for time 1985
+CONW prediction finalized for year 1985
+Predicting for PISI. Prediction for time 1985
+OVEN prediction finalized for year 1985
+Predicting for RBNU. Prediction for time 1985
+PISI prediction finalized for year 1985
+Predicting for SWTH. Prediction for time 1985
+RBNU prediction finalized for year 1985
+Predicting for TEWA. Prediction for time 1985
+SWTH prediction finalized for year 1985
+TEWA prediction finalized for year 1985
+Predicting for WETA. Prediction for time 1985
+Predicting for YRWA. Prediction for time 1985
+WETA prediction finalized for year 1985
+YRWA prediction finalized for year 1985
+starting worker pid=39762 on localhost:11188 at 16:35:39.879
+starting worker pid=39763 on localhost:11188 at 16:35:40.484
+starting worker pid=39764 on localhost:11188 at 16:35:41.280
+starting worker pid=39771 on localhost:11188 at 16:35:45.272
+starting worker pid=39772 on localhost:11188 at 16:35:45.859
+starting worker pid=39773 on localhost:11188 at 16:35:46.546
+starting worker pid=39780 on localhost:11188 at 16:35:50.523
+starting worker pid=39781 on localhost:11188 at 16:35:51.180
+starting worker pid=39782 on localhost:11188 at 16:35:51.857
+starting worker pid=39789 on localhost:11188 at 16:35:55.704
+starting worker pid=39790 on localhost:11188 at 16:35:56.442
+starting worker pid=39791 on localhost:11188 at 16:35:57.098
+starting worker pid=39798 on localhost:11188 at 16:36:00.881
+Predicting for BBWA. Prediction for time 1985
+BBWA prediction finalized for year 1985
+Predicting for BLPW. Prediction for time 1985
+Predicting for BOCH. Prediction for time 1985
+Predicting for BRCR. Prediction for time 1985
+Predicting for BTNW. Prediction for time 1985
+Predicting for CAWA. Prediction for time 1985
+Predicting for CMWA. Prediction for time 1985
+Predicting for CONW. Prediction for time 1985
+Predicting for OVEN. Prediction for time 1985
+Predicting for PISI. Prediction for time 1985
+Predicting for RBNU. Prediction for time 1985
+Predicting for SWTH. Prediction for time 1985
+Predicting for TEWA. Prediction for time 1985
+Predicting for WETA. Prediction for time 1985
+Predicting for YRWA. Prediction for time 1985
+Predicting for BBWA. Prediction for time 1985
+Predicting for BLPW. Prediction for time 1985
+Predicting for BOCH. Prediction for time 1985
+Predicting for BRCR. Prediction for time 1985
+Predicting for BTNW. Prediction for time 1985
+Predicting for CAWA. Prediction for time 1985
+Predicting for CMWA. Prediction for time 1985
+Predicting for CONW. Prediction for time 1985
+Predicting for OVEN. Prediction for time 1985
+Predicting for PISI. Prediction for time 1985
+Predicting for RBNU. Prediction for time 1985
+Predicting for SWTH. Prediction for time 1985
+Predicting for TEWA. Prediction for time 1985
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=40184 on localhost:11188 at 23:10:25.185
+starting worker pid=40189 on localhost:11188 at 23:10:27.953
+starting worker pid=40194 on localhost:11188 at 23:10:30.791
+starting worker pid=40195 on localhost:11188 at 23:10:31.313
+starting worker pid=40202 on localhost:11188 at 23:10:35.159
+starting worker pid=40203 on localhost:11188 at 23:10:35.730
+starting worker pid=40204 on localhost:11188 at 23:10:36.263
+starting worker pid=40211 on localhost:11188 at 23:10:40.063
+starting worker pid=40212 on localhost:11188 at 23:10:40.649
+starting worker pid=40217 on localhost:11188 at 23:10:43.358
+starting worker pid=40218 on localhost:11188 at 23:10:43.934
+starting worker pid=40223 on localhost:11188 at 23:10:46.709
+starting worker pid=40224 on localhost:11188 at 23:10:47.255
+starting worker pid=40245 on localhost:11188 at 23:17:16.488
+starting worker pid=40246 on localhost:11188 at 23:17:17.009
+starting worker pid=40247 on localhost:11188 at 23:17:17.540
+starting worker pid=40254 on localhost:11188 at 23:17:21.365
+starting worker pid=40255 on localhost:11188 at 23:17:21.903
+starting worker pid=40256 on localhost:11188 at 23:17:22.428
+starting worker pid=40263 on localhost:11188 at 23:17:26.287
+starting worker pid=40264 on localhost:11188 at 23:17:26.799
+starting worker pid=40265 on localhost:11188 at 23:17:27.320
+starting worker pid=40272 on localhost:11188 at 23:17:31.037
+starting worker pid=40273 on localhost:11188 at 23:17:31.570
+starting worker pid=40274 on localhost:11188 at 23:17:32.102
+starting worker pid=40281 on localhost:11188 at 23:17:35.887
+Predicting for BBWA. Prediction for time 1986
+Predicting for BLPW. Prediction for time 1986
+BBWA prediction finalized for year 1986
+Predicting for BOCH. Prediction for time 1986
+BLPW prediction finalized for year 1986
+Predicting for BRCR. Prediction for time 1986
+BOCH prediction finalized for year 1986
+Predicting for BTNW. Prediction for time 1986
+BRCR prediction finalized for year 1986
+Predicting for CAWA. Prediction for time 1986
+BTNW prediction finalized for year 1986
+Predicting for CMWA. Prediction for time 1986
+CAWA prediction finalized for year 1986
+Predicting for CONW. Prediction for time 1986
+CMWA prediction finalized for year 1986
+CONW prediction finalized for year 1986
+Predicting for OVEN. Prediction for time 1986
+Predicting for PISI. Prediction for time 1986
+OVEN prediction finalized for year 1986
+Predicting for RBNU. Prediction for time 1986
+PISI prediction finalized for year 1986
+Predicting for SWTH. Prediction for time 1986
+RBNU prediction finalized for year 1986
+Predicting for TEWA. Prediction for time 1986
+SWTH prediction finalized for year 1986
+TEWA prediction finalized for year 1986
+Predicting for WETA. Prediction for time 1986
+Predicting for YRWA. Prediction for time 1986
+WETA prediction finalized for year 1986
+YRWA prediction finalized for year 1986
+starting worker pid=41005 on localhost:11188 at 00:55:33.132
+starting worker pid=41006 on localhost:11188 at 00:55:34.572
+starting worker pid=41011 on localhost:11188 at 00:55:41.436
+starting worker pid=41012 on localhost:11188 at 00:55:42.769
+starting worker pid=41017 on localhost:11188 at 00:55:49.675
+starting worker pid=41018 on localhost:11188 at 00:55:51.025
+starting worker pid=41023 on localhost:11188 at 00:55:57.927
+starting worker pid=41024 on localhost:11188 at 00:55:59.272
+starting worker pid=41029 on localhost:11188 at 00:56:06.193
+starting worker pid=41030 on localhost:11188 at 00:56:07.560
+starting worker pid=41035 on localhost:11188 at 00:56:14.563
+starting worker pid=41036 on localhost:11188 at 00:56:15.909
+starting worker pid=41041 on localhost:11188 at 00:56:22.904
+starting worker pid=41690 on localhost:11188 at 01:58:19.768
+starting worker pid=41691 on localhost:11188 at 01:58:20.346
+starting worker pid=41692 on localhost:11188 at 01:58:20.942
+starting worker pid=41699 on localhost:11188 at 01:58:25.066
+starting worker pid=41700 on localhost:11188 at 01:58:25.646
+starting worker pid=41701 on localhost:11188 at 01:58:26.220
+starting worker pid=41708 on localhost:11188 at 01:58:30.397
+starting worker pid=41709 on localhost:11188 at 01:58:30.943
+starting worker pid=41710 on localhost:11188 at 01:58:31.582
+starting worker pid=41717 on localhost:11188 at 01:58:35.737
+starting worker pid=41718 on localhost:11188 at 01:58:36.305
+starting worker pid=41719 on localhost:11188 at 01:58:36.889
+starting worker pid=41726 on localhost:11188 at 01:58:41.127
+starting worker pid=42299 on localhost:11188 at 02:37:21.606
+starting worker pid=42300 on localhost:11188 at 02:37:22.512
+starting worker pid=42305 on localhost:11188 at 02:37:27.097
+starting worker pid=42306 on localhost:11188 at 02:37:28.023
+starting worker pid=42311 on localhost:11188 at 02:37:32.685
+starting worker pid=42312 on localhost:11188 at 02:37:33.654
+starting worker pid=42317 on localhost:11188 at 02:37:38.357
+starting worker pid=42318 on localhost:11188 at 02:37:39.312
+starting worker pid=42323 on localhost:11188 at 02:37:44.221
+starting worker pid=42324 on localhost:11188 at 02:37:45.276
+starting worker pid=42329 on localhost:11188 at 02:37:50.417
+starting worker pid=42330 on localhost:11188 at 02:37:51.612
+starting worker pid=42335 on localhost:11188 at 02:37:56.698
+Predicting for BBWA. Prediction for time 1988
+BBWA prediction finalized for year 1988
+Predicting for BLPW. Prediction for time 1988
+BLPW prediction finalized for year 1988
+Predicting for BOCH. Prediction for time 1988
+BOCH prediction finalized for year 1988
+Predicting for BRCR. Prediction for time 1988
+BRCR prediction finalized for year 1988
+Predicting for BTNW. Prediction for time 1988
+BTNW prediction finalized for year 1988
+Predicting for CAWA. Prediction for time 1988
+CAWA prediction finalized for year 1988
+Predicting for CMWA. Prediction for time 1988
+CMWA prediction finalized for year 1988
+Predicting for CONW. Prediction for time 1988
+CONW prediction finalized for year 1988
+Predicting for OVEN. Prediction for time 1988
+OVEN prediction finalized for year 1988
+Predicting for PISI. Prediction for time 1988
+PISI prediction finalized for year 1988
+Predicting for RBNU. Prediction for time 1988
+RBNU prediction finalized for year 1988
+Predicting for SWTH. Prediction for time 1988
+SWTH prediction finalized for year 1988
+Predicting for TEWA. Prediction for time 1988
+TEWA prediction finalized for year 1988
+Predicting for WETA. Prediction for time 1988
+WETA prediction finalized for year 1988
+Predicting for YRWA. Prediction for time 1988
+YRWA prediction finalized for year 1988
+starting worker pid=24822 on localhost:11342 at 22:53:48.457
+starting worker pid=24823 on localhost:11342 at 22:53:49.003
+starting worker pid=24824 on localhost:11342 at 22:53:49.562
+starting worker pid=24831 on localhost:11342 at 22:53:53.600
+starting worker pid=24832 on localhost:11342 at 22:53:54.240
+starting worker pid=24833 on localhost:11342 at 22:53:54.825
+starting worker pid=24840 on localhost:11342 at 22:53:58.872
+starting worker pid=24841 on localhost:11342 at 22:53:59.493
+starting worker pid=24842 on localhost:11342 at 22:54:00.074
+starting worker pid=24849 on localhost:11342 at 22:54:04.022
+starting worker pid=24850 on localhost:11342 at 22:54:04.702
+starting worker pid=24851 on localhost:11342 at 22:54:05.398
+starting worker pid=24858 on localhost:11342 at 22:54:09.594
+Predicting for BBWA. Prediction for time 2001
+Predicting for BLPW. Prediction for time 2001
+Predicting for BOCH. Prediction for time 2001
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=25602 on localhost:11342 at 23:18:42.086
+starting worker pid=25603 on localhost:11342 at 23:18:42.642
+starting worker pid=25608 on localhost:11342 at 23:18:45.595
+starting worker pid=25609 on localhost:11342 at 23:18:46.159
+starting worker pid=25610 on localhost:11342 at 23:18:46.711
+starting worker pid=25617 on localhost:11342 at 23:18:50.718
+starting worker pid=25618 on localhost:11342 at 23:18:51.422
+starting worker pid=25619 on localhost:11342 at 23:18:52.126
+starting worker pid=25626 on localhost:11342 at 23:18:56.158
+starting worker pid=25627 on localhost:11342 at 23:18:56.723
+starting worker pid=25628 on localhost:11342 at 23:18:57.297
+starting worker pid=25635 on localhost:11342 at 23:19:01.420
+starting worker pid=25636 on localhost:11342 at 23:19:01.985
+starting worker pid=25649 on localhost:11342 at 23:20:22.151
+starting worker pid=25650 on localhost:11342 at 23:20:22.724
+starting worker pid=25651 on localhost:11342 at 23:20:23.280
+starting worker pid=25658 on localhost:11342 at 23:20:27.280
+starting worker pid=25659 on localhost:11342 at 23:20:27.895
+starting worker pid=25660 on localhost:11342 at 23:20:28.454
+starting worker pid=25667 on localhost:11342 at 23:20:32.479
+starting worker pid=25668 on localhost:11342 at 23:20:33.060
+starting worker pid=25669 on localhost:11342 at 23:20:33.614
+starting worker pid=25676 on localhost:11342 at 23:20:38.081
+starting worker pid=25677 on localhost:11342 at 23:20:38.659
+starting worker pid=25678 on localhost:11342 at 23:20:39.222
+starting worker pid=25685 on localhost:11342 at 23:20:43.685
+starting worker pid=25686 on localhost:11342 at 23:20:44.249
+starting worker pid=25687 on localhost:11342 at 23:20:44.801
+starting worker pid=26187 on localhost:11630 at 23:42:31.152
+starting worker pid=26188 on localhost:11630 at 23:42:31.246
+starting worker pid=26189 on localhost:11630 at 23:42:31.338
+starting worker pid=26190 on localhost:11630 at 23:42:31.431
+starting worker pid=26195 on localhost:11630 at 23:42:31.930
+starting worker pid=26196 on localhost:11630 at 23:42:32.026
+starting worker pid=26197 on localhost:11630 at 23:42:32.123
+starting worker pid=26198 on localhost:11630 at 23:42:32.221
+starting worker pid=26199 on localhost:11630 at 23:42:32.319
+starting worker pid=26204 on localhost:11630 at 23:42:32.816
+starting worker pid=26205 on localhost:11630 at 23:42:32.912
+starting worker pid=26206 on localhost:11630 at 23:42:33.006
+starting worker pid=26207 on localhost:11630 at 23:42:33.101
+starting worker pid=26212 on localhost:11630 at 23:42:33.588
+starting worker pid=26213 on localhost:11630 at 23:42:33.684
+starting worker pid=26237 on localhost:11630 at 23:49:36.120
+starting worker pid=26238 on localhost:11630 at 23:49:36.208
+starting worker pid=26239 on localhost:11630 at 23:49:36.296
+starting worker pid=26240 on localhost:11630 at 23:49:36.384
+starting worker pid=26241 on localhost:11630 at 23:49:36.473
+starting worker pid=26246 on localhost:11630 at 23:49:36.924
+starting worker pid=26247 on localhost:11630 at 23:49:37.013
+starting worker pid=26248 on localhost:11630 at 23:49:37.101
+starting worker pid=26249 on localhost:11630 at 23:49:37.187
+starting worker pid=26250 on localhost:11630 at 23:49:37.275
+starting worker pid=26255 on localhost:11630 at 23:49:37.727
+starting worker pid=26256 on localhost:11630 at 23:49:37.818
+starting worker pid=26257 on localhost:11630 at 23:49:37.908
+starting worker pid=26258 on localhost:11630 at 23:49:37.997
+starting worker pid=26259 on localhost:11630 at 23:49:38.086
+starting worker pid=26341 on localhost:11630 at 23:53:04.530
+starting worker pid=26342 on localhost:11630 at 23:53:04.681
+starting worker pid=26343 on localhost:11630 at 23:53:04.831
+starting worker pid=26344 on localhost:11630 at 23:53:04.981
+starting worker pid=26349 on localhost:11630 at 23:53:05.754
+starting worker pid=26350 on localhost:11630 at 23:53:05.905
+starting worker pid=26351 on localhost:11630 at 23:53:06.056
+starting worker pid=26352 on localhost:11630 at 23:53:06.209
+starting worker pid=26357 on localhost:11630 at 23:53:06.985
+starting worker pid=26358 on localhost:11630 at 23:53:07.141
+starting worker pid=26359 on localhost:11630 at 23:53:07.300
+starting worker pid=26360 on localhost:11630 at 23:53:07.458
+starting worker pid=26365 on localhost:11630 at 23:53:08.254
+starting worker pid=26366 on localhost:11630 at 23:53:08.409
+starting worker pid=26367 on localhost:11630 at 23:53:08.563
+starting worker pid=26389 on localhost:11630 at 23:54:08.724
+starting worker pid=26390 on localhost:11630 at 23:54:08.938
+starting worker pid=26391 on localhost:11630 at 23:54:09.150
+starting worker pid=26392 on localhost:11630 at 23:54:09.360
+starting worker pid=26397 on localhost:11630 at 23:54:10.444
+starting worker pid=26398 on localhost:11630 at 23:54:10.664
+starting worker pid=26399 on localhost:11630 at 23:54:10.883
+starting worker pid=26400 on localhost:11630 at 23:54:11.103
+starting worker pid=26405 on localhost:11630 at 23:54:12.215
+starting worker pid=26406 on localhost:11630 at 23:54:12.433
+starting worker pid=26407 on localhost:11630 at 23:54:12.650
+starting worker pid=26408 on localhost:11630 at 23:54:12.864
+starting worker pid=26413 on localhost:11630 at 23:54:13.956
+starting worker pid=26414 on localhost:11630 at 23:54:14.190
+starting worker pid=26415 on localhost:11630 at 23:54:14.427
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=28762 on localhost:11042 at 00:11:57.335
+starting worker pid=28763 on localhost:11042 at 00:11:57.428
+starting worker pid=28764 on localhost:11042 at 00:11:57.521
+starting worker pid=28765 on localhost:11042 at 00:11:57.612
+starting worker pid=28766 on localhost:11042 at 00:11:57.703
+starting worker pid=28771 on localhost:11042 at 00:11:58.178
+starting worker pid=28772 on localhost:11042 at 00:11:58.273
+starting worker pid=28773 on localhost:11042 at 00:11:58.368
+starting worker pid=28774 on localhost:11042 at 00:11:58.461
+starting worker pid=28775 on localhost:11042 at 00:11:58.554
+starting worker pid=28780 on localhost:11042 at 00:11:59.031
+starting worker pid=28781 on localhost:11042 at 00:11:59.126
+starting worker pid=28782 on localhost:11042 at 00:11:59.218
+starting worker pid=28783 on localhost:11042 at 00:11:59.311
+starting worker pid=28784 on localhost:11042 at 00:11:59.402
+starting worker pid=28809 on localhost:11042 at 00:13:43.929
+starting worker pid=28814 on localhost:11042 at 00:13:44.524
+starting worker pid=28815 on localhost:11042 at 00:13:44.643
+starting worker pid=28816 on localhost:11042 at 00:13:44.758
+starting worker pid=28821 on localhost:11042 at 00:13:45.346
+starting worker pid=28822 on localhost:11042 at 00:13:45.464
+starting worker pid=28823 on localhost:11042 at 00:13:45.582
+starting worker pid=28828 on localhost:11042 at 00:13:46.188
+starting worker pid=28829 on localhost:11042 at 00:13:46.307
+starting worker pid=28830 on localhost:11042 at 00:13:46.424
+starting worker pid=28835 on localhost:11042 at 00:13:47.009
+starting worker pid=28836 on localhost:11042 at 00:13:47.126
+starting worker pid=28837 on localhost:11042 at 00:13:47.244
+starting worker pid=28842 on localhost:11042 at 00:13:47.839
+starting worker pid=28843 on localhost:11042 at 00:13:47.958
+Predicting for BBWA. Prediction for time 2001
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=28992 on localhost:11771 at 00:20:00.574
+starting worker pid=28993 on localhost:11771 at 00:20:00.670
+starting worker pid=28994 on localhost:11771 at 00:20:00.762
+starting worker pid=28995 on localhost:11771 at 00:20:00.855
+starting worker pid=29000 on localhost:11771 at 00:20:01.337
+starting worker pid=29002 on localhost:11771 at 00:20:01.431
+starting worker pid=29003 on localhost:11771 at 00:20:01.525
+starting worker pid=29004 on localhost:11771 at 00:20:01.618
+starting worker pid=29005 on localhost:11771 at 00:20:01.712
+starting worker pid=29010 on localhost:11771 at 00:20:02.195
+starting worker pid=29011 on localhost:11771 at 00:20:02.292
+starting worker pid=29012 on localhost:11771 at 00:20:02.387
+starting worker pid=29013 on localhost:11771 at 00:20:02.482
+starting worker pid=29014 on localhost:11771 at 00:20:02.574
+starting worker pid=29019 on localhost:11771 at 00:20:03.065
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=29251 on localhost:11749 at 00:25:27.554
+starting worker pid=29252 on localhost:11749 at 00:25:27.653
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=29377 on localhost:11407 at 00:28:32.872
+starting worker pid=29378 on localhost:11407 at 00:28:32.966
+Error in unserialize(node$con) : error reading from connection
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=29494 on localhost:11149 at 00:31:22.930
+starting worker pid=29495 on localhost:11149 at 00:31:23.028
+starting worker pid=29521 on localhost:11149 at 00:32:58.833
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=29858 on localhost:11136 at 00:38:56.460
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=30430 on localhost:11323 at 00:46:56.297
+starting worker pid=30732 on localhost:11635 at 00:54:32.690
+starting worker pid=30852 on localhost:11337 at 00:57:53.545
+Error in unserialize(node$con) : error reading from connection
+starting worker pid=30967 on localhost:11191 at 01:02:03.404
+starting worker pid=32187 on localhost:11191 at 16:33:53.590
+starting worker pid=32625 on localhost:11191 at 21:41:34.284
+Predicting for BBWA. Prediction for time 2001
+BBWA prediction finalized for year 2001
+Error in serialize(data, node$con, xdr = FALSE) : 
+  error writing to connection
+starting worker pid=37455 on localhost:11687 at 18:44:03.391
+starting worker pid=37456 on localhost:11687 at 18:44:03.492
+starting worker pid=37457 on localhost:11687 at 18:44:03.591
+starting worker pid=37458 on localhost:11687 at 18:44:03.688
+starting worker pid=37459 on localhost:11687 at 18:44:03.784
+starting worker pid=37460 on localhost:11687 at 18:44:03.879
+starting worker pid=37461 on localhost:11687 at 18:44:03.977
+starting worker pid=37462 on localhost:11687 at 18:44:04.077
+starting worker pid=37463 on localhost:11687 at 18:44:04.178
+starting worker pid=37464 on localhost:11687 at 18:44:04.280
+starting worker pid=37465 on localhost:11687 at 18:44:04.383
+starting worker pid=37466 on localhost:11687 at 18:44:04.487
+starting worker pid=37467 on localhost:11687 at 18:44:04.588
+Predicting for BBWA. Prediction for time 2001
+BBWA prediction finalized for year 2001
+Predicting for BLPW. Prediction for time 2001
+Error in unserialize(node$con) : error reading from connection
+BLPW prediction finalized for year 2001
+Error in serialize(data, node$con, xdr = FALSE) : 
+  error writing to connection
+Error in serialize(data, node$con, xdr = FALSE) : 
+  error writing to connection
+starting worker pid=37667 on localhost:11063 at 19:09:55.817
+starting worker pid=37676 on localhost:11063 at 19:09:56.174
+starting worker pid=37685 on localhost:11063 at 19:09:56.562
+starting worker pid=37694 on localhost:11063 at 19:09:56.910
+starting worker pid=37703 on localhost:11063 at 19:09:57.277
+starting worker pid=37712 on localhost:11063 at 19:09:57.639
+starting worker pid=37721 on localhost:11063 at 19:09:57.983
+starting worker pid=37730 on localhost:11063 at 19:09:58.356
+starting worker pid=37739 on localhost:11063 at 19:09:58.723
+starting worker pid=37748 on localhost:11063 at 19:09:59.097
+starting worker pid=37757 on localhost:11063 at 19:09:59.487
+starting worker pid=37766 on localhost:11063 at 19:09:59.837
+starting worker pid=37775 on localhost:11063 at 19:10:00.188
+Predicting for BBWA. Prediction for time 2001
+BBWA prediction finalized for year 2001
+Predicting for BLPW. Prediction for time 2001
+BLPW prediction finalized for year 2001
+Predicting for BOCH. Prediction for time 2001
+BOCH prediction finalized for year 2001
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+In addition: Warning message:
+In fun(libname, pkgname) : couldn't connect to display ":0"
+Execution halted
+Error in serialize(data, node$con) : error writing to connection
+Calls: <Anonymous> ... doTryCatch -> sendData -> sendData.SOCKnode -> serialize
+In addition: Warning message:
+In fun(libname, pkgname) : couldn't connect to display ":0"
+Execution halted
+Error in serialize(data, node$con) : error writing to connection
+Calls: <Anonymous> ... doTryCatch -> sendData -> sendData.SOCKnode -> serialize
+In addition: Warning message:
+In fun(libname, pkgname) : couldn't connect to display ":0"
+Execution halted
+Error in serialize(data, node$con) : error writing to connection
+Calls: <Anonymous> ... doTryCatch -> sendData -> sendData.SOCKnode -> serialize
+In addition: Warning message:
+In fun(libname, pkgname) : couldn't connect to display ":0"
+Execution halted

@@ -1,0 +1,5 @@
+"file" "checksum" "filesize" "algorithm"
+"Final_points_2010.csv" "ad2d5682b6f56ac8" "23754425" "xxhash64"
+"Minidataset_master29JAN19.csv" "2e6fa50887f5034d" "4826366" "xxhash64"
+"Minidataset_master.csv" "c525ed95f3598dfe" "4416339" "xxhash64"
+"Minidataset_master_withAgent.csv" "4f5e4addfd602189" "5334437" "xxhash64"

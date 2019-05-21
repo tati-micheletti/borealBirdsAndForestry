@@ -1,9 +1,9 @@
-predictDensities <- function(birdSpecies = sim$birdSpecies,
-                             disturbanceRas = sim$focalYearList[[paste0("Year", time(sim))]],
-                             birdDensityRasters = sim$birdDensityRasters,
-                             currentTime = time(sim),
-                             modelList = sim$models,
-                             pathData = cachePath(sim)) {
+predictDensities <- function(birdSpecies,
+                             disturbanceRas,
+                             birdDensityRasters,
+                             currentTime,
+                             modelList,
+                             pathData) {
 
 predictionPerSpecies <-  lapply(birdSpecies, function(spName){ # I can paralellize the predictions up to 3 times safely apparently. It in only consuming 16Gb per species
   message(crayon::yellow("Stacking rasters for ", spName , " prediction"))

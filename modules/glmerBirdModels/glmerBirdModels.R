@@ -83,6 +83,7 @@ doEvent.glmerBirdModels = function(sim, eventTime, eventType, debug = FALSE) {
                                   avoidAlbertosData = P(sim)$avoidAlbertosData,
                                   SQLTableName = "SQLData",
                                   envirSim = envir(sim))
+browser()
         # Clean some of the data: Apparently in this new DS (29JAN19 - "Minidataset_master29JAN19.csv"), there are some 
         # really small "disturbances" in State_P_500 (10^-7) which are probably just
         # GIS overlay problems. They are classified as "" in Agent_500

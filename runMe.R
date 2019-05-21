@@ -6,13 +6,23 @@
 # If using parallel, to view messages (in BorealCloud): tail -f /mnt/data/Micheletti/borealBirdsAndForestry/cache/logParallelFocal
 
 # Testing for install of GDAL / These scripts are temporarily in the 'inputs' folder. Should be pushed to 'pemisc' once it is working/passing again.
-source(file.path(getwd(), "inputs", "isGDALInstalled.R"))
-source(file.path(getwd(), "inputs", "defineStudyArea.R"))
+setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
+invisible(sapply(X = list.files(file.path(getwd(), "functions"), 
+                                full.names = TRUE), FUN = source))
 if (!isGDALInstalled()) message("GDAL was not found in your computer, please make sure you install it before running these modules.")
 if (!length(Sys.which("unzip")) > 0) message("unzip was not found in your computer, please make sure you install it before running these modules.")
-invisible(sapply(X = list.files(file.path(getwd(), "functions"), full.names = TRUE), FUN = source))
 
+# We also need to set a 'scratch' temporary folder for raster (if our home folder doesn't have enough space)
+maxMemory <- 5e+12
+user <- pemisc::user()
+scratchDir <- reproducible::checkPath(path = paste0("/mnt/tmp/rasterTMP/", user), create = TRUE)
+
+#Here we check that the creation of the folder worked (we might have problems with writting access, only tested with my own user)
+if(dir.create(scratchDir)) system(paste0("sudo chmod -R 777 /mnt/tmp/rasterTMP"), wait = TRUE) 
+raster::rasterOptions(default = TRUE)
+options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
 # Make sure all packages are updated
+# update.packages(checkBuilt = TRUE)
 # devtools::install_github("PredictiveEcology/LandR")
 # devtools::install_github("PredictiveEcology/reproducible@development")
 # devtools::install_github("PredictiveEcology/map")
@@ -35,32 +45,29 @@ Paths <- list(
   outputPath = file.path(workDirectory, "outputs")
 )
 
-# If setTmpFolder == TRUE, a temporary folder will be created inside the cache folder set. 
-# This can/should be changed later for other projects using:
-# ===> In Windows:
-# write(TMPDIR = '<path/to/tempFolder>'), file = file.path(Sys.getenv('R_USER'), '.Renviron'))
-# ===> In Linux/MacOS:
-# tryCatch(library(unixtools),
-#   error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
-#   unixtools::set.tempdir(<path/to/tempFolder>)
+# Set temp folder
+tryCatch(library(unixtools),
+  error = function(e) install.packages("unixtools", repos = 'http://www.rforge.net/'))
+  unixtools::set.tempdir(file.path(dirname(getwd()), "tmp"))
+  
 options('spades.moduleCodeChecks' = FALSE)
 options('reproducible.useNewDigestAlgorithm' = FALSE)
-options("reproducible.cachePath" = paths$cachePath)
-SpaDES.core::setPaths(modulePath = paths$modulePath, inputPath = paths$inputPath, outputPath = paths$outputPath, cachePath = paths$cachePath)
+options("reproducible.cachePath" = Paths$cachePath)
+SpaDES.core::setPaths(modulePath = Paths$modulePath, inputPath = Paths$inputPath, outputPath = Paths$outputPath, cachePath = Paths$cachePath)
 
 # Check for any log leftovers
-leftoverLogs <- list.files(paths$cachePath, pattern = "logParallel")
+leftoverLogs <- list.files(Paths$cachePath, pattern = "logParallel")
 if (length(leftoverLogs) != 0)
-  unlink(file.path(paths$cachePath, leftoverLogs))
+  unlink(file.path(Paths$cachePath, leftoverLogs))
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels")
+modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels")#"predictBirds", "birdDensityTrends")
 # modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "predictBirds", "birdDensityTrends")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdDensityTrends", "finalRasterPlots"
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 2011, timeunit = "year")
+times <- list(start = 1985, end = 2011, timeunit = "year") # Cada 16 anos levam em media 12 horas. TOMORROW NIGHT: 2001 - 2011
 parameters <- list(
   birdDensityBCR_Prov_LCC = list(extractFrom4kRasters = FALSE,
                                  avoidAlbertosData = TRUE,
@@ -83,6 +90,7 @@ parameters <- list(
                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
                           useParallel = NULL, #"local", # Local parallel for 500m not working apparently
                           nNodes = 1), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
+  predictBirds = list(useParallel = FALSE),
   birdDensityTrends = list(plotting = FALSE)
 )
 
@@ -94,9 +102,30 @@ tryCatch(googledrive::drive_download(file = googledrive::as_id("1KoL6QzKqCiBUZ8i
          error = function(e){message("Files are already present and won't be overwritten")})
 models <- readRDS(file = file.path(getPaths()$modulePath, "glmerBirdModels/data/models.rds"))
 data <- readRDS(file = file.path(getPaths()$modulePath, "glmerBirdModels/data/data.rds"))
+disturbancePredict <- "Transitional"
+birdSpecies <- c("BBWA", # Bird species to run the models for
+                "BLPW",
+                "BOCH",
+                "BRCR",
+                "BTNW",
+                "CAWA",
+                "CMWA",
+                "CONW",
+                "OVEN",
+                "PISI",
+                "RBNU",
+                "SWTH",
+                "TEWA",
+                "WETA",
+                "YRWA"
+)
+
+predictModels <- subsetModels(birdSp = birdSpecies, disturbancePredict = disturbancePredict, 
+                       prmt = parameters, models = models)
 
 .objects <- list( # Possible to include 'rP' directly here as a shapefile!
-  models = models,
+  predictModels = predictModels,
+  # models = predictModels,
   data = data,
   mapSubset = "Canada", # "Canada" or Provinces to run at once. Good to subset provinces still within the boreal
   specificTestArea = "boreal", # "boreal", or canadian provinces
@@ -104,25 +133,10 @@ data <- readRDS(file = file.path(getPaths()$modulePath, "glmerBirdModels/data/da
   SQLServer = "boreal.biology.ualberta.ca", # Data retrieving from SQL: server
   SQLDatabase = "BAM_National_V4_2015_0206", # Data retrieving from SQL: specific database
   dataName = "Minidataset_master29JAN19.csv", # Alberto's manuscript data to select points and GIS. Data are, however coming from SQL.
-  birdSpecies = c("BBWA", # Bird species to run the models for
-                  "BLPW",
-                  "BOCH",
-                  "BRCR",
-                  "BTNW",
-                  "CAWA",
-                  "CMWA",
-                  "CONW",
-                  "OVEN",
-                  "PISI",
-                  "RBNU",
-                  "SWTH",
-                  "TEWA",
-                  "WETA",
-                  "YRWA"
-  ),
+  birdSpecies = birdSpecies,
   typeDisturbance = c("Transitional", "Permanent", "Both"), #, "Permanent", "Both"
   disturbanceDimension = c("local", "neighborhood", "LocalUndisturbed"), #, "neighborhood", "LocalUndisturbed"
-  disturbancePredict = c("Transitional")#, # Needs to match disturbanceClass from prediction module. Type of disturbance we want to predict from.
+  disturbancePredict = disturbancePredict #, # Needs to match disturbanceClass from prediction module. Type of disturbance we want to predict from.
   # Raster1 = NA, # direct path to locally stored object as a "character string.
   # urlRaster1 = NA, #If you want to download the object from a specific url that not the default, specify the url as a "character string" here
   # Use the same logic for Raster2 and Raster3
@@ -131,12 +145,6 @@ data <- readRDS(file = file.path(getPaths()$modulePath, "glmerBirdModels/data/da
 clearPlot()
 
 #file.remove("/mnt/storage/borealBirdsAndForestry/cache/logParallel")
-
-# outputsGLMER <- data.frame(
-#   objectName = c("models",
-#                  "data"),
-#   saveTime = c(rep(times$end, 2))
-# )
 
 ## Simulation setup
 borealBirds100 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
