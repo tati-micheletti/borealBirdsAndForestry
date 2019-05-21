@@ -6,43 +6,52 @@ output: pdf_document
 ---
 
 # Overview
+Still to do:
+1. Need to use the 'data' rds ("https://drive.google.com/open?id=1KoL6QzKqCiBUZ8i6O-llCiit0G2APWLI"), as the Minidataset*.csv doesn't have all information. However: this one is a list already. Need to be rbindlisted (only forestry ones, both scales) and duplicated lines excluded.
+2. Add age to this "final" dataset. Should do all prep (step 1) in a new function before passing to dataframeBuilding.
+3. Correct age2004 for correct age based on the column YYYY
+4. dataframeBuilding function needs to make a list with copies of all the values of the model and the specific bird sp offset and log and count (bird names on the cols): each element of the named list is a data.frame with all info for one bird species
+5. Do data checking on Age?
+6. Create the data.frame that I want to populate:
 
-Provide an overview of what the module does / how to use the module.
+Abundance = NA (the one parameter to monitor!),
+estimate = log of estimate based on LCC_BCR (I have this table somewhere!),
+age = corrected growth 1985-2011 based off of 2004 layer (and maybe double check the disturbances?! See item 5.),
+disturbance = values from the focal rasterstack, 
+X = coordenadas X from "template raster" (one of the mergedFocal?) for all pixels to forecast (maybe would be smart to crop to only the pixels that are within Sp distribution for computation time?),
+Y = same as x,
+offsets = NA
 
-Module documentation should be written so that others can use your module.
-This is a template for module documentation, and should be changed to reflect your module.
-
-## R Markdown
-
-R Markdown syntax allows R code, outputs, and figures to be rendered in the documentation.
-
-For help writing in R Markdown, see http://rmarkdown.rstudio.com/.
-
+7. Put the DF in the model and figure out after that...
+# NOT SUREIT IS WORTH IT SEPARATE EACH YEAR OR DO THE WHOLE PREDICTION FOR ALL YEARS... Might be too heavy?!
 # Usage
 
 ```{r module_usage}
-library(SpaDES)
+library("SpaDES")
 
-setPaths(modulePath = file.path("C:/Users/tmichele/GitHub/borealBirdsAndForestry/modules"))
+setPaths(modulePath = file.path(getwd(), "modules"))
 getPaths() # shows where the 4 relevant paths are
+invisible(sapply(X = list.files(file.path(getwd(), "functions"), full.names = TRUE), FUN = source))
 
-times <- list(start = 0, end = 10)
+times <- list(start = 1985, end = 1985)
 
 parameters <- list(
-  #.progress = list(type = "text", interval = 1), # for a progress bar
-  ## If there are further modules, each can have its own set of parameters:
-  #module1 = list(param1 = value1, param2 = value2),
-  #module2 = list(param1 = value1, param2 = value2)
 )
-modules <- list("bayesianBirdModel")
-objects <- list()
+
+modules <- list("birdDensityBCR_Prov_LCC", "bayesianBirdModel")
+
+rp <- Cache(defineStudyArea, testArea = TRUE, 
+                          specificTestArea = "boreal",
+                          mapSubset = "Alberta")
+
+.objects <- list("rP" = rp,
+                 "birdSpecies" = c("BBWA", "BOCH"))
 inputs <- list()
 outputs <- list()
 
-mySim <- simInit(times = times, params = parameters, modules = modules,
-                 objects = objects)
+bayes <- simInitAndSpades(times = times, params = parameters, modules = modules,
+                 objects = .objects, debug = 2)
 
-mySimOut <- spades(mySim)
 ```
 
 # Events

@@ -56,11 +56,11 @@ defineStudyArea <- function(testArea = NULL, specificTestArea = NULL, mapSubset 
             )
           }
           if (!is.null(mapSubset) && mapSubset != "Canada") {
-            sA <- prepInputs(url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
+            sA <- prepInputs(url = "https://drive.google.com/open?id=1OhAAnSvi_9ycpv2urGO3IJGzXdX5ZxX2",
                           targetFile = "gpr_000b11a_e.shp",
                           alsoExtract = "similar",
-                          destinationPath = destinationFolder) %>%
-              raster::subset(PRENAME %in% mapSubset)
+                          destinationPath = destinationFolder)
+              sA <- raster::subset(sA, PRENAME %in% mapSubset)
             if (nrow(sA@data) == 0) {
               stop(paste0("There is no Canadian Province called ",
                           mapSubset,
@@ -83,11 +83,11 @@ defineStudyArea <- function(testArea = NULL, specificTestArea = NULL, mapSubset 
           }
         } else {
           if (!is.null(specificTestArea)) {
-            rP <- prepInputs(url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/gpr_000b11a_e.zip",
+            rP <- prepInputs(url = "https://drive.google.com/open?id=1OhAAnSvi_9ycpv2urGO3IJGzXdX5ZxX2",
                             targetFile = "gpr_000b11a_e.shp",
                             alsoExtract = "similar",
-                            destinationPath = destinationFolder) %>%
-              raster::subset(PRENAME == specificTestArea)
+                            destinationPath = destinationFolder)
+            rP <- raster::subset(rP, PRENAME == specificTestArea)
             if (nrow(rP@data) == 0) {
               stop(paste0("There is no Canadian Province called ",
                           specificTestArea,
