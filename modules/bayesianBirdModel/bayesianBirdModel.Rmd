@@ -65,6 +65,9 @@ bayes <- simInitAndSpades(times = times, params = parameters, modules = modules,
       
       # Obvious outcomes
       #   NN > NL
+      # Wrong! The observation per se is at local scale. NN would only indicate the observation at local scale with Ndisturbance!
+      # Therefore we use the offsets here, to correct back for counts, and on the NL we don't, as we have already counts entered as a 
+      # covariate. 
       
       
       #   # Assumptions

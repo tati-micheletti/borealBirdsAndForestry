@@ -11,7 +11,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "bayesianBirdModel.Rmd"),
-  reqdPkgs = list("googledrive", "data.table", "raster", "stats", "gstat", "LandR", "stringr"),
+  reqdPkgs = list("googledrive", "data.table", "raster", "stats", "gstat", "LandR", "stringr", "nimble"),
   parameters = rbind(
     defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant"),
     defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
@@ -53,42 +53,34 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, time(sim), "bayesianBirdModel", "model")
     },
     model = {
-      
+      message(paste0("Building the statistical data frame..."))
       sim$fixedDT <- dataframeBuilding(birdData = sim$data, 
                                   birdSpecies = sim$birdSpecies,
                                   ageMap = sim$ageMap)
       
-      browser() # Need to build the next function
-      # Don't forget:
-      # Need to add the expected age at the time currentTime (similar to what I did in dataframeBuilding)
-      # Need to crop, mask and extract the values from the rasters to a DT:
-      #     ageMap (YES, this too!)
-      #     focalRasters: need to grep which ones are currentYear
-      #     birdDensityRasters: don't forget to log these!
-      # Think about cummulative disturbance: should this be per year? (i.e. dist1986 = dist1986-dist1985) THINK THIS WOULD COMPLICATE TOO MUCH!
-      # I would just keep it as is (cumm dist) and just age the forest 
-      sim$yearDT <- buildYearlyDT(currentTime = time(sim),
-                                  pathData = dataPath(sim),
-                                  rP = sim$rP,
-                                  ageMap = sim$ageMap,
-                                  fixedDT = sim$fixedDT,
-                                  focalRasters = sim$focalRasters,
-                                  birdDensityRasters = sim$birdDensityRasters)
-
-
-      # 5. Create the data.frame that I want to populate: - NEXT FUNCTION. 
-      # This one should be cached just to be added every year to the one I really want to monitor
-      # 
-      # Abundance = NA (the one parameter to monitor!),
-      # estimate = log of estimate based on LCC_BCR (I have this table somewhere!),
-      # age = corrected growth 1985-2011 based off of 2004 layer (and maybe double check the disturbances?! See item 5.),
-      # disturbance = values from the focal rasterstack, 
-      # X = coordenadas X from "template raster" (one of the mergedFocal?) for all pixels to 
-      # forecast (maybe would be smart to crop to only the pixels that are within Sp distribution for computation time?),
-      # Y = same as x,
-      # offsets = NA
-      # 
-      # 6. Put the DF in the model and figure out after that...  
+      sim$yearDT <- lapply(X = seq_along(sim$birdSpecies), 
+                           FUN = function(index){
+                             buildYearlyDT(
+                               currentTime = time(sim),
+                               pathData = dataPath(sim),
+                               rP = sim$rP,
+                               ageMap = sim$ageMap,
+                               fixedDT = sim$fixedDT[[index]],
+                               focalRasters = sim$focalRasters,
+                               birdDensityRasters = sim$birdDensityRasters[[index]])
+                             })
+      names(sim$yearDT) <- sim$birdSpecies
+      
+      sim$predictHierarchicalModel <- lapply(X = seq_along(sim$birdSpecies),
+                                         FUN = function(index){
+                                           predictHierarchicalModel(
+                                             bird = index,
+                                             birdList = sim$birdSpecies,
+                                             currentYearBirdData = sim$yearDT[[index]],
+                                             currentTime = time(sim),
+                                             pathData = dataPath(sim))
+                                           })
+      browser() # Rebuild the rasters
     },
     
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -148,6 +140,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
       ras <- raster::raster(fileToLoad)
     })
     )
+    names(sim$birdDensityRasters) <- sim$birdSpecies
   }
   
   return(invisible(sim))

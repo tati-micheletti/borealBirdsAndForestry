@@ -42,7 +42,7 @@ dataframeBuilding <- function(birdData,
   
   listOfTables <- lapply(X = birdSpecies, FUN = function(sp){
     birdDependentVars <- grepMulti(x = names(birdDataFinal), patterns = sp)[-2] # Hack for excluding DENSITY (keep logDENSITY)
-    IndependentVars <- c("X", "Y", "State_P_100", "State_P_500", "correctedAge") #"YYYY", "ClusterSP", [ FIX ] TO ADD RE ADD THESE
+    IndependentVars <- c("X", "Y", "State_P_100", "State_P_500", "correctedAge", "YYYY", "ClusterSP")
     varsToKeep <- c(IndependentVars, birdDependentVars)
     spDT <- birdDataFinal[, ..varsToKeep]
     return(spDT)
