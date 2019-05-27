@@ -15,13 +15,19 @@
 # 1. Bird density might vary depending on cluster (RE)
 # 2. Bird density might vary depending on the year (RE)
 
+# May 2019 Observations
+# 1st: Try without RE.
+# What do I need in the dataset?
+# Covariates: 
+# To test, I can crop these to a smaller area (say 10000 ha around x = -71.14925, y = 47.26242 or 
+# crop to a province like Alberta)
 
-bayesModel <- function(birdData = sim$birdData, 
-                       birdSpecies = sim$birdSpecies, 
-                       ageMap = sim$ageMap,
-                       beads = sim$beads,
-                       dataPath = dataPath(sim),
-                       rP = sim$rP){
+bayesModel <- function(birdData, 
+                       birdSpecies, 
+                       ageMap,
+                       beads,
+                       dataPath,
+                       rP){
   
   browser()
   # Subsetting to avoid using data from other types of disturbance
@@ -32,6 +38,7 @@ bayesModel <- function(birdData = sim$birdData,
   if(!is.null(rP)){ # If we have a test study area
   
     # Crop data Already have a code for that
+    # Converting the dataset to a shapefile - is this really necessary?!
     BDFcoor <- birdDataFinal
     coordinates(BDFcoor)=~X+Y
     proj4string(BDFcoor)<- CRS("+proj=longlat +datum=WGS84") # Seems to be aligning, confirm data is only for boreal forest
