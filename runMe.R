@@ -31,17 +31,18 @@ options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
 # devtools::install_github("PredictiveEcology/SpaDES.tools@development")
 # devtools::install_github("PredictiveEcology/pemisc@development")
 
-library(SpaDES.core)
-library(SpaDES.tools)
-reproducible::Require(ggplot2)
-reproducible::Require(ggalt)
+library("SpaDES.core")
+library("SpaDES.tools")
+reproducible::Require("ggplot2")
+reproducible::Require("ggalt")
 
+if (quickPlot::isRstudioServer()) options(httr_oob_default = TRUE)
 workDirectory <- getwd()
 
 Paths <- list(
   cachePath = file.path(workDirectory, "cache"),
   modulePath = file.path(workDirectory, "modules"),
-  inputPath = file.path(workDirectory, "inputs"),
+  inputPath = file.path(workDirectory, "modules/predictBirds/data/"),
   outputPath = file.path(workDirectory, "outputs")
 )
 
@@ -53,7 +54,10 @@ tryCatch(library(unixtools),
 options('spades.moduleCodeChecks' = FALSE)
 options('reproducible.useNewDigestAlgorithm' = FALSE)
 options("reproducible.cachePath" = Paths$cachePath)
-SpaDES.core::setPaths(modulePath = Paths$modulePath, inputPath = Paths$inputPath, outputPath = Paths$outputPath, cachePath = Paths$cachePath)
+SpaDES.core::setPaths(modulePath = Paths$modulePath, 
+                      inputPath = Paths$inputPath, 
+                      outputPath = Paths$outputPath, 
+                      cachePath = Paths$cachePath)
 
 # Check for any log leftovers
 leftoverLogs <- list.files(Paths$cachePath, pattern = "logParallel")
@@ -61,13 +65,13 @@ if (length(leftoverLogs) != 0)
   unlink(file.path(Paths$cachePath, leftoverLogs))
 
 ## list the modules to use
-modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels")#"predictBirds", "birdDensityTrends")
+modules <- list("birdDensityTrends")#"predictBirds", "birdDensityTrends")
 # modules <- list("birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "predictBirds", "birdDensityTrends")
 #Complete set of modules: "birdDensityBCR_Prov_LCC", "loadOffsetsBAM", "glmerBirdModels", "prepTiles",
 # "focalCalculation", "predictBirds", "birdDensityTrends", "finalRasterPlots"
 
 ## Set simulation and module parameters
-times <- list(start = 1985, end = 2011, timeunit = "year") # Cada 16 anos levam em media 12 horas. TOMORROW NIGHT: 2001 - 2011
+times <- list(start = 1985, end = 2011, timeunit = "year")
 parameters <- list(
   birdDensityBCR_Prov_LCC = list(extractFrom4kRasters = FALSE,
                                  avoidAlbertosData = TRUE,
@@ -91,7 +95,8 @@ parameters <- list(
                           useParallel = NULL, #"local", # Local parallel for 500m not working apparently
                           nNodes = 1), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
   predictBirds = list(useParallel = FALSE),
-  birdDensityTrends = list(plotting = FALSE)
+  birdDensityTrends = list(plotting = FALSE,
+                           useParallel = TRUE)
 )
 
 tryCatch(googledrive::drive_download(file = googledrive::as_id("1S4ryXaqp0ZdW_yPBuYtNSPW5Mp1ft3R5"), 
@@ -125,6 +130,7 @@ predictModels <- subsetModels(birdSp = birdSpecies, disturbancePredict = disturb
 
 .objects <- list( # Possible to include 'rP' directly here as a shapefile!
   predictModels = predictModels,
+  focalDistance = 100, # Should be provided only if the trends module is the only one used
   # models = predictModels,
   data = data,
   mapSubset = "Canada", # "Canada" or Provinces to run at once. Good to subset provinces still within the boreal
@@ -147,9 +153,23 @@ clearPlot()
 #file.remove("/mnt/storage/borealBirdsAndForestry/cache/logParallel")
 
 ## Simulation setup
-borealBirds100 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
+localScale = TRUE
+if (localScale) {
+  borealTRENDS_100 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
                                                 modules = modules, paths =  Paths,
                                                 objects = .objects, debug = 2)
+
+saveRDS(borealTRENDS_100, file = file.path(getwd(), "outputs/17JUN19/borealTRENDS_100.rds"))
+rm(borealTRENDS_100)
+} else {
+  .objects <- list(
+  focalDistance = 500)
+
+borealTRENDS_500 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
+                                                  modules = modules, paths =  Paths,
+                                                  objects = .objects, debug = 2)
+saveRDS(borealTRENDS_500, file = file.path(getwd(), "outputs/17JUN19/borealTRENDS_500.rds"))
+}
 
 # reproducible::Require(googledrive)
 # googledrive::drive_upload(file.path(getwd(), "outputs/models.rds"), 
