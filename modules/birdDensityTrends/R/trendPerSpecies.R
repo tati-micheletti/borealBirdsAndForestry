@@ -1,9 +1,11 @@
-trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
-                            focalDistance = NULL,
-                            predictRas = sim$predictRas,
-                            startTime = start(sim),
-                            endTime = end(sim),
-                            outPath = cachePath(sim)){
+trendPerSpecies <- function(birdSpecies,
+                            focalDistance,
+                            predictRas,
+                            startTime,
+                            endTime,
+                            outPath,
+                            nx,
+                            ny){
   if (!identical(names(predictRas[[1]]), birdSpecies)){
     stop("Your species list and predicted rasters do not match. Please revise the code")
   }
@@ -13,7 +15,7 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
                              , Sys.time(), ")")))
   trends <- lapply(X = 1:length(birdSpecies), FUN = function(sp){
     birdTS <- lapply(predictRas, `[[`, birdSpecies[sp])
-    
+    birdTS <- lapply(X = birdTS, FUN = raster::raster)
     # Rasters are still too big to fit memory. Splitting and selecting each group:
     suppressWarnings(dir.create(path = file.path(outPath, paste0("trends", focalDistance))))
     mergedTilesName <- file.path(outPath, paste0("trends", focalDistance), 
@@ -27,7 +29,7 @@ trendPerSpecies <- function(birdSpecies = sim$birdSpecies,
     } else {
       splittedPath <- file.path(outPath, paste0("trends", focalDistance))
       message(crayon::yellow(paste0("Splitting rasters for ", birdSpecies[sp], " (Time: ", Sys.time(), ")")))
-      splittedList <- Cache(lapply, X = birdTS, splitRaster, nx = 1, ny = 1, buffer = c(800, 800),
+      splittedList <- Cache(lapply, X = birdTS, splitRaster, nx = nx, ny = ny, buffer = c(800, 800),
                             path = splittedPath, userTags = paste0("splitTrends", focalDistance, birdSpecies[sp]))
       totalTiles <- unique(lengths(splittedList))
       lengthVector <- 1:totalTiles
