@@ -16,6 +16,8 @@ defineModule(sim, list(
   parameters = rbind(
     defineParameter("plotting", "logical", TRUE, NA, NA, paste0("This describes if the ", 
                     "plotting event should occur")),
+    defineParameter("onlySignificant", "logical", TRUE, NA, NA, paste0("If TRUE, masks out the non-significant", 
+                                                                        "coefficient from birds' trend")),
     defineParameter("useParallel", "logical", FALSE, NA, NA, paste0("Use parallel")),
     defineParameter("nx", "numeric", 2, NA, NA, paste0("tiling using how many rows")),
     defineParameter("ny", "numeric", 2, NA, NA, paste0("tiling using how many columns")),
@@ -58,7 +60,8 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
                                     predictRas = sim$predictRas,
                                     startTime = start(sim),
                                     endTime = end(sim),
-                                    outPath = cachePath(sim),
+                                    outPath = outputPath(sim),
+                                    onlySignificant = P(sim)$onlySignificant,
                                     userTags = paste0("trendYears", sim$focalDistance,"TS:",
                                                       start(sim), ":",
                                                       end(sim)))
@@ -100,8 +103,8 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
   if (!suppliedElsewhere("predictRas", sim)){
     sim$predictRas <- lapply(start(sim):end(sim), function(year){
       if (is.null(sim$birdSpecies)){
-        message(paste0("No species list found. Using fake data for bay-breasted", 
-                       " warbler and canada warbler (BBWA and CAWA)"))
+        message(crayon::red(paste0("No species list found. Using fake data for bay-breasted", 
+                       " warbler and canada warbler (BBWA and CAWA)")))
         sim$birdSpecies <- c("BBWA", "CAWA")
       }
       predictRasBird <- lapply(sim$birdSpecies, function(bird){
@@ -133,9 +136,9 @@ doEvent.birdDensityTrends = function(sim, eventTime, eventType) {
   }
 
   if (is.null(sim$predictRas)){
-    message(paste0("No bird density raster found.",
+    message(crayon::red(paste0("No bird density raster found.",
                    " Using fake time series rasters for BBWA and CAWA for years ",
-                   start(sim), " to ", end(sim)))
+                   start(sim), " to ", end(sim))))
     sim$predictRas <- Cache(createRandomRasterList, rastersPerList = length(sim$birdSpecies),
                             numberOfLists = length(start(sim):end(sim)),
                             returnPaths = FALSE,

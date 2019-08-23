@@ -15,6 +15,9 @@ defineModule(sim, list(
   documentation = list("README.txt", "predictBirds.Rmd"),
   reqdPkgs = list("raster"),
   parameters = rbind(
+    defineParameter("savePredVectors", "logical", FALSE, NA, NA, 
+                    paste0("Should predicted vectors be saved right after prediction and retur the path to the file?",
+                           "This is useful for low memory computers to avoid crashing")),
     defineParameter("useParallel", "logical", FALSE, NA, NA, 
                     paste0("Use parallel? Especifically for this module, when using a 1TB 56cores BorealCloud",
                            "not using paralell was 43% faster than using it, even if passing all rasters in memory,",
@@ -70,7 +73,7 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
 
       if (is.null(sim$predictModels)){ # Data sanity check
           stop("PredictModels was not found and default did not load test data. Revise code")
-        }
+      }
         if (!identical(sim$birdSpecies, names(sim$predictModels)) | 
             !identical(sim$birdSpecies, names(sim$birdDensityRasters))){ # Data sanity check
           stop("birdSpecies, predictModels and densityRasters don't match the species' order. Revise code")
@@ -106,13 +109,16 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
           }
           
           sim$focalYearList[[paste0("Year", time(sim))]][] <- sim$focalYearList[[paste0("Year", time(sim))]][]
-          sim$birdDensityRasters <- lapply(sim$birdDensityRasters, function(r){
-            r <- raster::raster(r)
-            r[] <- r[]
-            return(r)
-          })
-          
+          if (class(sim$birdDensityRasters[[1]]) == "character"){
+            sim$birdDensityRasters <- lapply(sim$birdDensityRasters, function(r){
+              r <- raster::raster(r)
+              r[] <- r[]
+              return(r)
+            }) 
+          }
+
           # Snapping layers to make sure it will work
+          
           sim$birdDensityRasters <- lapply(X = sim$birdDensityRasters, FUN = function(lay){
             raster::extent(lay) <- raster::alignExtent(extent = raster::extent(lay),
                                                        object = sim$focalYearList[[paste0("Year", time(sim))]],
@@ -150,21 +156,40 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
                                                     birdDensityRas = birdDensityVectors[[index]],
                                                     pathData = dataPath(sim),
                                                     disturbanceRas = disturbanceRasVector,
-                                                    currentTime = time(sim))
+                                                    currentTime = time(sim),
+                                                    savePredVectors = P(sim)$savePredVectors)
                                    })
             }
-            
+            message("Predictions finished. Converting vectors into rasters.", " TIME: ", Sys.time())
             # Reconvert vectors into rasters
             rm(disturbanceRasVector)
             rm(birdDensityVectors)
             invisible(gc())
-            sim$predictRas[[paste0("Year", time(sim))]] <- lapply(predictVec, FUN = function(spVec){
+            if (length(names(predictVec))==0){
+              names(predictVec) <- sim$birdSpecies
+            }
+            sim$predictRas[[paste0("Year", time(sim))]] <- lapply(names(predictVec), FUN = function(bird){
+              spVec <- predictVec[[bird]]
+              if (P(sim)$savePredVectors){
+                message(crayon::yellow("Generating raster for ", bird, " from vector", " TIME: ", Sys.time()))
+                spVec <- readRDS(spVec)
+              }
               rasName <- paste0("prediction", attributes(spVec)[["prediction"]])
               birdRas <- raster(sim$birdDensityRasters[[1]]) # Using the first as a template. All should be the same.
+              message(crayon::cyan("Setting values for raster for ", bird, " TIME: ", Sys.time()))
               birdRas <- raster::setValues(x = birdRas, values = as.numeric(spVec))
-              return(birdRas)
+              message(crayon::green(bird, " raster finished! TIME: ", Sys.time()))
+              if (P(sim)$savePredVectors){
+                writeRaster(birdRas,
+                            filename = predictedName[[bird]], format = "GTiff")
+                rm(birdRas)
+                invisible(gc())
+                return(predictedName[[bird]])
+              } else {
+                return(birdRas)
+                }
             })
-            names(sim$predictRas[[paste0("Year", time(sim))]]) <- sim$birdSpecies      
+            names(sim$predictRas[[paste0("Year", time(sim))]]) <- sim$birdSpecies     
             rm(predictVec)
             invisible(gc())
             
@@ -173,13 +198,14 @@ doEvent.predictBirds = function(sim, eventTime, eventType) {
           }
           
           # SAVE THE PREDICTED RASTERS
-          sim$predictRas[[paste0("Year", time(sim))]] <- lapply(names(predictedName), function(bird){
-            writeRaster(sim$predictRas[[paste0("Year", time(sim))]][[bird]], 
-                        filename = predictedName[[bird]], format = "GTiff")
-            return(predictedName[[bird]])
-          })
-          names(sim$predictRas[[paste0("Year", time(sim))]]) <- sim$birdSpecies
-          
+          if (!P(sim)$savePredVectors){
+            sim$predictRas[[paste0("Year", time(sim))]] <- lapply(names(predictedName), function(bird){
+              writeRaster(sim$predictRas[[paste0("Year", time(sim))]][[bird]], 
+                          filename = predictedName[[bird]], format = "GTiff")
+              return(predictedName[[bird]])
+            })
+            names(sim$predictRas[[paste0("Year", time(sim))]]) <- sim$birdSpecies
+          }
           invisible(gc())
         }
       

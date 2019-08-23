@@ -1,11 +1,11 @@
-fetchData <- function(pathData = dataPath(sim),
-                      birdsRangeList = sim$birdsRangeList,
-                      birdSp = sim$birdSpecies, 
-                      studyArea = sim$rP,
-                      extractFrom4kRasters = P(sim)$extractFrom4kRasters,
-                      densityEstimatesURL = sim$densityEstimatesURL,
-                      densityEstimatesFileName = sim$densityEstimatesFileName,
-                      avoidAlbertosData = P(sim)$avoidAlbertosData) {
+fetchData <- function(pathData,
+                      birdsRangeList,
+                      birdSp, 
+                      studyArea,
+                      extractFrom4kRasters,
+                      densityEstimatesURL,
+                      densityEstimatesFileName,
+                      avoidAlbertosData) {
   require(raster)
   require(data.table)
   require(gdalUtils)

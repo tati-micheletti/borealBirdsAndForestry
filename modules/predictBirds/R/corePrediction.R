@@ -1,14 +1,12 @@
 corePrediction <- function(bird, model, birdDensityRas,
                            predictedName,
                            disturbanceRas = NULL,
-                           successionLayers = NULL,
-                           staticLayers = NULL,
+                           successionStaticLayers = NULL,
                            currentTime,
                            pathData,
-                           overwritePredictions = FALSE){
-  
-  successionLayersNames <- names(successionLayers)
-  staticLayersNames <- names(staticLayers)
+                           overwritePredictions = FALSE,
+                           savePredVectors){
+
   message(crayon::yellow(paste0("Predicting for ", bird , ". Prediction for time ", currentTime)))
   if ("glmerMod" %in% class(model)){
     nameStackRas1 <- names(model@frame)[2]
@@ -19,46 +17,46 @@ corePrediction <- function(bird, model, birdDensityRas,
       nameStackRas2 <- names(model$coefficients)[3]
     } else {
       if ("gbm" %in% class(model)){ # If gbm, do everything in here, else, do outside
-        browser() # NEED TO DEBUG HERE FOR BIRDS PARALLEL IN NWT PROJECT...
-        stkLays <- cbind(successionLayers, staticLayers) #raster::stack(successionLayers, staticLayers) # MIGHT NEED row.names = TRUE?!
         if (isTRUE(overwritePredictions)||!file.exists(predictedName)){
           message(crayon::yellow(paste0(" Starting prediction raster for ", bird, ". This might take some time... [", Sys.time(),"]")))
-          predicted <- gbm::predict.gbm(object = model, newdata = stkLays,
+          startTime <- Sys.time()
+          predicted <- gbm::predict.gbm(object = model, newdata = successionStaticLayers,
                                         type = "response",
                                         n.trees = model$n.trees)
+          attr(predicted, "prediction") <- paste0(bird, currentTime)
           message(crayon::green(paste0("Prediction finalized for ", bird, ". [", Sys.time(),"]. Total time elapsed: ", 
                                        Sys.time() - startTime)))
-          # startTime <- Sys.time()
-          # message(crayon::green("Masking ", bird , " prediction to ", crayon::red("studyArea"), " for time ", currentTime))
-          # basePlot <- stkLays[[1]]
-          # basePlot <- setValues(basePlot, predicted)
-          # basePlot <- reproducible::fastMask(basePlot, y = studyArea) # ALL THIS NEEDS TO HAPPEN OUTSIDE OF CORE PREDICTION...
-          # 
-          # names(basePlot) <- paste0("predicted", bird)
-          # message(crayon::green("Masking ", bird , " prediction to ", crayon::red("uplands"), " for time ", currentTime))
-          # predictedMasked <- reproducible::postProcess(x = basePlot, rasterToMatch = uplandsRaster, 
-          #                                              maskWithRTM = TRUE, destinationPath = pathData, filename2 = NULL)
+          }
+            return(predicted)
+        } else {
+          return(predictedName)
         }
-        predicted <- raster(predicted)
-        gc()
-        return(predicted)
       }
     }
-  }
   focDis <- as.numeric(gsub("[^\\d]+", "", nameStackRas1, perl=TRUE))
-  
-  if (isTRUE(overwritePredictions)||!file.exists(predictedName)){
+  predictedNameVec <- paste0(tools::file_path_sans_ext(predictedName), "VEC.rds")
+    if (all(any(isTRUE(overwritePredictions), !file.exists(predictedName)), 
+            any(isTRUE(overwritePredictions), all(isTRUE(savePredVectors), !file.exists(predictedNameVec))))){
     birdDensityRas <- log(birdDensityRas) # log the value of densities so it is the same of the original model
-    birdDensityRas[birdDensityRas < -0.99] <- -1
+    birdDensityRas[birdDensityRas < -0.99] <- -1 # Why did I do this? Maybe because we were not supposed to have values smaller than -0.99?
     vecDF <- data.frame(disturbanceRas, birdDensityRas)
     colnames(vecDF) <- c(nameStackRas1, nameStackRas2)
     predicted <- suppressWarnings(fitModel(inRas = vecDF, 
                                            inputModel = model, 
                                            x = bird, 
                                            tileYear = currentTime))
-  } else {
-    message("Prediction already exists for ", bird, ". Returning ", predictedName)
-    predicted <- raster(predictedName)
+    if (savePredVectors){
+      saveRDS(object = predicted, file = predictedNameVec)
+      predicted <- predictedNameVec
+      }
+    } else {
+    if (savePredVectors){
+      message(crayon::blue("Prediction vector exists for ", bird, ". Returning ", predictedNameVec))
+      predicted <- predictedNameVec
+    } else {
+      message(crayon::blue("Prediction already exists for ", bird, ". Returning ", predictedName))
+      predicted <- raster(predictedName)
+    }
   }
   gc()
   return(predicted) # The predicted value is NOT multiplied by 1000! For that, need to change fitModel!

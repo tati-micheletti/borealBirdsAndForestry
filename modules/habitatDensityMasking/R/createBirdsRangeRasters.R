@@ -1,4 +1,4 @@
-createBirdsRangeRasters <- function(birdSpecies = sim$birdSpecies){
+createBirdsRangeRasters <- function(birdSpecies = NULL){
   rangeList <- list(
     "BBWA" = "https://drive.google.com/open?id=1OlfDr3jfAN5GpVL_VFlun7c_6hlkRf_x",
     "BLPW" = "https://drive.google.com/open?id=1Lddk59-IEu3L4eh69vIDBHK-lb65r5Bq",
@@ -16,6 +16,10 @@ createBirdsRangeRasters <- function(birdSpecies = sim$birdSpecies){
     "WETA" = "https://drive.google.com/open?id=1p5o1kb_yM02xexR7Ny9cNTh1H-k4NPK8",
     "YRWA" = "https://drive.google.com/open?id=1ypBzddcw79BqnwFqBxaSTKH6svEt3edf"
   )
-  subsetList <- rangeList[birdSpecies]
-  return(subsetList)
+  if (!is.null(birdSpecies)){
+    subsetList <- rangeList[birdSpecies]
+    return(subsetList)
+  } else {
+    return(rangeList)
+  }
 } 

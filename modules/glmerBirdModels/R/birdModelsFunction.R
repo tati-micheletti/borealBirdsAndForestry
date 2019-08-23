@@ -1,4 +1,5 @@
-# Bird model functions version 3 - TO be used with both Alberto's data and updated versions of offsets and densities: TO BE USED WHEN PREDICTING
+# Bird model functions version 3 - TO be used with both Alberto's data and updated versions 
+# of offsets and densities: TO BE USED WHEN PREDICTING
 
 birdModelsFunction <- function(combinations = sim$combinations,
                                birdSp = sim$birdSpecies,

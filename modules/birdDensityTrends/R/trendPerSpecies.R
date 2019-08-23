@@ -5,7 +5,8 @@ trendPerSpecies <- function(birdSpecies,
                             endTime,
                             outPath,
                             nx,
-                            ny){
+                            ny,
+                            onlySignificant){
   if (!identical(names(predictRas[[1]]), birdSpecies)){
     stop("Your species list and predicted rasters do not match. Please revise the code")
   }
@@ -30,7 +31,7 @@ trendPerSpecies <- function(birdSpecies,
       splittedPath <- file.path(outPath, paste0("trends", focalDistance))
       message(crayon::yellow(paste0("Splitting rasters for ", birdSpecies[sp], " (Time: ", Sys.time(), ")")))
       splittedList <- Cache(lapply, X = birdTS, splitRaster, nx = nx, ny = ny, buffer = c(800, 800),
-                            path = splittedPath, userTags = paste0("splitTrends", focalDistance, birdSpecies[sp]))
+                            path = splittedPath, userTags = paste0("splitTrends", focalDistance, birdSpecies[sp]), useCache = "overwrite")
       totalTiles <- unique(lengths(splittedList))
       lengthVector <- 1:totalTiles
       orderedRasterList <- lapply(X = lengthVector, FUN = function(index){
@@ -58,27 +59,34 @@ trendPerSpecies <- function(birdSpecies,
           slopeValues <- apply(X = arrayStack, MARGIN = c(1, 2), FUN = function(x){
             slpCoef <- RcppArmadillo::fastLmPure(X = cbind(1, times), y = x) # Original formula was way slower: lm(x ~ times, data = dfX,  na.action = na.omit)
             coef <- slpCoef$coefficients[2]
-            pVal <- 2*pt(abs(slpCoef$coefficients/slpCoef$stderr), slpCoef$df.residual, lower.tail=FALSE)[2]
+            if (onlySignificant){
+              pVal <- 2*pt(abs(slpCoef$coefficients/slpCoef$stderr), slpCoef$df.residual, lower.tail=FALSE)[2]
+            } else {
+              pVal <- NA
+            }
             return(list(coef = coef, pVal = pVal))
           })
           slopeCoefficientVals <- matrix(unlist(lapply(slopeValues, `[[`, 1)), 
                                          nrow = nrow(arrayStack), 
                                          ncol = ncol(arrayStack), 
                                          byrow = FALSE) # retrieves values from slope Coefficient, arranges into a corrected (inversed) matrix
-          
-          slopeSignificancyVals <- matrix(unlist(lapply(slopeValues, `[[`, 2)), 
-                                          nrow = nrow(arrayStack), 
-                                          ncol = ncol(arrayStack), 
-                                          byrow = FALSE) # retrieves values from slope Coefficient, arranges into a corrected (inversed) matrix
+          if (onlySignificant){
+            slopeSignificancyVals <- matrix(unlist(lapply(slopeValues, `[[`, 2)), 
+                                            nrow = nrow(arrayStack), 
+                                            ncol = ncol(arrayStack), 
+                                            byrow = FALSE) # retrieves values from slope Coefficient, arranges into a corrected (inversed) matrix
+          }
           rm(slopeValues)
           rm(arrayStack)
           gc()
           # Assigning significancy values to the raster, multiplying by 1000 for efficient storage
-          slopeSignificancy <- predictedStack[[1]] %>%
-            raster::setValues(slopeSignificancyVals)
-          names(slopeSignificancy) <- "slopeSignificancy"
-          rm(slopeSignificancyVals)
-          gc()
+          if (onlySignificant){
+            slopeSignificancy <- predictedStack[[1]] %>%
+              raster::setValues(slopeSignificancyVals)
+            names(slopeSignificancy) <- "slopeSignificancy"
+            rm(slopeSignificancyVals)
+            gc()
+          }
           
           # Assigning coefficient values to the raster, multiplying by 1000 for efficient storage
           slopeCoefficient <- predictedStack[[1]] %>%
@@ -92,34 +100,41 @@ trendPerSpecies <- function(birdSpecies,
           # that are in fact 0 (which return some 
           # non-signifficant values of significancy that 
           # we don't want to plot)
-          slopeSignificancy[slopeCoefficient == 0] <- 1
-          vals <- getValues(x = slopeSignificancy)
-          vals[vals < 0.05] <- -999
-          vals[vals >= 0.05] <- 0 # Rasters with value 0 in THIS GRAPH are NOT signifficant (the original saved graphs have the real significancy)
-          vals[vals == -999] <- 1 # Rasters with value 1 in THIS GRAPH are signifficant (the original saved graphs have the real significancy)
-          slopeSignificancy <- setValues(slopeSignificancy, vals)
-          storage.mode(slopeSignificancy[]) <- "integer"
-          message(crayon::yellow(paste0("Masking significant pixels for tile ", tiles,
-                                        " of ", birdSpecies[sp],
-                                        " (Time: ", Sys.time(), ")")))
-          rm(vals)
-          gc()
-
-          if (!identical(raster::extent(slopeCoefficient), raster::extent(slopeSignificancy))){
-            if (raster::ncell(slopeSignificancy) < raster::ncell(slopeCoefficient)) {
-              slopeCoefficient <- raster::crop(x = slopeCoefficient, y = slopeSignificancy)
-            }
-            if (raster::ncell(slopeSignificancy) > raster::ncell(slopeCoefficient)) {
-              slopeSignificancy <- raster::crop(x = slopeSignificancy, y = slopeCoefficient)
-            }
-            raster::extent(slopeCoefficient) <- raster::alignExtent(extent = raster::extent(slopeCoefficient), 
-                                                                    object = slopeSignificancy, 
-                                                                    snap = "near")
+          if (onlySignificant){
+            slopeSignificancy[slopeCoefficient == 0] <- 1
+            vals <- getValues(x = slopeSignificancy)
+            vals[vals < 0.05] <- -999
+            vals[vals >= 0.05] <- 0 # Rasters with value 0 in THIS GRAPH are NOT signifficant (the original saved graphs have the real significancy)
+            vals[vals == -999] <- 1 # Rasters with value 1 in THIS GRAPH are signifficant (the original saved graphs have the real significancy)
+            slopeSignificancy <- setValues(slopeSignificancy, vals)
+            rm(vals)
+            gc()
+            storage.mode(slopeSignificancy[]) <- "integer"
+            message(crayon::yellow(paste0("Masking significant pixels for tile ", tiles,
+                                          " of ", birdSpecies[sp],
+                                          " (Time: ", Sys.time(), ")")))
           }
-          raster::mask(x = slopeCoefficient, mask = slopeSignificancy,
-                       maskvalue = 0, updatevalue = 0,
-                       filename = slopePath, overwrite = TRUE)
-          rm(slopeSignificancy)
+          if (onlySignificant){
+            if (!identical(raster::extent(slopeCoefficient), raster::extent(slopeSignificancy))){
+              if (raster::ncell(slopeSignificancy) < raster::ncell(slopeCoefficient)) {
+                slopeCoefficient <- raster::crop(x = slopeCoefficient, y = slopeSignificancy)
+              }
+              if (raster::ncell(slopeSignificancy) > raster::ncell(slopeCoefficient)) {
+                slopeSignificancy <- raster::crop(x = slopeSignificancy, y = slopeCoefficient)
+              }
+              raster::extent(slopeCoefficient) <- raster::alignExtent(extent = raster::extent(slopeCoefficient), 
+                                                                      object = slopeSignificancy, 
+                                                                      snap = "near")
+            }
+            message(crayon::yellow("onlySignificant == TRUE, masking slope coefficient to significant values"))
+            raster::mask(x = slopeCoefficient, mask = slopeSignificancy,
+                         maskvalue = 0, updatevalue = 0,
+                         filename = slopePath, overwrite = TRUE)
+            rm(slopeSignificancy)
+          } else {
+            message(crayon::yellow("onlySignificant == FALSE, NOT masking slope coefficient to significant values"))
+            raster::writeRaster(slopeCoefficient, filename = slopePath, overwrite = TRUE, format = "GTiff")
+          }
           rm(slopeCoefficient)
           gc()
           return(slopePath)

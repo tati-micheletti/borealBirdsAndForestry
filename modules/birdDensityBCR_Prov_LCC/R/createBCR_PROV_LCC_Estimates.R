@@ -1,6 +1,7 @@
-createBCR_PROV_LCC_Estimates <- function(BCR = BCR,
-                                     LCC05 = LCC05,
-                                     densityEstimates = densityEstimates){
+createBCR_PROV_LCC_Estimates <- function(BCR,
+                                     LCC05,
+                                     densityEstimates = NULL,
+                                     justBCRProvLCC = FALSE){
   
   # 2. Rasterize (fasterize) both PROV and BCR.
   # =========== BCR 
@@ -28,12 +29,26 @@ createBCR_PROV_LCC_Estimates <- function(BCR = BCR,
                                                11L, 12L, 13L), .Label = c("AB", "BC", "MB", "NB", "NL", 
                                                                           "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"), class = "factor")), 
                        .Names = c("PRENAME", "ID", "PROV"), row.names = c(NA, -13L), class = "data.frame")
+
+  if (justBCRProvLCC){
+    PROVabb <- data.table::data.table(PROVabb)
+    rasPROVvals <- data.table::data.table(pixelID = 1:raster::ncell(LCC05), 
+                                          ID = raster::getValues(fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "PROV_ID")))
+    provDT <- merge(rasPROVvals, PROVabb, by = "ID", all.x = TRUE)
+    setkey(provDT, pixelID)
+    PROV_BCR_LCC <- data.table::data.table(PROV = provDT$PROV,
+                                           BCR = raster::getValues(rasBCR),
+                                           LCC = raster::getValues(LCC05))
+    return(PROV_BCR_LCC)
+  }
   
   # 4. Set a base data.table to retrieve the specific density values for each pixel 
   PROV_BCR_LCC <- data.table::data.table(ID = as.integer(rasPROV[]),
                                          BCR = as.integer(rasBCR[]),
                                          LCC = as.integer(LCC05[]))
-
+  
+  if (is.null(densityEstimates)) stop("densityEstimates can only be null if justBCRProvLCC = TRUE")
+  
   densityEstimates <- Cache(plyr::join, densityEstimates, PROVabb, userTags = "densityEstimatesIntegers")
   out <- list(PROV_BCR_LCC = PROV_BCR_LCC, 
               densityEstimates = densityEstimates)

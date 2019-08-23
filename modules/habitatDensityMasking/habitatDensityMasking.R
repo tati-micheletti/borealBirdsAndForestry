@@ -1,13 +1,8 @@
-
-# Everything in this file gets sourced during simInit, and all functions and objects
-# are put into the simList. To use objects, use sim$xxx, and are thus globally available
-# to all modules. Functions can be used without sim$ as they are namespaced, like functions
-# in R packages. If exact location is required, functions will be: sim$<moduleName>$FunctionName
 defineModule(sim, list(
   name = "habitatDensityMasking",
   description = NA, #"insert module description here",
   keywords = NA, # c("insert key words here"),
-  authors = c(person(c("First", "Middle"), "Last", email = "email@example.com", role = c("aut", "cre"))),
+  authors = c(person(given = "Tati", family = "Micheletti", email = "tati.micheletti@gmail.com", role = c("aut", "cre"))),
   childModules = character(0),
   version = list(SpaDES.core = "0.2.2", habitatDensityMasking = "0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
@@ -25,6 +20,8 @@ defineModule(sim, list(
     defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
   ),
   inputObjects = bind_rows(
+    expectsInput(objectName = "pathData", objectClass = "list",
+                 desc = paste0("destination path to the new trend rasters. If not supplied, will be in tempdir()")),    
     expectsInput(objectName = "trends", objectClass = "list",
                  desc = paste0("List of species, with significant slope raster. ",
                                "The slope has was masked by significancy at alpha = 0.05")),
@@ -36,9 +33,6 @@ defineModule(sim, list(
   )
 ))
 
-## event types
-#   - type `init` is required for initialiazation
-
 doEvent.habitatDensityMasking = function(sim, eventTime, eventType) {
   switch(
     eventType,
@@ -49,7 +43,7 @@ doEvent.habitatDensityMasking = function(sim, eventTime, eventType) {
     maskToHR = {
       sim$trendsWithinRange <- maskingHR(trendRasters = sim$trends,
                                  birdsRangeList = sim$birdsRangeList,
-                                 pathData = asPath(cachePath(sim)))
+                                 pathData = sim$pathData)
       },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
@@ -58,6 +52,12 @@ doEvent.habitatDensityMasking = function(sim, eventTime, eventType) {
 }
 
 .inputObjects <- function(sim) {
+  if (!suppliedElsewhere("birdSpecies", sim)) {
+    sim$birdSpecies <- c("BBWA", "BLPW", "BOCH", "BRCR",
+                         "BTNW", "CAWA", "CMWA", "CONW", 
+                         "OVEN", "PISI", "RBNU", "SWTH", 
+                         "TEWA", "WETA", "YRWA")
+    }
   if (!suppliedElsewhere("birdsRangeList", sim)) {
     sim$birdsRangeList <- createBirdsRangeRasters(birdSpecies = sim$birdSpecies)
   }

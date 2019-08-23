@@ -22,17 +22,14 @@ if(dir.create(scratchDir)) system(paste0("sudo chmod -R 777 /mnt/tmp/rasterTMP")
 raster::rasterOptions(default = TRUE)
 options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
 # Make sure all packages are updated
-
-updateGithubPackages <- FALSE
-
-if (updateGithubPackages){
-  devtools::install_github("PredictiveEcology/reproducible@development")
-  devtools::install_github("achubaty/amc@development")
-  devtools::install_github("PredictiveEcology/pemisc@development")
-  devtools::install_github("PredictiveEcology/map@development")
-  devtools::install_github("PredictiveEcology/LandR@development") # Updates SpaDES.tools and SpaDES.core quickPlot
-  devtools::install_github("ianmseddy/LandR.CS@master") # Climate sensitivity in LandR
-}
+# update.packages(checkBuilt = TRUE)
+# devtools::install_github("PredictiveEcology/LandR")
+# devtools::install_github("PredictiveEcology/reproducible@development")
+# devtools::install_github("PredictiveEcology/map")
+# devtools::install_github("PredictiveEcology/quickPlot@development")
+# devtools::install_github("PredictiveEcology/SpaDES.core@development")
+# devtools::install_github("PredictiveEcology/SpaDES.tools@development")
+# devtools::install_github("PredictiveEcology/pemisc@development")
 
 library("SpaDES.core")
 library("SpaDES.tools")
@@ -92,16 +89,14 @@ parameters <- list(
                    .useCache = FALSE), # Should it override module's .useCache?
   focalCalculation = list(recoverTime = 30,
                           resampledRes = 250,
-                          focalDistance = 100, # To run for neighborhood, change to c(100, 500)
+                          focalDistance = c(100, 500), # To run for neighborhood, change to c(100, 500)
                           disturbanceClass = 2, # 2 = Forestry, 1 = Fire, 3 and 4 = low probability forestry and fire
                           forestClass = 1:6, # Forested area class in the land cover map. If changing to fire might need to be rethought. Or not...
                           useParallel = NULL, #"local", # Local parallel for 500m not working apparently
                           nNodes = 1), # "across" = across machines, "local" = only on local machine, "NULL" or anything else = no parallel
-  predictBirds = list(focalDistance = 100,
-                      useParallel = FALSE),
-  birdDensityTrends = list("plotting" = FALSE,
-                           "useParallel" = TRUE,
-                           "onlySignificant" = FALSE)
+  predictBirds = list(useParallel = FALSE),
+  birdDensityTrends = list(plotting = FALSE,
+                           useParallel = TRUE)
 )
 
 tryCatch(googledrive::drive_download(file = googledrive::as_id("1S4ryXaqp0ZdW_yPBuYtNSPW5Mp1ft3R5"), 
@@ -158,10 +153,23 @@ clearPlot()
 #file.remove("/mnt/storage/borealBirdsAndForestry/cache/logParallel")
 
 ## Simulation setup
-  borealTRENDS_100 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
+localScale = TRUE
+if (localScale) {
+  borealTRENDS_500 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
                                                 modules = modules, paths =  Paths,
-                                                objects = .objects, debug = 1)
-saveRDS(borealTRENDS_100, file = file.path(getwd(), "outputs/08JUL2019_nonSignificant/borealTRENDS_100.rds"))
+                                                objects = .objects, debug = 2)
+
+saveRDS(borealTRENDS_500, file = file.path(getwd(), "outputs/17JUN19/borealTRENDS_100.rds"))
+rm(borealTRENDS_500)
+} else {
+  .objects <- list(
+  focalDistance = 500)
+
+borealTRENDS_500 <- SpaDES.core::simInitAndSpades(times = times, params = parameters, 
+                                                  modules = modules, paths =  Paths,
+                                                  objects = .objects, debug = 2)
+saveRDS(borealTRENDS_500, file = file.path(getwd(), "outputs/17JUN19/borealTRENDS_500.rds"))
+}
 
 # reproducible::Require(googledrive)
 # googledrive::drive_upload(file.path(getwd(), "outputs/models.rds"), 
