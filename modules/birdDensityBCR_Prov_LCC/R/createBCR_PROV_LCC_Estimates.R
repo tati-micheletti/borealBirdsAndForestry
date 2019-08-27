@@ -36,7 +36,8 @@ createBCR_PROV_LCC_Estimates <- function(BCR,
                                           ID = raster::getValues(fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "PROV_ID")))
     provDT <- merge(rasPROVvals, PROVabb, by = "ID", all.x = TRUE)
     setkey(provDT, pixelID)
-    PROV_BCR_LCC <- data.table::data.table(PROV = provDT$PROV,
+    PROV_BCR_LCC <- data.table::data.table(pixelID = provDT$pixelID,
+                                           PROV = provDT$PROV,
                                            BCR = raster::getValues(rasBCR),
                                            LCC = raster::getValues(LCC05))
     return(PROV_BCR_LCC)

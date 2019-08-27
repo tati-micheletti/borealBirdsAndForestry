@@ -12,6 +12,12 @@ if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/mnt/data/Micheletti/b
 # googledrive::drive_auth(use_oob = TRUE) # ONLY ONCE: USING RStudio Server. Doesn't work for the first time in RGui
 googledrive::drive_deauth()
 SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
+species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
+
+species <- c("BBWA") # TEMPRARY!! Doing for only one species for now, just to test the workflow
+onlyFinalPixelTables <- TRUE # If I only want the final full pixel tables for each sp for a reason, 
+                             # this should be TRUE
+doAssertions <- FALSE
 # 1. Calculate prediction area for each bird species: `birdSpecies` and `predArea`
 # 2. Estimate total abundance from Peter&Diana's paper for this area * 6.25: `realAbund0`
 # 1.1. Before I can calculate total abundance, I need to mask out all the non-NA pixels 
@@ -20,6 +26,7 @@ SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
 # expected density and predicted rasters
 
 # FIRST, TEST IF THE FILE ALREADY EXISTS | If not, create it
+if (!onlyFinalPixelTables){
 completeSummaryFile <- file.path(wd, "outputs/posthocAnalysis", "completeSummaryTable.rds")
 if (file.exists(completeSummaryFile)){
   fullTableList <- readRDS(completeSummaryFile) # JUST FOR NOW!
@@ -54,7 +61,7 @@ summarizedTableFileName <- file.path(wd, "outputs/posthocAnalysis",
                                      "birdsTableDENSITY.rds")
 fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder, 
                                        full.names = TRUE), patterns = c("density", ".tif"))
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/returnBirdAbundance.R')
+source(file.path(getwd(), "functions/returnBirdAbundance.R"))
 if (!file.exists(densityFullTable)){
   densityTable <- returnBirdAbundance(filepath = fl, type = "density", 
                                       fullTableFilename = densityFullTable, 
@@ -165,7 +172,6 @@ fullTablePixelsFile <- file.path(folderForTables, paste0(tableFileName, ".rds"))
 if (file.exists(fullTablePixelsFile)){
   fullTablePixels <- readRDS(fullTablePixelsFile)
 } else {
-  species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
   spFullTable <- lapply(species, FUN = function(sp){
     tableFileName <- paste0("birdsTableAbund",sp)
     fullTablePixels <- makeBirdTable(species = sp, tableFileName = tableFileName,
@@ -176,64 +182,88 @@ if (file.exists(fullTablePixelsFile)){
   })
 }
 names(spFullTable) <- species
+}
+
+downloadFullTableBirdsFromURL <- TRUE # If these tables are not present, 
+                                      # nor you want to calculate these, set it to TRUE
 
 fullTableAllBirds <- lapply(X = species, function(bird){
-  completeSummaryFile <- file.path(wd, "outputs/posthocAnalysis", paste0("fullPixelTable", bird, ".rds"))
+  completeSummaryFile <- file.path(wd, "outputs/posthocAnalysis", 
+                                   paste0("fullPixelTable", bird, ".rds"))
   if (file.exists(completeSummaryFile)){
     message(crayon::green("Full pixel table exists for ", bird))
     return(completeSummaryFile)
   } else {
-    message(crayon::yellow("Full pixel table doesn't exist for ", bird, ". Creating..."))
-    
-    # 4.2 RATE YEARS 1984 - 2011 PER BIRD
-    library("data.table")
-    
-    # 4.2.1 Rate per year
-    fullTableList <- readRDS(spFullTable[[bird]])
-    dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, value.var = "density")
-    ys <- usefun::substrBoth(unique(fullTableList$year), howManyCharacters = 4, fromEnd = TRUE)
-    newNames <- c(names(dcastedTable)[1:2], paste0("abund", ys))
-    names(dcastedTable) <- newNames
-    fullTableList <- dcastedTable
-    abundNames <- usefun::grepMulti(names(fullTableList), patterns = c("abund"))
-    for (i in 2:length(abundNames)) {
-      yearRef <- usefun::substrBoth(strng = abundNames[i],
-                                    howManyCharacters = 4,
-                                    fromEnd = TRUE)
-      thisYearsRate <- (fullTableList[,abundNames[i], with = FALSE]-
-                          fullTableList[,abundNames[i-1], with = FALSE])/
-        fullTableList[,abundNames[i-1], with = FALSE]
-      names(thisYearsRate) <- paste0("rate", yearRef)
-      fullTableList <- cbind(fullTableList, thisYearsRate)
+    if (downloadFullTableBirdsFromURL) { # THIS IS FOR WHEN I NEED TO RUN IT SOMEWHERE ELSE
+      message(crayon::cyan("Full pixel table doesn't exist for ", bird, ". Downloading..."))
+      library("data.table")
+      library("googledrive")
+      fl <- Cache(drive_ls, path = as_id("1DI9k8rx4dY8P7TbMdXX9Wpv6KqXl6t4m"), 
+                  recursive = TRUE, userTags = c("objectName:completeSummaryFile", 
+                                                 paste0("birdSpecies:", bird)))
+      browser() # Match the file id with the `bird` object. DO NOT APPLY!
+      # fl <- fl[match(bird)]
+        destPath <- file.path(getwd(), "outputs/posthocAnalysis", fl$drive_resource$name)
+        url <- paste0("https://drive.google.com/open?id=", eachTable$drive_resource$id)
+        tablePath <- reproducible::preProcess(url = url, destinationPath = destPath,
+                                              targetFile = eachTable$drive_resource$name)
+      browser() # Check 
+      # names(completeSummaryFile) <- 
+      return(completeSummaryFile)
+    } else {
+      message(crayon::yellow("Full pixel table doesn't exist for ", bird, ". Creating..."))
+      
+      # 4.2 RATE YEARS 1984 - 2011 PER BIRD
+      library("data.table")
+      
+      # 4.2.1 Rate per year
+      fullTableList <- readRDS(spFullTable[[bird]])
+      dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, value.var = "density")
+      ys <- usefun::substrBoth(unique(fullTableList$year), howManyCharacters = 4, fromEnd = TRUE)
+      newNames <- c(names(dcastedTable)[1:2], paste0("abund", ys))
+      names(dcastedTable) <- newNames
+      fullTableList <- dcastedTable
+      abundNames <- usefun::grepMulti(names(fullTableList), patterns = c("abund"))
+      for (i in 2:length(abundNames)) {
+        yearRef <- usefun::substrBoth(strng = abundNames[i],
+                                      howManyCharacters = 4,
+                                      fromEnd = TRUE)
+        thisYearsRate <- (fullTableList[,abundNames[i], with = FALSE]-
+                            fullTableList[,abundNames[i-1], with = FALSE])/
+          fullTableList[,abundNames[i-1], with = FALSE]
+        names(thisYearsRate) <- paste0("rate", yearRef)
+        fullTableList <- cbind(fullTableList, thisYearsRate)
+      }
+      # 4.2.2. Rate compared to abund1984
+      for (i in 2:length(abundNames)) {
+        yearRef <- usefun::substrBoth(strng = abundNames[i],
+                                      howManyCharacters = 4,
+                                      fromEnd = TRUE)
+        thisYearsRate <- (fullTableList[,abundNames[i], with = FALSE]-
+                            fullTableList[,"abund1984"])/
+          fullTableList[,"abund1984"]
+        names(thisYearsRate) <- paste0("cummRate", yearRef)
+        fullTableList <- cbind(fullTableList, thisYearsRate)
+      }
+      # 5. Calculate the AbundXXXX in each year: `realAbundXXXX` (using `realAbund0`+(`realAbund0`*`cummRateXXXX`))
+      # 5.1 Attach the `realAbund0` to the full table
+      fullTableList <- usefun::cbindFromList(list(fullTableList, spDensityTable[[bird]])) # BEFORE MERGING CHECK IF BOTH TABLES HAVE THE SAME VALUES FOR TOTAL PIXELS!
+      names(fullTableList)[names(fullTableList) == "density"] <- "realAbund0"
+      # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
+      cummRates <- usefun::grepMulti(x = names(fullTableList), patterns = "cumm")
+      lapply(X = cummRates, FUN = function(cum){
+        newColName <- paste0("realAbund", 
+                             usefun::substrBoth(strng = cum, 
+                                                howManyCharacters = 4, 
+                                                fromEnd = TRUE))
+        fullTableList[, c(newColName) := realAbund0+(get(cum)*realAbund0)]
+      })
+      saveRDS(fullTableList, file = completeSummaryFile)
+      return(completeSummaryFile) 
     }
-    # 4.2.2. Rate compared to abund1984
-    for (i in 2:length(abundNames)) {
-      yearRef <- usefun::substrBoth(strng = abundNames[i],
-                                    howManyCharacters = 4,
-                                    fromEnd = TRUE)
-      thisYearsRate <- (fullTableList[,abundNames[i], with = FALSE]-
-                          fullTableList[,"abund1984"])/
-        fullTableList[,"abund1984"]
-      names(thisYearsRate) <- paste0("cummRate", yearRef)
-      fullTableList <- cbind(fullTableList, thisYearsRate)
-    }
-    # 5. Calculate the AbundXXXX in each year: `realAbundXXXX` (using `realAbund0`+(`realAbund0`*`cummRateXXXX`))
-    # 5.1 Attach the `realAbund0` to the full table
-    fullTableList <- usefun::cbindFromList(list(fullTableList, spDensityTable[[bird]])) # BEFORE MERGING CHECK IF BOTH TABLES HAVE THE SAME VALUES FOR TOTAL PIXELS!
-    names(fullTableList)[names(fullTableList) == "density"] <- "realAbund0"
-    # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
-    cummRates <- usefun::grepMulti(x = names(fullTableList), patterns = "cumm")
-    lapply(X = cummRates, FUN = function(cum){
-      newColName <- paste0("realAbund", 
-                           usefun::substrBoth(strng = cum, 
-                                              howManyCharacters = 4, 
-                                              fromEnd = TRUE))
-      fullTableList[, c(newColName) := realAbund0+(get(cum)*realAbund0)]
-    })
-    saveRDS(fullTableList, file = completeSummaryFile)
-    return(completeSummaryFile)
   }
 })
+names(fullTableAllBirds) <- species
 
 # To correct for LCC previous to 2005 that we don't know what was, we can use the minimum and the maximum values of 
 # each one of the forest cover types that were harvested until 2011 for each pixel.
@@ -244,46 +274,45 @@ fullTableAllBirds <- lapply(X = species, function(bird){
 # *** Shouldn't I also consider the CV for these values? i.e. min = minValuesOfForestTypes*(averageExpD-cvExpD); max = maxValueOfForestTypes*(averageExpD+cvExpD)
 
 # Testing if Density rasters are the same format as our tables from the birdDensityBCR_Prov_LCC
-birdSp <- "BBWA"
-BBWA <- readRDS(fullTableAllBirds[[1]]) # hardcoded... [ FIX ] # THIS IS MY DENSITY RASTER (ExpD)
-templateRas <- raster(file.path(getwd(), paste0("modules/birdDensityBCR_Prov_LCC/data/density",birdSp,".tif")))
-dtTemplateRas <- data.table::data.table(pixelID = 1:ncell(templateRas), vals = raster::getValues(templateRas)) # making sure these are the rasters we need. 
-# If the NA's in this raster match the table's missing values, it is.
-whichNotNA <- dtTemplateRas[!is.na(vals), pixelID]
-diffPixels <- setdiff(BBWA$pixelID, whichNotNA) # Integer(0) means that the data.table comes from the density rasters. So we can use density rasters as template.
+
+# ~~~~~~~~~~~~~~~~HERE
+
+# 1. Layover LCC05 in 2011 DISTURBANCE (not focal!! Needs to be the pure disturbed pixels) to know which LCC was disturbed
+# 1.1. Assertions to make sure all maps are ok
+if (doAssertions){
+  allOK <- lapply(species, function(birdSp){
+    gc()
+    BIRD <- readRDS(fullTableAllBirds[[birdSp]]) # THIS IS MY DENSITY RASTER (ExpD)
+    templateRas <- raster(file.path(getwd(), paste0("modules/birdDensityBCR_Prov_LCC/data/density",birdSp,".tif")))
+    dtTemplateRas <- data.table::data.table(pixelID = 1:ncell(templateRas), vals = raster::getValues(templateRas)) # making sure these are the rasters we need. 
+    # If the NA's in this raster match the table's missing values, it is.
+    whichNotNA <- dtTemplateRas[!is.na(vals), pixelID]
+    diffPixels <- setdiff(BIRD$pixelID, whichNotNA) # Integer(0) means that the data.table comes from the density rasters. So we can use density rasters as template.
+    if (length(diffPixels) == 0){
+      return(TRUE)
+    } else {
+      stop("error with species ", birdSp)
+    }
+  })
+}
+
+# 1.2. Run the focal over the 250m LCC05, and return the mode of the forest# Ian's approach
+# localFocal2011 <- raster::raster(file.path(wd, "modules/focalCalculation/data/mergedFocal2011-100Res250m.tif"))
+# 
 
 # I need to extract the values of a raster stack BCR LCC PROV using the density raster for each species, where density != 0
 pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
-# source(file.path(getwd(), "functions/defineStudyArea.R"))
-# rP <- Cache(defineStudyArea, testArea = TRUE, 
-#             specificTestArea = "boreal", 
-#             mapSubset = "Canada", 
-#             destinationFolder = pathData, cacheId = "3a17633692bc3299") # cacheId = 3a17633692bc3299 as it is not picking up
-
-# LCC05 <- Cache(prepInputs, url = "https://drive.google.com/open?id=19rMA800ZFsKkXx-eqBcXdR84P9MQdCLX",
-#                destinationPath = pathData,
-#                studyArea = rP,
-#                overwrite = TRUE,
-#                userTags = "objectName:LCC05")
-# targetCRS <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
-
-# LCC05 <- Cache(projectInputs, LCC05, targetCRS = targetCRS, userTags = "objectName:LCC05reproj", cacheId = "e10b12018c04b906") # cacheId = e10b12018c04b906  as it is not picking up
-# BCR <- Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip",
-#              targetFile = "BCR_Terrestrial_master.shp",
-#              alsoExtract = "similar",
-#              destinationPath = pathData,
-#              studyArea = rP,
-#              rasterToMatch = LCC05, overwrite = TRUE, omitArgs = c("userTags", "overwrite"),
-#              userTags = c("objectName:BCR", "objectName2:newBCR")) # cacheId = e10b12018c04b906 as it is not picking up
-# BCR <- Cache(rnorm, cacheId = "93222d18f73a2391")
-source('/mnt/data/Micheletti/borealBirdsAndForestry/modules/birdDensityBCR_Prov_LCC/R/createBCR_PROV_LCC_Estimates.R')
-BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCR,
-                        LCC05 = LCC05, justBCRProvLCC = TRUE,
+source(file.path(getwd(), 'outputs/posthocAnalysis/makeBCRandLCC.R'))
+BCRLCC05 <- makeBCRandLCC(pathData = pathData)
+source(file.path(getwd(), 'modules/birdDensityBCR_Prov_LCC/R/createBCR_PROV_LCC_Estimates.R'))
+BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCRLCC05$BCR,
+                        LCC05 = BCRLCC05$LCC05, justBCRProvLCC = TRUE,
                         densityEstimates = NULL,
                         omitArgs = c("userTags"),
-                        userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))
+                        userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))  # cacheId = e10b12018c04b906 as it is not picking up
+# lapply(specis, and do this for each, and save the output, maybe without the cummulative to be lighter?)
+BCR_PROV_LCC_D <- merge(specificSpeciesSimplifiedTable, BCR_Prov_LCC, by = "pixelID") 
 
-BCRProvLCC <- rasterStack(BCR, LCC)
 # densityEstimates <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
 #                           targetFile = "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv", # OBS. Not all species have densities for all combinations of LCC_PROV_BCR. Not all species are everywhere!
 #                           destinationPath = pathData, fun = "data.table::fread",
@@ -304,12 +333,12 @@ BCRProvLCC <- rasterStack(BCR, LCC)
 # PLOT1: rate of decrease for each year -- is forestry reducing? (DOES PIXEL vs TOTAL AGREE? -- only works if focal is not cummulative, 
 # so it is not working, cause focal is cummulative):. Therefore we can only do it regarding the totals 
 # HOW DO I KNOW the general effects of forestry are reducing in birds? If the 'rate' from one year is smaller than the previous
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/effectsOfForestryWithTime.R')
+source(file.path(getwd(), "functions/effectsOfForestryWithTime.R"))
 plot1 <- effectsOfForestryWithTime(fullTableList = fullTableList)
 
 # PLOT2: How much did habitat supply change from 1984 to the given year (cummulative rate of habitat loss) 
 # Exclusively related to forest activities
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupplyThroughTime.R')
+source(file.path(getwd(), "functions/changeInHabitatSupplyThroughTime.R"))
 plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableList)
 
 # PLOT4: For each species, the percentage of pixels that showed significant decline: 
