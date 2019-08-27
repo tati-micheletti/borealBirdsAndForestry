@@ -1,4 +1,4 @@
-makeBCRandLCC <- function(pathData){
+makeBCRandLCC <- function(pathData, overwrite = NULL){
   source(file.path(getwd(), "functions/defineStudyArea.R"))
   rP <- Cache(defineStudyArea, testArea = TRUE,
               specificTestArea = "boreal",
@@ -8,7 +8,7 @@ makeBCRandLCC <- function(pathData){
   LCC05 <- Cache(prepInputs, url = "https://drive.google.com/open?id=19rMA800ZFsKkXx-eqBcXdR84P9MQdCLX",
                  destinationPath = pathData,
                  studyArea = rP,
-                 overwrite = FALSE,
+                 overwrite = overwrite,
                  userTags = "objectName:LCC05", omitArgs = c("overwrite", "destinationPath"))
   targetCRS <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
   
@@ -18,7 +18,7 @@ makeBCRandLCC <- function(pathData){
                alsoExtract = "similar",
                destinationPath = pathData,
                studyArea = rP,
-               rasterToMatch = LCC05, overwrite = FALSE, omitArgs = c("destinationPath", "overwrite"),
+               rasterToMatch = LCC05, overwrite = overwrite, omitArgs = c("destinationPath", "overwrite"),
                userTags = c("objectName:BCR", "objectName2:newBCR")) # cacheId = e10b12018c04b906 as it is not picking up
   return(list(BCR = BCR, LCC05 = LCC05))
 }

@@ -10,6 +10,7 @@ if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/mnt/data/Micheletti/b
   setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
 }
 # googledrive::drive_auth(use_oob = TRUE) # ONLY ONCE: USING RStudio Server. Doesn't work for the first time in RGui
+googledrive::drive_auth(email = "tati.micheletti@gmail.com")
 googledrive::drive_deauth()
 SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
 species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
@@ -18,6 +19,8 @@ species <- c("BBWA") # TEMPRARY!! Doing for only one species for now, just to te
 onlyFinalPixelTables <- TRUE # If I only want the final full pixel tables for each sp for a reason, 
                              # this should be TRUE
 doAssertions <- FALSE
+shortcutToDensityTable <- TRUE
+
 # 1. Calculate prediction area for each bird species: `birdSpecies` and `predArea`
 # 2. Estimate total abundance from Peter&Diana's paper for this area * 6.25: `realAbund0`
 # 1.1. Before I can calculate total abundance, I need to mask out all the non-NA pixels 
@@ -267,57 +270,47 @@ names(fullTableAllBirds) <- species
 
 # To correct for LCC previous to 2005 that we don't know what was, we can use the minimum and the maximum values of 
 # each one of the forest cover types that were harvested until 2011 for each pixel.
-# 1. Layover LCC05 on 2011 disturbance map. Get all unique LCC classes
-# 2. Lookout table BCR Prov LCC ExpD per species with only forested types that were harvested in 2011 (as 2011 is cummulative), from 1.
-# 3. Based on pixelID, create new columns in each table (fullTableList) realAbundMinXXXX, and  realAbundMaxXXXX, realAbundAveXXXX (where XXXX is 1984-2004)
-# 4. Subtract realAbundMin1984, realAbundMax1984 and realAbundMax1984 rasters from realAbund2011 to get the lossAbundanceMin, lossAbundanceMax, lossAbundanceAverage
-# *** Shouldn't I also consider the CV for these values? i.e. min = minValuesOfForestTypes*(averageExpD-cvExpD); max = maxValueOfForestTypes*(averageExpD+cvExpD)
-
-# Testing if Density rasters are the same format as our tables from the birdDensityBCR_Prov_LCC
-
-# ~~~~~~~~~~~~~~~~HERE
-
-# 1. Layover LCC05 in 2011 DISTURBANCE (not focal!! Needs to be the pure disturbed pixels) to know which LCC was disturbed
-# 1.1. Assertions to make sure all maps are ok
-if (doAssertions){
-  allOK <- lapply(species, function(birdSp){
-    gc()
-    BIRD <- readRDS(fullTableAllBirds[[birdSp]]) # THIS IS MY DENSITY RASTER (ExpD)
-    templateRas <- raster(file.path(getwd(), paste0("modules/birdDensityBCR_Prov_LCC/data/density",birdSp,".tif")))
-    dtTemplateRas <- data.table::data.table(pixelID = 1:ncell(templateRas), vals = raster::getValues(templateRas)) # making sure these are the rasters we need. 
-    # If the NA's in this raster match the table's missing values, it is.
-    whichNotNA <- dtTemplateRas[!is.na(vals), pixelID]
-    diffPixels <- setdiff(BIRD$pixelID, whichNotNA) # Integer(0) means that the data.table comes from the density rasters. So we can use density rasters as template.
-    if (length(diffPixels) == 0){
-      return(TRUE)
-    } else {
-      stop("error with species ", birdSp)
-    }
-  })
+# 1. I need to extract the values of a raster stack BCR LCC PROV using the density raster for each species
+pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
+# Here I need the table table BCR, Prov, LCC, ExpD so I can check the min, max and average for 
+# each combination of BCR + Prov for forested LCC (classes: )
+if (!shortcutToDensityTable){
+  source(file.path(getwd(), 'outputs/posthocAnalysis/makeBCRandLCC.R'))
+  BCRLCC05 <- Cache(makeBCRandLCC, pathData = pathData, overwrite = TRUE)
+  densityEstimates <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
+                            targetFile = densityEstimatesFileName, # OBS. Not all species have densities for all combinations of LCC_PROV_BCR. Not all species are everywhere!
+                            destinationPath = asPath(pathData), fun = "data.table::fread",
+                            userTags = "objectName:densityEstimates", overwrite = TRUE) %>% # Also checked if it was pooled with other BCR, but not.
+    .[SPECIES %in% species,]
+  source(file.path(getwd(), 'modules/birdDensityBCR_Prov_LCC/R/createBCR_PROV_LCC_Estimates.R'))
+  BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCRLCC05$BCR,
+                          LCC05 = BCRLCC05$LCC05, justBCRProvLCC = FALSE,
+                          densityEstimates = densityEstimates,
+                          omitArgs = c("userTags"),
+  userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))
+} else {
+  densityTable <- prepInputs(url = "https://drive.google.com/open?id=10lQSxK-DQ6CovtOwSo9w-ggr2HfsWrds", 
+                             destinationPath = file.path(wd, "outputs/posthocAnalysis/"), 
+                             targetFile = "originalDensityTable.rds", fun = "readRDS")
 }
 
-# 1.2. Run the focal over the 250m LCC05, and return the mode of the forest# Ian's approach
-# localFocal2011 <- raster::raster(file.path(wd, "modules/focalCalculation/data/mergedFocal2011-100Res250m.tif"))
-# 
-
-# I need to extract the values of a raster stack BCR LCC PROV using the density raster for each species, where density != 0
-pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
-source(file.path(getwd(), 'outputs/posthocAnalysis/makeBCRandLCC.R'))
-BCRLCC05 <- makeBCRandLCC(pathData = pathData)
-source(file.path(getwd(), 'modules/birdDensityBCR_Prov_LCC/R/createBCR_PROV_LCC_Estimates.R'))
-BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCRLCC05$BCR,
+# For each species...
+pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
+  # Exclude uninportant columns 
+  densityTableSub <- densityTable[SPECIES == BIRD, c("LCC", "BCR", "PROV", "D", "D_se")]
+  
+  source(file.path(getwd(), 'modules/birdDensityBCR_Prov_LCC/R/createBCR_PROV_LCC_Estimates.R'))
+  BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCRLCC05$BCR,
                         LCC05 = BCRLCC05$LCC05, justBCRProvLCC = TRUE,
                         densityEstimates = NULL,
                         omitArgs = c("userTags"),
-                        userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))  # cacheId = e10b12018c04b906 as it is not picking up
-# lapply(specis, and do this for each, and save the output, maybe without the cummulative to be lighter?)
-BCR_PROV_LCC_D <- merge(specificSpeciesSimplifiedTable, BCR_Prov_LCC, by = "pixelID") 
+                        userTags = c("goal:createPixelMap", "objectName:BCR_Prov_LCC", "script:paperPlot")) # TO BE REPLACED BY PREPINPUTS CALL
 
-# densityEstimates <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
-#                           targetFile = "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv", # OBS. Not all species have densities for all combinations of LCC_PROV_BCR. Not all species are everywhere!
-#                           destinationPath = pathData, fun = "data.table::fread",
-#                           userTags = "objectName:densityEstimates") %>% # Also checked if it was pooled with other BCR, but not.
-#   .[SPECIES %in% birdSp, c("LCC", "BCR", "PROV", "D", "D_se")]
+  densityTableSubPixelID <- merge(BCR_Prov_LCC, densityTableSub, by = c("BCR", "PROV", "LCC"))
+  BCR_PROV_LCC_D <- merge(readRDS(fullTableAllBirds[[BIRD]]), 
+                          densityTableSubPixelID, by = "pixelID") 
+  
+})
 
 
 # tableBCR_Prov_LCC_D <- merge(BCR_Prov_LCC_D$PROV_BCR_LCC, BCR_Prov_LCC_D$densityEstimates, all.x = TRUE)
