@@ -15,7 +15,7 @@ googledrive::drive_deauth()
 SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
 species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
 
-species <- c("BBWA") # TEMPRARY!! Doing for only one species for now, just to test the workflow
+# species <- c("BBWA") # TEMPRARY!! Doing for only one species for now, just to test the workflow
 onlyFinalPixelTables <- TRUE # If I only want the final full pixel tables for each sp for a reason, 
                              # this should be TRUE
 doAssertions <- FALSE
@@ -124,7 +124,7 @@ for (i in 2:length(abundNames)) {
   names(thisYearsRate) <- paste0("rate", yearRef)
   fullTableList <- cbind(fullTableList, thisYearsRate)
 }
-# 4.2.2. Rate compared to abund1984: cmmRate
+# 4.2.2. Rate compared to abund1984: cummRate
 for (i in 2:length(abundNames)) {
   yearRef <- usefun::substrBoth(strng = abundNames[i],
                                 howManyCharacters = 4,
@@ -136,19 +136,7 @@ for (i in 2:length(abundNames)) {
   fullTableList <- cbind(fullTableList, thisYearsRate)
 }
 
-# 5. Calculate the AbundXXXX in each year: `realAbundXXXX` (using `realAbund0`+(`realAbund0`*`cummRateXXXX`))
-
-# Now real density
-spDensityTable <- lapply(X = species, FUN = function(sp){
-  fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
-                                         full.names = TRUE), patterns = c("density", sp,".tif"))
-  fullDensityTable <- returnBirdAbundance(filepath = fl, type = "density",
-                                          fullTableFilename = paste0("densityFullTable", sp),
-                                          summarizedTableFileName = paste0("summarizedTableFileName", sp),
-                                          whichToLoad = "fullTable")
-})
-names(spDensityTable) <- species
-
+# 5. Calculate the REAL AbundXXXX in each year: `realAbundXXXX` (using `realAbund0`+(`realAbund0`*`cummRateXXXX`))
 # 5.1 Attach the `realAbund0` to the full table
 fullTableList <- usefun::cbindFromList(list(fullTableList, densityTable)) # BEFORE MERGING CHECK IF BOTH TABLES HAVE THE SAME VALUES FOR TOTAL PIXELS!
 # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
@@ -162,10 +150,17 @@ lapply(X = cummRates, FUN = function(cum){
 })
 saveRDS(fullTableList, file = completeSummaryFile)
 }
+}
 
-# CALCULATE ALL THE SAME I DID FOR THE SUMMARY, but at pixel basis!
-# NOW DO THE SAME I DID FOR THE SUMMARIZED TABLE, BUT FOR EACH PIXEL
-# FOR THAT, NEED TO DO FOR EACH BIRD
+
+######################################################################
+# CALCULATE ALL THE SAME I DID FOR THE SUMMARY, but at pixel basis!  #
+# NOW DO THE SAME I DID FOR THE SUMMARIZED TABLE, BUT FOR EACH PIXEL #
+# FOR THAT, NEED TO DO FOR EACH BIRD                                 #
+######################################################################
+
+
+
 
 # Pixel by pixel basis: 
 source(file.path(wd, "functions/makeBirdTable.R"))
@@ -177,17 +172,18 @@ if (file.exists(fullTablePixelsFile)){
 } else {
   spFullTable <- lapply(species, FUN = function(sp){
     tableFileName <- paste0("birdsTableAbund",sp)
-    fullTablePixels <- makeBirdTable(species = sp, tableFileName = tableFileName,
+    fullTablePixels <- Cache(makeBirdTable, species = sp, tableFileName = tableFileName,
                                      folderForTables = folderForTables,
                                      folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
                                      locationReturnBirdAbundanceFUN = file.path(wd, "functions/returnBirdAbundance.R"),
-                                     typeOfTable = "fullTable", lightLoad = FALSE)
+                                     typeOfTable = "fullTable", lightLoad = TRUE, tablePerPixel = TRUE,
+                             userTags = c(paste0("objectName:fullTablePixels", sp), "typeOfTable:fullTable"))
   })
 }
 names(spFullTable) <- species
-}
 
-downloadFullTableBirdsFromURL <- TRUE # If these tables are not present, 
+
+downloadFullTableBirdsFromURL <- FALSE # If these tables are not present, 
                                       # nor you want to calculate these, set it to TRUE
 
 fullTableAllBirds <- lapply(X = species, function(bird){
@@ -250,6 +246,18 @@ fullTableAllBirds <- lapply(X = species, function(bird){
       }
       # 5. Calculate the AbundXXXX in each year: `realAbundXXXX` (using `realAbund0`+(`realAbund0`*`cummRateXXXX`))
       # 5.1 Attach the `realAbund0` to the full table
+      # Now real density
+      spDensityTable <- lapply(X = species, FUN = function(sp){
+        fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
+                                               full.names = TRUE), patterns = c("density", sp,".tif"))
+        fullDensityTable <- Cache(returnBirdAbundance, filepath = fl, type = "density",
+                                                fullTableFilename = paste0("densityFullTable", sp, ".rds"),
+                                                summarizedTableFileName = paste0("summarizedTableFileName", sp),
+                                                whichToLoad = "fullTable", tablePerPixel = TRUE,
+                                  userTags = c(paste0("objectName:fullDensityTable", sp), "typeOfTable:fullTable"))
+      })
+      names(spDensityTable) <- species
+      
       fullTableList <- usefun::cbindFromList(list(fullTableList, spDensityTable[[bird]])) # BEFORE MERGING CHECK IF BOTH TABLES HAVE THE SAME VALUES FOR TOTAL PIXELS!
       names(fullTableList)[names(fullTableList) == "density"] <- "realAbund0"
       # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
@@ -259,7 +267,7 @@ fullTableAllBirds <- lapply(X = species, function(bird){
                              usefun::substrBoth(strng = cum, 
                                                 howManyCharacters = 4, 
                                                 fromEnd = TRUE))
-        fullTableList[, c(newColName) := realAbund0+(get(cum)*realAbund0)]
+        fullTableList[, c(newColName) := realAbund0 + (get(cum)*realAbund0)]
       })
       saveRDS(fullTableList, file = completeSummaryFile)
       return(completeSummaryFile) 
@@ -268,16 +276,20 @@ fullTableAllBirds <- lapply(X = species, function(bird){
 })
 names(fullTableAllBirds) <- species
 
+
+# HERE
+
+
 # To correct for LCC previous to 2005 that we don't know what was, we can use the minimum and the maximum values of 
 # each one of the forest cover types that were harvested until 2011 for each pixel.
 # 1. I need to extract the values of a raster stack BCR LCC PROV using the density raster for each species
 pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
 # Here I need the table table BCR, Prov, LCC, ExpD so I can check the min, max and average for 
-# each combination of BCR + Prov for forested LCC (classes: )
+# each combination of BCR + Prov for forested LCC (classes: 1:15)
 if (!shortcutToDensityTable){
   source(file.path(getwd(), 'outputs/posthocAnalysis/makeBCRandLCC.R'))
-  BCRLCC05 <- Cache(makeBCRandLCC, pathData = pathData, overwrite = TRUE)
-  densityEstimates <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
+  BCRLCC05 <- Cache(makeBCRandLCC, pathData = pathData)
+  densityTable <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
                             targetFile = densityEstimatesFileName, # OBS. Not all species have densities for all combinations of LCC_PROV_BCR. Not all species are everywhere!
                             destinationPath = asPath(pathData), fun = "data.table::fread",
                             userTags = "objectName:densityEstimates", overwrite = TRUE) %>% # Also checked if it was pooled with other BCR, but not.
@@ -285,38 +297,34 @@ if (!shortcutToDensityTable){
   source(file.path(getwd(), 'modules/birdDensityBCR_Prov_LCC/R/createBCR_PROV_LCC_Estimates.R'))
   BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCRLCC05$BCR,
                           LCC05 = BCRLCC05$LCC05, justBCRProvLCC = FALSE,
-                          densityEstimates = densityEstimates,
+                          densityEstimates = densityTable,
                           omitArgs = c("userTags"),
   userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))
 } else {
-  densityTable <- prepInputs(url = "https://drive.google.com/open?id=10lQSxK-DQ6CovtOwSo9w-ggr2HfsWrds", 
+  densityTable <- Cache(prepInputs, url = "https://drive.google.com/open?id=10lQSxK-DQ6CovtOwSo9w-ggr2HfsWrds", 
                              destinationPath = file.path(wd, "outputs/posthocAnalysis/"), 
                              targetFile = "originalDensityTable.rds", fun = "readRDS")
+  BCR_Prov_LCC <- Cache(prepInputs, url = "https://drive.google.com/open?id=1-ZXdU1DGzQOdOTrqHDd2HsPzdWOp5lmZ", 
+                        destinationPath = file.path(wd, "outputs/posthocAnalysis/"), 
+                        targetFile = "BCRProvLCCPixel.rds", fun = "readRDS", overwrite = TRUE)
 }
 
 # For each species...
 pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
   # Exclude uninportant columns 
   densityTableSub <- densityTable[SPECIES == BIRD, c("LCC", "BCR", "PROV", "D", "D_se")]
+  # Merge to get the Density per BCR_Prov_LCC per pixel
+  densityTableSubPixelID <- Cache(merge, BCR_Prov_LCC, densityTableSub, by = c("BCR", "PROV", "LCC"), all.x = TRUE)
+  # Get the min, max and average D for each combination of BCR and PROV, among all forested LCC classes (1:15)
+  densityTableSubPixelID[LCC %in% 1:15, c("minD", "maxD", "aveD") := list(min(D, na.rm = TRUE), 
+                                                                           max(D, na.rm = TRUE), 
+                                                                           mean(D, na.rm = TRUE)), by = c("BCR", "PROV")]
   
-  source(file.path(getwd(), 'modules/birdDensityBCR_Prov_LCC/R/createBCR_PROV_LCC_Estimates.R'))
-  BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCRLCC05$BCR,
-                        LCC05 = BCRLCC05$LCC05, justBCRProvLCC = TRUE,
-                        densityEstimates = NULL,
-                        omitArgs = c("userTags"),
-                        userTags = c("goal:createPixelMap", "objectName:BCR_Prov_LCC", "script:paperPlot")) # TO BE REPLACED BY PREPINPUTS CALL
-
-  densityTableSubPixelID <- merge(BCR_Prov_LCC, densityTableSub, by = c("BCR", "PROV", "LCC"))
-  BCR_PROV_LCC_D <- merge(readRDS(fullTableAllBirds[[BIRD]]), 
-                          densityTableSubPixelID, by = "pixelID") 
+  # Merge now with the fullTableAllBirds of each bird to add min, max and average to the full table
+  fullTableUncertain <- merge(readRDS(fullTableAllBirds[[BIRD]]),
+                          densityTableSubPixelID, by = "pixelID", all.x = TRUE)
   
 })
-
-
-# tableBCR_Prov_LCC_D <- merge(BCR_Prov_LCC_D$PROV_BCR_LCC, BCR_Prov_LCC_D$densityEstimates, all.x = TRUE)
-# tableBCR_Prov_LCC_D$pixelID <- 1:NROW(tableBCR_Prov_LCC_D)
-# # tableBCR_Prov_LCC_D <- na.omit(tableBCR_Prov_LCC_D, cols = "D")
-# tableBCR_Prov_LCC_D2 <- tableBCR_Prov_LCC_D[pixelID %in% BBWA$pixelID, ]
 
 
         #########

@@ -3,13 +3,13 @@
 # summarizedTableFileName : RDS object to be saved: table with summarized numberPixels, areaHa, totalAreaHa, `abundXXXX` or `realAbund0`
 # whichToLoad : should be `fullTable` or `summarizedTable`. Default to `summarizedTable`
 returnBirdAbundance <- function(filepath, type, fullTableFilename, summarizedTableFileName, 
-                                whichToLoad = "summarizedTable", lightLoad = FALSE){
+                                whichToLoad = "summarizedTable", lightLoad = FALSE, tablePerPixel = NULL){
   if (length(filepath)==0) stop("'filepath' needs to be provided") 
   if (any(!file.exists(fullTableFilename), !file.exists(summarizedTableFileName))){
     message(crayon::yellow(basename(fullTableFilename), " or ", 
                            basename(summarizedTableFileName), " does not exist. Creating and saving"))
     source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/areaAndAbundance.R')
-    denRasters <- areaAndAbundance(filepath = filepath, type = type)
+    denRasters <- areaAndAbundance(filepath = filepath, type = type, tablePerPixel = tablePerPixel)
     names(denRasters) <- usefun::substrBoth(strng = tools::file_path_sans_ext(filepath), 
                                                         howManyCharacters = 4, fromEnd = TRUE)
     birdsCleanDensities <- data.table::rbindlist(lapply(denRasters, `[[`, "birdDT"))

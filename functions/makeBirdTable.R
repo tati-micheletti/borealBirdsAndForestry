@@ -5,7 +5,8 @@ makeBirdTable <- function(species = NULL,
                           folderForPredictedRasters,
                           locationReturnBirdAbundanceFUN,
                           typeOfTable = "summarizedTable", 
-                          lightLoad = FALSE){
+                          lightLoad = FALSE, 
+                          tablePerPixel = NULL){
   bigTableName <- file.path(folderForTables, paste0(tableFileName, ".rds"))
   if (!file.exists(bigTableName)){
     if (is.null(year))
@@ -24,7 +25,8 @@ makeBirdTable <- function(species = NULL,
                                           fullTableFilename = fullTableFilename, 
                                           summarizedTableFileName = summarizedTableFileName,
                                           whichToLoad = typeOfTable, lightLoad = lightLoad, 
-                                          cacheRepo = file.path(getwd(), "outputs/posthocAnalysis/cache"))
+                                          cacheRepo = file.path(getwd(), "outputs/posthocAnalysis/cache"),
+                                          tablePerPixel = tablePerPixel)
       densityTable$year <- paste0("year", y)
       return(densityTable)
     }))
