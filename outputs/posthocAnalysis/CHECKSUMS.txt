@@ -1,2 +1,0 @@
-"file" "checksum" "filesize" "algorithm"
-"fullPixelTableYRWA.rds" "663286e10de139ba" "1571927227" "xxhash64"
