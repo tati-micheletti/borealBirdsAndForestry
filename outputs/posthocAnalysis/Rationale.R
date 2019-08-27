@@ -30,3 +30,11 @@
    #      allNotNA + allNA == ncell(significantSlope)))
    #   stop("Something is not adding up. Debug") 
   
+id <- "1DI9k8rx4dY8P7TbMdXX9Wpv6KqXl6t4m"
+
+fl <- usefun::grepMulti(x = list.files(file.path(getwd(), "outputs/posthocAnalysis/"),
+                                       full.names=T), patterns = "fullPixelTable")
+
+lapply(fl, function(ras){
+  googledrive::drive_upload(media = ras, path = googledrive::as_id(id))
+})
