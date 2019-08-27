@@ -9,6 +9,7 @@ if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/mnt/data/Micheletti/b
   warning("Make sure you are in the correct working directory!")
   setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
 }
+# googledrive::drive_auth(use_oob = TRUE) # ONLY ONCE: USING RStudio Server. Doesn't work for the first time in RGui
 googledrive::drive_deauth()
 SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
 # 1. Calculate prediction area for each bird species: `birdSpecies` and `predArea`
@@ -280,9 +281,7 @@ BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_Estimates, BCR = BCR,
                         LCC05 = LCC05, justBCRProvLCC = TRUE,
                         densityEstimates = NULL,
                         omitArgs = c("userTags"),
-                        userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))  # cacheId = e10b12018c04b906 as it is not picking up
-
-# BCR_Prov_LCC_D <- Cache(rnorm, 1, 1, cacheId = "2e781ecc396984c3")  # cacheId = e10b12018c04b906 as it is not picking up
+                        userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))
 
 BCRProvLCC <- rasterStack(BCR, LCC)
 # densityEstimates <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
