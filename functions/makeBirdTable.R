@@ -27,7 +27,8 @@ makeBirdTable <- function(species = NULL,
                                           summarizedTableFileName = summarizedTableFileName,
                                           whichToLoad = typeOfTable, lightLoad = lightLoad, 
                                           cacheRepo = file.path(getwd(), "outputs/posthocAnalysis/cache"),
-                                          tablePerPixel = tablePerPixel, useCache = overwriteInternals)
+                                          tablePerPixel = tablePerPixel, useCache = overwriteInternals,
+                                          omitArgs = c("useCache", "cacheRepo"))
       densityTable$year <- paste0("year", y)
       return(densityTable)
     }))
