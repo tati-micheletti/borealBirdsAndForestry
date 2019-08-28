@@ -178,7 +178,7 @@ if (file.exists(fullTablePixelsFile)){
                                      locationReturnBirdAbundanceFUN = file.path(wd, "functions/returnBirdAbundance.R"),
                                      typeOfTable = "fullTable", lightLoad = TRUE, tablePerPixel = TRUE,
                              userTags = c(paste0("objectName:fullTablePixels", sp), "typeOfTable:fullTable"),
-                             omitArgs = c("useCache", "userTags", "destinationPath"),
+                             omitArgs = c("useCache", "userTags", "destinationPath"), overwriteInternals = "overwrite",
                              useCache = "overwrite")
   })
 }
