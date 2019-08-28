@@ -20,6 +20,8 @@ areaAndAbundance <- function(filepath, type, tablePerPixel = NULL){
     birdDT <- na.omit(birdDT) # Only non-NA pixels
     dt <- data.table::data.table(species = bird, numberPixels = NROW(birdDT), 
                                  areaHa = prod(raster::res(birdRas))/10000)
+    print("TOTAL AREA BASED ON tablePerPixel == ", tablePerPixel, " ", ifelse(tablePerPixel, areaHa, NROW(birdDT)*areaHa))
+    browser()
     dt[, c("totalAreaHa", ifelse(type == "density", "realAbund0", paste0("abund", type))) := 
          list(ifelse(tablePerPixel, areaHa, NROW(birdDT)*areaHa), sum(birdDT$density*areaHa))]
     message(crayon::green("Finished ", 
