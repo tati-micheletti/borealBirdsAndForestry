@@ -177,7 +177,9 @@ if (file.exists(fullTablePixelsFile)){
                                      folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
                                      locationReturnBirdAbundanceFUN = file.path(wd, "functions/returnBirdAbundance.R"),
                                      typeOfTable = "fullTable", lightLoad = TRUE, tablePerPixel = TRUE,
-                             userTags = c(paste0("objectName:fullTablePixels", sp), "typeOfTable:fullTable"))
+                             userTags = c(paste0("objectName:fullTablePixels", sp), "typeOfTable:fullTable"),
+                             omitArgs = c("useCache", "userTags", "destinationPath"),
+                             useCache = "overwrite")
   })
 }
 names(spFullTable) <- species

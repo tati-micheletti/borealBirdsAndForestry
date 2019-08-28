@@ -6,7 +6,8 @@ makeBirdTable <- function(species = NULL,
                           locationReturnBirdAbundanceFUN,
                           typeOfTable = "summarizedTable", 
                           lightLoad = FALSE, 
-                          tablePerPixel = NULL){
+                          tablePerPixel = NULL,
+                          overwriteInternals = NULL){ # or "overwrite"; basically Cache argument 'useCache'
   bigTableName <- file.path(folderForTables, paste0(tableFileName, ".rds"))
   if (!file.exists(bigTableName)){
     if (is.null(year))
@@ -26,7 +27,7 @@ makeBirdTable <- function(species = NULL,
                                           summarizedTableFileName = summarizedTableFileName,
                                           whichToLoad = typeOfTable, lightLoad = lightLoad, 
                                           cacheRepo = file.path(getwd(), "outputs/posthocAnalysis/cache"),
-                                          tablePerPixel = tablePerPixel)
+                                          tablePerPixel = tablePerPixel, useCache = overwriteInternals)
       densityTable$year <- paste0("year", y)
       return(densityTable)
     }))

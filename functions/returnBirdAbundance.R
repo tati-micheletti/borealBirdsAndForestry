@@ -4,8 +4,10 @@
 # whichToLoad : should be `fullTable` or `summarizedTable`. Default to `summarizedTable`
 returnBirdAbundance <- function(filepath, type, fullTableFilename, summarizedTableFileName, 
                                 whichToLoad = "summarizedTable", lightLoad = FALSE, tablePerPixel = NULL){
+  
   if (length(filepath)==0) stop("'filepath' needs to be provided") 
-  if (any(!file.exists(fullTableFilename), !file.exists(summarizedTableFileName))){
+  if (any(all(!file.exists(fullTableFilename), whichToLoad != "summarizedTable"), 
+          all(!file.exists(summarizedTableFileName), whichToLoad == "summarizedTable"))){
     message(crayon::yellow(basename(fullTableFilename), " or ", 
                            basename(summarizedTableFileName), " does not exist. Creating and saving"))
     source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/areaAndAbundance.R')
@@ -22,8 +24,7 @@ returnBirdAbundance <- function(filepath, type, fullTableFilename, summarizedTab
       return(birdsTable) 
     }
   } else {
-    message(crayon::green(basename(fullTableFilename), " and/or ", 
-                           basename(summarizedTableFileName), " exist. Returning"))
+    message(crayon::green(basename(fullTableFilename), "exists. Returning"))
     if (whichToLoad == "fullTable"){
       if (lightLoad) return(fullTableFilename)
       return(readRDS(fullTableFilename))
