@@ -170,6 +170,7 @@ fullTablePixelsFile <- file.path(folderForTables, paste0(tableFileName, ".rds"))
 if (file.exists(fullTablePixelsFile)){
   fullTablePixels <- readRDS(fullTablePixelsFile)
 } else {
+  # Make a density table. This has the original DENSITY, per pixel, taken out straight from the density/predicted rasters
   spFullTable <- lapply(species, FUN = function(sp){
     tableFileName <- paste0("birdsTableAbund",sp)
     fullTablePixels <- Cache(makeBirdTable, species = sp, tableFileName = tableFileName,
@@ -186,7 +187,7 @@ names(spFullTable) <- species
 
 
 downloadFullTableBirdsFromURL <- FALSE # If these tables are not present, 
-                                      # nor you want to calculate these, set it to TRUE
+                                      # nor you want to calculate these, set it to TRUE ==> Not yet fully implemented
 
 fullTableAllBirds <- lapply(X = species, function(bird){
   completeSummaryFile <- file.path(wd, "outputs/posthocAnalysis", 
@@ -261,6 +262,7 @@ fullTableAllBirds <- lapply(X = species, function(bird){
       names(spDensityTable) <- species
       
       fullTableList <- usefun::cbindFromList(list(fullTableList, spDensityTable[[bird]])) # BEFORE MERGING CHECK IF BOTH TABLES HAVE THE SAME VALUES FOR TOTAL PIXELS!
+      fullTableList$density <- fullTableList$density * 6.25       # Creating the realAbundance by converting density to abundance prod(raster::res(birdRas))/10000)
       names(fullTableList)[names(fullTableList) == "density"] <- "realAbund0"
       # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
       cummRates <- usefun::grepMulti(x = names(fullTableList), patterns = "cumm")

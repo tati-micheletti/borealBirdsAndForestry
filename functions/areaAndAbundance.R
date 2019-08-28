@@ -18,12 +18,11 @@ areaAndAbundance <- function(filepath, type, tablePerPixel = NULL){
     birdRas <- raster::raster(rasPath)
     birdDT <- data.table::data.table(species = bird, density = raster::getValues(birdRas), pixelID = 1:raster::ncell(birdRas))
     birdDT <- na.omit(birdDT) # Only non-NA pixels
+    # Still don't need abundance, as it is calculated later
     dt <- data.table::data.table(species = bird, numberPixels = NROW(birdDT), 
                                  areaHa = prod(raster::res(birdRas))/10000)
-    browser()
-    # print("TOTAL AREA BASED ON tablePerPixel == ", tablePerPixel, " ", ifelse(tablePerPixel, areaHa, NROW(birdDT)*areaHa))
     dt[, c("totalAreaHa", ifelse(type == "density", "realAbund0", paste0("abund", type))) := 
-         list(ifelse(tablePerPixel, areaHa, NROW(birdDT)*areaHa), sum(birdDT$density*areaHa))]
+         list(NROW(birdDT)*dt$areaHa, sum(birdDT$density*areaHa))]
     message(crayon::green("Finished ", 
                            bird, " for ", type))
     return(list(birdDT = birdDT, dt = dt))
