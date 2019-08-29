@@ -251,6 +251,7 @@ fullTableAllBirds <- lapply(X = species, function(bird){
       # 5.1 Attach the `realAbund0` to the full table
       # Now real density
       spDensityTable <- lapply(X = species, FUN = function(sp){
+        maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
         fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
                                                full.names = TRUE), patterns = c("density", sp,".tif"))
         fullDensityTable <- Cache(returnBirdAbundance, filepath = fl, type = "density",
@@ -281,7 +282,7 @@ fullTableAllBirds <- lapply(X = species, function(bird){
 names(fullTableAllBirds) <- species
 
 
-# HERE
+# HERE <<~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 # To correct for LCC previous to 2005 that we don't know what was, we can use the minimum and the maximum values of 
