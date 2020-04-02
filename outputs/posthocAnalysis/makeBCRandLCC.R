@@ -1,4 +1,4 @@
-makeBCRandLCC <- function(pathData, overwrite = NULL){
+makeBCRandLCC <- function(pathData, overwrite = FALSE){
   source(file.path(getwd(), "functions/defineStudyArea.R"))
   rP <- Cache(defineStudyArea, testArea = TRUE,
               specificTestArea = "boreal",

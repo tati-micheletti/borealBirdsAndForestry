@@ -5,7 +5,7 @@ createBCR_PROV_LCC_Estimates <- function(BCR,
   
   # 2. Rasterize (fasterize) both PROV and BCR.
   # =========== BCR 
-  message(crayon::yellow(paste0("Fasterizing BCRsf")))
+  message(crayon::yellow(paste0("Fasterizing BCR")))
   BCRsf <- sf::st_as_sf(BCR)
   BCRsf <- BCRsf[!is.na(BCRsf$PROVINCE_S),] # Excluding a weird NA from the polygons
   BCRsf <- BCRsf[BCRsf$COUNTRY == "CANADA",] # Excluding the USA from the analysis
@@ -13,7 +13,7 @@ createBCR_PROV_LCC_Estimates <- function(BCR,
   rasBCR[] <- rasBCR[]
   
   # # ==========+ PROV
-  
+  message(crayon::yellow(paste0("Fasterizing PROV")))
   PROV_ID <- data.table(PROVINCE_S = unique(BCRsf$PROVINCE_S), ID = seq(200, 199 + length(unique(BCRsf$PROVINCE_S))))
   BCRsf$PROV_ID <- PROV_ID$ID[match(BCRsf$PROVINCE_S, PROV_ID$PROVINCE_S)]
   rasPROV <- fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "PROV_ID")
@@ -31,15 +31,12 @@ createBCR_PROV_LCC_Estimates <- function(BCR,
                        .Names = c("PRENAME", "ID", "PROV"), row.names = c(NA, -13L), class = "data.frame")
 
   if (justBCRProvLCC){
-    PROVabb <- data.table::data.table(PROVabb)
-    rasPROVvals <- data.table::data.table(pixelID = 1:raster::ncell(LCC05), 
-                                          ID = raster::getValues(fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "PROV_ID")))
-    provDT <- merge(rasPROVvals, PROVabb, by = "ID", all.x = TRUE)
-    setkey(provDT, pixelID)
-    PROV_BCR_LCC <- data.table::data.table(pixelID = provDT$pixelID,
-                                           PROV = provDT$PROV,
-                                           BCR = raster::getValues(rasBCR),
-                                           LCC = raster::getValues(LCC05))
+    lccProvBCR <- raster::stack(LCC05, rasPROV, rasBCR)
+    names(lccProvBCR) <- c("LCC", "ID", "BCR")
+    PROV_BCR_LCC <- data.table(getValues(lccProvBCR), 
+                               pixelID = 1:ncell(lccProvBCR))
+    PROV_BCR_LCC <- merge(PROV_BCR_LCC, PROVabb[,2:3], by = "ID", all.x = TRUE)
+    PROV_BCR_LCC[, ID := NULL]
     return(PROV_BCR_LCC)
   }
   

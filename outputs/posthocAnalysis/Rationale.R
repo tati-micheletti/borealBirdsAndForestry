@@ -29,12 +29,13 @@
    #      significant + nonSignificant + allNA == ncell(significantSlope),
    #      allNotNA + allNA == ncell(significantSlope)))
    #   stop("Something is not adding up. Debug") 
-  
-id <- "1DI9k8rx4dY8P7TbMdXX9Wpv6KqXl6t4m"
 
-fl <- usefun::grepMulti(x = list.files(file.path(getwd(), "outputs/posthocAnalysis/"),
-                                       full.names=T), patterns = "fullPixelTable")
+id <- "12iUWhrSBDS8dDXI42uSFqns_7akFSr1R"
 
-lapply(fl, function(ras){
-  googledrive::drive_upload(media = ras, path = googledrive::as_id(id))
+fl <- usefun::grepMulti(x = list.files(file.path(getwd(), "outputs/posthocAnalysis/"), #file.path(getwd(), "modules/focalCalculation/data/", dirname(maskedDensityRasFolder)
+                                       full.names=T), patterns = "absolute")
+
+fl2 <- usefun::grepMulti(x = fl3, patterns = "table")
+lapply(fl3, function(ras){
+  googledrive::drive_upload(media = "/mnt/data/Micheletti/borealBirdsAndForestry/outputs/posthocAnalysis/proportionalCAWA.tif", path = googledrive::as_id(id))
 })
