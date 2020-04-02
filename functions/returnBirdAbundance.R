@@ -3,15 +3,18 @@
 # summarizedTableFileName : RDS object to be saved: table with summarized numberPixels, areaHa, totalAreaHa, `abundXXXX` or `realAbund0`
 # whichToLoad : should be `fullTable` or `summarizedTable`. Default to `summarizedTable`
 returnBirdAbundance <- function(filepath, type, fullTableFilename, summarizedTableFileName, 
-                                whichToLoad = "summarizedTable", lightLoad = FALSE, tablePerPixel = NULL){
+                                whichToLoad = "summarizedTable", onlyNA = FALSE, 
+                                lightLoad = FALSE, tablePerPixel = NULL, rasterToMatch = NULL){
   
-  if (length(filepath)==0) stop("'filepath' needs to be provided") 
+  if (length(filepath)==0) stop("'filepath' needs to be provided")
   if (any(all(!file.exists(fullTableFilename), whichToLoad != "summarizedTable"), 
           all(!file.exists(summarizedTableFileName), whichToLoad == "summarizedTable"))){
     message(crayon::yellow(basename(fullTableFilename), " or ", 
                            basename(summarizedTableFileName), " does not exist. Creating and saving"))
     source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/areaAndAbundance.R')
-    denRasters <- areaAndAbundance(filepath = filepath, type = type, tablePerPixel = tablePerPixel)
+    denRasters <- Cache(areaAndAbundance, filepath = filepath, onlyNA = onlyNA, 
+                        type = type, tablePerPixel = tablePerPixel, 
+                        rasterToMatch = rasterToMatch)
     names(denRasters) <- usefun::substrBoth(strng = tools::file_path_sans_ext(filepath), 
                                                         howManyCharacters = 4, fromEnd = TRUE)
     birdsCleanDensities <- data.table::rbindlist(lapply(denRasters, `[[`, "birdDT"))
@@ -19,9 +22,9 @@ returnBirdAbundance <- function(filepath, type, fullTableFilename, summarizedTab
     birdsTable <- data.table::rbindlist(lapply(denRasters, `[[`, "dt"))
     if (!file.exists(summarizedTableFileName)) saveRDS(object = birdsTable, file = summarizedTableFileName)
     if (whichToLoad == "fullTable"){
-      return(birdsCleanDensities) 
+      return(birdsCleanDensities)
     } else {
-      return(birdsTable) 
+      return(birdsTable)
     }
   } else {
     message(crayon::green(basename(fullTableFilename), "exists. Returning"))

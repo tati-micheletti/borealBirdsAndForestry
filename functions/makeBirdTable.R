@@ -1,5 +1,6 @@
 makeBirdTable <- function(species = NULL,
                           year = NULL, 
+                          onlyNA = FALSE,
                           tableFileName,
                           folderForTables,
                           folderForPredictedRasters,
@@ -26,12 +27,14 @@ makeBirdTable <- function(species = NULL,
                                           fullTableFilename = fullTableFilename, 
                                           summarizedTableFileName = summarizedTableFileName,
                                           whichToLoad = typeOfTable, lightLoad = lightLoad, 
+                                          onlyNA = onlyNA,
                                           cacheRepo = file.path(getwd(), "outputs/posthocAnalysis/cache"),
                                           tablePerPixel = tablePerPixel, useCache = overwriteInternals,
                                           omitArgs = c("useCache", "cacheRepo"))
       densityTable$year <- paste0("year", y)
       return(densityTable)
     }))
+    browser()
     dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, value.var = "density")
     saveRDS(object = fullTableList, file = bigTableName)
     rm(fullTableList)
