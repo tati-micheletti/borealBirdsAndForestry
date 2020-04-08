@@ -340,24 +340,29 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     }
     
     # simplify table
-    colsToDrop <- names(BIRDfullTable)[!names(BIRDfullTable) %in% c("pixelID", paste0("realAbund", c(0, 1984:2011)),
+    colsToDrop <- names(BIRDfullTable)[!names(BIRDfullTable) %in% c("pixelID", 
+                                                                    paste0("realAbund", 
+                                                                           c(0, 1984:2011)),
                                                                     grepMulti(x = names(BIRDfullTable), 
                                                                               patterns = "cum"))]
     BIRDfullTable[, (colsToDrop) := NULL]
-    # 4. Create a new table: with realAbundYEARmin realAbundYEARmax, where for pixels that didn't change, 
+    # 4. Create a new table: with realAbundYEARmin realAbundYEARmax, 
+    # where for pixels that didn't change, 
     # these two columns have the same value (the original realAbundYEAR)
     # 4.1 Join the table with Abund, Abund_se, minAbund, maxAbund
     BIRDfullTable <- merge(BIRDfullTable,
                            densityTableSubPixelIDsimp, by = "pixelID", all.x = TRUE)
     
     # Identify which pixels changed before 2005
-    BIRDfullTable[, pixelChanged := ifelse(cummRate1985-cummRate2005 != 0, TRUE, FALSE)] #all(LCC %in% 1:15)
+    BIRDfullTable[, pixelChanged := ifelse(cummRate1985-cummRate2005 != 0, TRUE, FALSE)] 
+    #all(LCC %in% 1:15)
     source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/percentOfAreaAffectedByDisturbance.R')
-    percChange <- percentOfAreaAffectedByDisturbance(tableWithChange = BIRDfullTable, logicalColChange = "pixelChanged")
+    percChange <- percentOfAreaAffectedByDisturbance(tableWithChange = BIRDfullTable, 
+                                                     logicalColChange = "pixelChanged")
     message(crayon::cyan(paste0("Percent area that is affected by ANY change for ", BIRD, ": ", 
                                 100*round(as.numeric(percChange), 2), "%")))
-    saveRDS(percChange, file.path(dirname(maskedDensityRasFolder), 
-                                  paste0("percentChange", BIRD, ".rds")))
+    saveRDS(percChange, file.path(folderForTables, 
+                                  paste0("percentChange", BIRD, spatialScale,".rds")))
     
     # 4.2 Calculate realAbundYYYY OR minrealAbundYYYY for years 1985-2005
     cummRates <- usefun::grepMulti(x = names(BIRDfullTable), patterns = "cumm")
