@@ -16,12 +16,9 @@ source(file.path(getwd(), "functions/returnBirdAbundance.R"))
 
 # googledrive::drive_auth(use_oob = TRUE) # ONLY ONCE: USING RStudio Server. Doesn't work for the first time in RGui
 googledrive::drive_auth(email = "tati.micheletti@gmail.com")
-# googledrive::drive_deauth()
 SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
 species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
-# species <- "CAWA"
-onlyFinalPixelTables <- TRUE # If I only want the final full pixel tables (not the summarized ones!), 
-                             # this should be TRUE
+spatialScale <- 100 # 500m DONE! 
 doAssertions <- TRUE
 freeUpMem <- FALSE
 lightLoadFinalTable <- FALSE
