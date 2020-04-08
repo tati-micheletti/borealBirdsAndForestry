@@ -422,83 +422,135 @@ finalPixelTableList <- lapply(names(finalPixelTableList), function(sp){
 })
 names(finalPixelTableList) <- species
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# MANAGED FOREST FOR EACH PROVINCE #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+
+# Here is where we can do any sort of summary by polygon. After this point, I go for summarizing all the tables
+# 1. Load a shapefile and extract the ID by pixel (i.e. have a dt with pixelID and a new column region)
+managedForest <- Cache(prepInputs, url = "https://drive.google.com/open?id=1tgqn8FajD1iSj0aECONGhFzwInau0-q8",
+                       targetFile = "NIR2016_MF.shp", archive = "NIR2016_MF.zip",
+                       alsoExtract = "similar",
+                       studyArea = BCRLCC05$BCR, rasterToMatch = BCRLCC05$LCC05, 
+                       overwrite = TRUE, omitArgs = c("overwrite"),
+                       destinationPath = file.path(getwd(), "inputs"), 
+                       userTags = "objectName:managedForest")
+
+managedForest <- managedForest[managedForest$ManagedFor == "Managed Forest",]
+
+# Creating codes to rasterize BCR province so we can decide if we do the comparison at 
+# Province, BCR or both levels
+
+BCR <- BCRLCC05[["BCR"]]
+library(data.table)
+# Improve speed, drop columns that we dont need
+colsToDrop <- c("BCRNAME", "COUNTRY", "REGION", "WATER", "Shape_Leng", "Shape_Area", "Id")
+# The BCR shapefile has some sort of water, non-water polygons. Need to drop those water ones before doing this!
+# WATER == 1 needs to be removed, and so does country == USA
+BCR <- BCR[BCR$WATER == 3 & BCR$COUNTRY == "CANADA" ,
+           !(names(BCR) %in% colsToDrop)]
+BCRdt <- data.table(BCR@data)
+
+BCRdt$BCR_PROV <- 1:NROW(BCRdt)
+provDT <- data.table(PROVINCE_S = unique(BCRdt$PROVINCE_S))
+provDT$PROVINCE <- 1:NROW(provDT)
+BCRdt <- merge(BCRdt, provDT, by = "PROVINCE_S")
+# Check the length of each possible variable to use for comparisons  
+length(unique(BCRdt$BCR)) # 10
+length(unique(BCRdt$PROVINCE)) # 10
+length(unique(BCRdt$PROVINCE_S)) # 10
+length(unique(BCRdt$BCR_PROV)) # 40
+
+knitr::kable(BCRdt)
+
+# Need to rasterize the shapefile for getting pixelID,
+# but first need to add BCR_PROV and PROVINCE TO SHAPEFILE (BCR is there already)
+BCRdtOriginal <- data.table(BCR@data)
+BCRdtOriginalData <- merge(BCRdtOriginal, BCRdt, by = c("BCR", "PROVINCE_S"))
+BCR$PROVINCE <- BCRdtOriginalData$PROVINCE
+BCR$BCR_PROV <- BCRdtOriginalData$BCR_PROV
+
+# Function to extract the values to a table
+source(file.path(getwd(), 'functions/extractValuesToTable.R'))
+rasProv <- Cache(extractValuesToTable, destinationPath = file.path(getwd(), "inputs"), 
+                                shape = BCR, extractFrom = managedForest,
+                                templateRas = BCRLCC05$LCC05, 
+                                field = "PROVINCE")
+rasBCR <- Cache(extractValuesToTable, destinationPath = file.path(getwd(), "inputs"),
+                               shape = BCR, extractFrom = managedForest, 
+                               templateRas = BCRLCC05$LCC05, 
+                               field = "BCR")
+rasProvBCR <- Cache(extractValuesToTable, destinationPath = file.path(getwd(), "inputs"),
+                                   shape = BCR, extractFrom = managedForest,
+                                   templateRas = BCRLCC05$LCC05, 
+                                   field = "BCR_PROV")
+# Now I have a data.table of pixelID, merge all and then merge with finalPixelTableList
+managedForestProvBCR <- merge(rasProv, rasBCR, by = "pixelID")
+managedForestProvBCR <- merge(managedForestProvBCR, rasProvBCR, by = "pixelID")
+names(managedForestProvBCR) <- c("pixelID", "PROV", "BCR", "PROV_BCR")
+
+# Now I can put together the managedForest raster and the birds table
+finalPixelTableListBCRPROV <- lapply(names(finalPixelTableList), function(sp){
+  finalPixelTableList[[sp]] <- merge(finalPixelTableList[[sp]], 
+                                     managedForestProvBCR, by = "pixelID")
+  # REMOVE NA's --> NA's in any of the columns == non-managed forests!
+  finalPixelTableList[[sp]] <- na.omit(finalPixelTableList[[sp]])
+  tbName <- file.path(dirname(maskedDensityRasFolder), 
+                      paste0("finalPixTab_BCRPROV_forSummary_", sp,".rds"))
+  saveRDS(finalPixelTableList[[sp]], file = tbName)
+  return(tbName)
+})
+names(finalPixelTableListBCRPROV) <- species
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# MANAGED FOREST FOR EACH PROVINCE #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# TABLE WITH MANAGED AND UNMAGAED FORESTS
 # SHORTCUT:: run from here on only
 finalPixelTableList <- lapply(species, function(sp){
-  tbName <- file.path(dirname(maskedDensityRasFolder), 
+  tbName <- file.path(dirname(maskedDensityRasFolder),
                       paste0("finalPixelTable_forSummary_", sp,".rds"))
   return(tbName)
 })
 names(finalPixelTableList) <- species
+ 
+# TABLE WITH MANAGED FOREST ONLY
+finalPixelTableListBCRPROV <- lapply(species, function(sp){
+  tbName <- file.path(dirname(maskedDensityRasFolder),
+                      paste0("finalPixTab_BCRPROV_forSummary_", sp,".rds"))
+  return(tbName)
+})
+names(finalPixelTableListBCRPROV) <- species
 
 
+# CREATING FINAL TABLES
 
-summarizedTableFromPixelsPath <- file.path(dirname(maskedDensityRasFolder), 
-                                           "summarizedTableFromPixels.rds")
+borealTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixels.rds", 
+                                             maskedDensityRasFolder = maskedDensityRasFolder, 
+                                             column = "value", finalPixelTableList = finalPixelTableList,
+                                             species = species)
+bcrTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixelsBCR.rds", 
+                                          maskedDensityRasFolder = maskedDensityRasFolder, 
+                                          column = "BCR",  finalPixelTableList = finalPixelTableListBCRPROV,
+                                          species = species)
+provinceTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixelsProv.rds", 
+                                               maskedDensityRasFolder = maskedDensityRasFolder, 
+                                               column = "PROV", finalPixelTableList = finalPixelTableListBCRPROV,
+                                               species = species)
+provinceBcrTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixelsProv_BCR.rds", 
+                                                  maskedDensityRasFolder = maskedDensityRasFolder, 
+                                                  column = "PROV_BCR", finalPixelTableList = finalPixelTableListBCRPROV, 
+                                                  species = species)
 
-if (!file.exists(summarizedTableFromPixelsPath)){
-  summarizedTable <- rbindlist(lapply(species, function(BIRD){
-    birdTable <- readRDS(finalPixelTableList[[BIRD]])
-    birdTable <- na.omit(birdTable) #TODO ugly shortcut for the presentation! Why do I still have NA's in this table? -- these are until 2005...
-    # 23NOV19 --> I still have 605 pixels that are NA for Abund. don't know where this is coming from.... Making a temporary fix
-    
-    tableSummaryByRegion <- rbindlist(lapply(unique(birdTable$value)[!is.na(unique(birdTable$value))], function(reg){
+# RUN ON LOCAL COMPUTER ONLY, AFTER UPLOADING TABLES AND DOWNLOADING TO FOLDER DATA
+borealTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixels.rds"))
+bcrTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsBCR.rds"))
+provinceTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsProv.rds"))
+provinceBcrTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsProv_BCR.rds"))
 
-    if (doAssertions){
-      # Make assertions to make sure we have the same amount of pixels with info
-      ok1 <- sum(!is.na(birdTable$minrealAbund1985)) == NROW(birdTable)
-      ok2 <- sum(!is.na(birdTable$maxrealAbund1985)) == NROW(birdTable)
-      ok3 <- sum(!is.na(birdTable$minrealAbund2011)) == NROW(birdTable)
-      ok4 <- sum(!is.na(birdTable$maxrealAbund2011)) == NROW(birdTable)
-      birdTable <- na.omit(birdTable, cols = "Abund")
-      if(!all(ok1, ok2, ok3, ok4)){
-        message("There are still NA's in the birdTable. Debug")
-      } 
-    }
-      abund0 <- birdTable[value == reg, sum(realAbund0)]
-      abund1985 <- birdTable[value == reg, sum(realAbund1985)]
-      minAbund1985 <- birdTable[value == reg, sum(minrealAbund1985)]
-      maxAbund1985 <- birdTable[value == reg, sum(maxrealAbund1985)]
-      abund2011 <- birdTable[value == reg, sum(realAbund2011)]
-      diff2011_0 <- abund2011-abund0
-      diff2011_1985min <- abund2011-minAbund1985
-      diff2011_1985max <- abund2011-maxAbund1985
-      diff2011_1985exp <- abund2011-abund1985
-      summarizedTable <- data.table::data.table(species = BIRD,
-                                                region = reg, # Each region/polygon of the shapefile
-                                                abund0 = abund0,
-                                                abund1985 = abund1985,
-                                                minAbund1985 = minAbund1985,
-                                                maxAbund1985 = maxAbund1985,
-                                                abund2011 = abund2011,
-                                                diff2011_1985min = diff2011_1985min,
-                                                diff2011_1985max = diff2011_1985max,
-                                                diff2011_1985exp = diff2011_1985exp,
-                                                diff2011_0 = diff2011_0,
-                                                range = NROW(birdTable),
-                                                diffPerYear0 = diff2011_0/27, # We have a time series of 27 years
-                                                diffPerYearMin = diff2011_1985min/27,
-                                                diffPerYearMax = diff2011_1985max/27,
-                                                diffPerYearExp = diff2011_1985exp/27,
-                                                propDiff0 = (abund2011-abund0)/abund0,
-                                                propDiffExp = (abund2011-abund1985)/abund1985,
-                                                propDiffMin1985 = (abund2011-minAbund1985)/minAbund1985,
-                                                propDiffMax1985 = (abund2011-maxAbund1985)/maxAbund1985)
-      return(summarizedTable)
-    }))
-
-    rm(birdTable); gc()
-    message(crayon::white("Summarized table finished for ", BIRD))
-    return(tableSummaryByRegion)
-  })
-  )
-  saveRDS(object = summarizedTable, file = summarizedTableFromPixelsPath)
-} else{
-  summarizedTable <- readRDS(summarizedTableFromPixelsPath)
-}
 
         #########
         # PLOTS #
         #########
+
+# HERE!!! <<<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 reg <- summarizedTable
 
@@ -527,8 +579,8 @@ summarizedTableCom[, c("abund2011_R", "minAbund2011_R", "maxAbund2011_R") := lis
 
 
 # Not sure here... Can I or can't I have this? Does it really not work if focal is not cummulative? I believe I was wrong. I think it does work! [ 12th SEPT ]
-# PLOT1: rate of decrease for each year -- is forestry reducing? (DOES PIXEL vs TOTAL AGREE? -- only works if focal is not cummulative, 
-# so it is not working, cause focal is cummulative):. Therefore we can only do it regarding the totals [ August ]
+# PLOT1: rate of decrease for each year -- is forestry reducing? (DOES PIXEL vs TOTAL AGREE? -- only works if focal is not cummulative, # so it is not working, cause focal is cummulative):. Therefore we can only do it regarding the totals [ August ]
+ 
 # HOW DO I KNOW the general effects of forestry are reducing in birds? If the 'rate' from one year is smaller than the previous
 source(file.path(getwd(), "functions/effectsOfForestryWithTime.R"))
 plot1 <- effectsOfForestryWithTime(fullTableList = fullTableAllBirds, pathToSave = dirname(maskedDensityRasFolder), 
