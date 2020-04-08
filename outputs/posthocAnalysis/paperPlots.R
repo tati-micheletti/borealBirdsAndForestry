@@ -270,28 +270,41 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
       testTableNoNA <- na.omit(testTable)
       ok <- all(all(testTableNoNA[, round(originalDMaps, 5) == round(D, 5)]),
                 all(testTableNoNA[, round(D, 5) == round(realAbund0, 5)]))
-      if (!ok) message(crayon::red("The density from one of the sources (probably D/Abund, coming from the created LCC_PROV_BCR) does not match the others. 
-                                   A fix will be applied but this should be debugged ASAP."))
-      # Here is my plan: realAbund0 is working fine (in accordance with the original density maps). So here I replace
-      # D with realAbund0. This way I can potentially fix this problem. Should be revised later, though [19Sep19]
+      if (!ok) message(crayon::red(
+        paste0("The density from one of the sources ",
+        "(probably D/Abund, coming from the created LCC_PROV_BCR) does not match the others.",
+        "A fix will be applied but this should be debugged ASAP.")))
+      # Here is my plan: realAbund0 is working fine (in accordance with 
+      # the original density maps). So here I replace
+      # D with realAbund0. This way I can potentially fix this problem. 
+      # Should be revised later, though [19Sep19]
       # TODO
       realAbund0 <- BIRDfullTable[, c("pixelID", "realAbund0")]
       densityTableSubPixelID <- merge(densityTableSubPixelID, realAbund0, by = "pixelID", all.x = TRUE)
-      # Does the number of pixels with values match D and realAbund0? If so, it should be safe to replace one with the other
+      # Does the number of pixels with values match D and realAbund0? 
+      # If so, it should be safe to replace one with the other
       ok <- length(!is.na(densityTableSubPixelID$D)) == length(!is.na(densityTableSubPixelID$realAbund0))
-      if (!ok) stop("For some wicked reason, the fix applied did not work. NA's in D don't match realAbund0. 
+      if (!ok) stop("For some wicked reason, the fix applied did not work. 
+                    NA's in D don't match realAbund0. 
                     Good luck fixing it! I'm out!")
-      message(crayon::green("Ufff! The fix worked! Fine for now, but please debug it ASAP."))
+      message(crayon::green("Ufff! The fix worked! 
+                            Fine for now, but please debug it ASAP."))
       densityTableSubPixelID[, D := NULL]
       names(densityTableSubPixelID)[names(densityTableSubPixelID) == "realAbund0"] <- "D"
-      # Divide the new D for 6.25 as it comes from the realAbund0, which is already in abundance form (density*6.25).
+      # Divide the new D for 6.25 as it comes from the realAbund0, which is already 
+      # in abundance form (density*6.25).
       densityTableSubPixelID$D <- densityTableSubPixelID$D/6.25
     }
   
-    # The densities (D) of pixels that have no 'se' (i.e. D_se == NA) are likely just artifacts. We should set these to 0 (i.e. the birds are technically not there. 
-    # Converting to NA would be a possibility, but I think 0 is better as we know it is being predicted there (no holes on the map) 
-    # 1. Checked the range of values that have NA in D_se but something in D so I can make a cut in a bin that makes sense. Here we found out that we have a few values between 0.005 and 0.0052. 
-    # These might not be artifacts so I will keep these even though their D_se is NA. I will cut them off in 0.00000001
+    # The densities (D) of pixels that have no 'se' (i.e. D_se == NA) are likely just artifacts. 
+    # We should set these to 0 (i.e. the birds are technically not there. 
+    # Converting to NA would be a possibility, but I think 0 is better as we know it is 
+    # being predicted there (no holes on the map) 
+    # 1. Checked the range of values that have NA in D_se but something in D so I can make a 
+    # cut in a bin that makes sense. Here we found out that we have a few values between 
+    # 0.005 and 0.0052. 
+    # These might not be artifacts so I will keep these even though their D_se is NA. 
+    # I will cut them off in 0.00000001
     # DwhereSEisNA <- densityTableSubPixelID[is.na(D_se), D]
     # br <- seq(0, 0.006, by = 0.001)
     # ranges <- paste(head(br, -1), br[-1], sep = " - ")
@@ -301,14 +314,20 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     # max(onlyLower) # 1.28e-08
     densityTableSubPixelID[D < 0.0000001 & is.na(D_se), D := 0]
     
-    # Get the min, max and average D for each combination of BCR and PROV, among all forested LCC classes (1:15)
+    # Get the min, max and average D for each combination of BCR and PROV, 
+    # among all forested LCC classes (1:15)
     # maybe need to include LCC classes 20 and 25
-    densityTableSubPixelID[, validD := ifelse(!is.na(D) & D > 0, D, NA)] # As zero's should not be considered for the interval, as they are derived from artifacts!
+    densityTableSubPixelID[, validD := ifelse(!is.na(D) & D > 0, D, NA)] 
+    # As zero's should not be considered for the interval, as they are derived from artifacts!
     densityTableSubPixelID[LCC %in% c(1:15), c("minD", "maxD") := list(min(validD, na.rm = TRUE), 
-                                                                       max(validD, na.rm = TRUE)), by = c("BCR", "PROV")] # When we have NA's in minD and maxD means we have LCC that is not forest.
-    # Here we fix the min and max for non-forests (we set both to D, so no variation), remembering this should ONLY happen for YYYY =< 2005
+                                                                       max(validD, na.rm = TRUE)),
+                           by = c("BCR", "PROV")] 
+    # When we have NA's in minD and maxD means we have LCC that is not forest.
+    # Here we fix the min and max for non-forests (we set both to D, so no variation), 
+    # remembering this should ONLY happen for YYYY =< 2005
     densityTableSubPixelID[is.na(minD) | is.na(maxD), c("minD", "maxD") := validD] 
-    # If Abund is NA, min and max need to be NA as well (i.e. abund is NA for pixels without prediction, so it can't have min or max!)
+    # If Abund is NA, min and max need to be NA as well (i.e. abund is NA 
+    # for pixels without prediction, so it can't have min or max!)
     densityTableSubPixelID[is.na(validD), c("minD", "maxD") := NA] 
     
     if (freeUpMem){
@@ -318,10 +337,12 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     }
     
     # simplify tables so I don't end up with monsters
-    densityTableSubPixelIDsimp <- densityTableSubPixelID[, c("pixelID", "D_se", "D", "minD", "maxD")]
+    densityTableSubPixelIDsimp <- densityTableSubPixelID[, c("pixelID", "D_se", 
+                                                             "D", "minD", "maxD")]
     rm(densityTableSubPixelID); gc()
     # 1. Multiply density by 6.25 to convert to Abundance (D, D_se, minD, maxD)
-    # Could exclude aveD... doesn't make ecological sense! If anything, the closest to be correct one is is 'realAbund'
+    # Could exclude aveD... doesn't make ecological sense! If anything, the closest 
+    # to be correct one is 'realAbund'
     # 2. Keep D and D_se so we can have the "most likely scenario" and uncertainty!
     if (doAssertions){
       ok <- all(names(densityTableSubPixelIDsimp) == c("pixelID", "D_se", "D", "minD", "maxD"))
@@ -329,10 +350,11 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     }
     DtoAbund <- c("D_se", "D", "minD", "maxD")
     densityTableSubPixelIDsimp[, (DtoAbund) := lapply(.SD, function(x)
-      x * 6.25), .SDcols = DtoAbund]
+      x * 6.25), .SDcols = DtoAbund] # This D is really density 
     names(densityTableSubPixelIDsimp) <- c("pixelID", "Abund_se", "Abund", "minAbund", "maxAbund")
     
-    # 3. Identify which pixels changed before 2005 (just subtract cummRate2005 from cummRate1985 and anything other than 0) and simplify table
+    # 3. Identify which pixels changed before 2005 (just subtract cummRate2005 from 
+    # cummRate1985 and anything other than 0) and simplify table
     # assertion regarding the data coming from the species in question
     if (doAssertions){
       if (BIRD != unique(BIRDfullTable[,species])) 
@@ -380,17 +402,22 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
                                                                maxAbund + (get(cum)*maxAbund), 
                                                                Abund + (get(cum)*Abund))]
       } else {
-        BIRDfullTable[, c(paste0("min", newColName), paste0("max", newColName)) := realAbund0 + (get(cum)*realAbund0)]
+        BIRDfullTable[, c(paste0("min", newColName), 
+                          paste0("max", newColName)) := realAbund0 + (get(cum)*realAbund0)]
       }
     })
     # 4.3 Simplify and save new table...
     saveRDS(BIRDfullTable, finalFullTablePath)
   } else {
     if (lightLoadFinalTable){
-      message(crayon::green(paste0("finalFullTable (predictions + rates + real abundances per year)  for ", BIRD, " exists. Returning path...")))
+      message(crayon::green(paste0("finalFullTable (predictions + rates + real",
+                                   " abundances per year)  for ", BIRD, 
+                                   " exists. Returning path...")))
       return(finalFullTablePath)
     } else {
-      message(crayon::green(paste0("finalFullTable (predictions + rates + real abundances per year)  for ", BIRD, " exists. Returning table...")))
+      message(crayon::green(paste0("finalFullTable (predictions + rates + real ",
+                                   "abundances per year)  for ", BIRD, 
+                                   " exists. Returning table...")))
       return(readRDS(finalFullTablePath))
     }
   }
@@ -403,7 +430,9 @@ names(pixelTablesWithUncertaintyPre05) <- species
 # final table.
 
 # Select the columns that have Abund in the name
-toConvertToZero <- usefun::grepMulti(x = names(pixelTablesWithUncertaintyPre05[[1]]), patterns = "Abund") # can be 1 because it is a template just for name 
+toConvertToZero <- usefun::grepMulti(x = names(pixelTablesWithUncertaintyPre05[[1]]), 
+                                     patterns = "Abund") 
+# can be 1 because it is a template just for name 
 finalPixelTableList <- lapply(pixelTablesWithUncertaintyPre05, FUN = function(eachBIRD){
   eachBIRD[Abund == 0, paste(toConvertToZero) := 0]
 })
