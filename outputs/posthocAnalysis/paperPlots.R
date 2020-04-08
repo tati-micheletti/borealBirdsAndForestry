@@ -44,9 +44,10 @@ if (file.exists(fullTablePixelsFile)){ # THIS COULD BE DEPRECATED. ITS SUPER MEM
   # Make a density table. This has the original DENSITY, per pixel, taken out straight from the density/predicted rasters
   # CALCULATED/PREDICTED DENSITY, NOT THE ORIGINAL Solymos/Stralberg density!!
   fullTablePixels <- lapply(species, FUN = function(sp){
-    tableFileName <- paste0("birdsTableAbund",sp)
+    tableFileName <- paste0("birdsTableAbund",sp, spatialScale, "m")
     fullTablePixels <- Cache(makeBirdTable, species = sp, tableFileName = tableFileName,
                                      folderForTables = folderForTables,
+                                     spatialScale = spatialScale,
                                      folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
                                      locationReturnBirdAbundanceFUN = file.path(wd, "functions/returnBirdAbundance.R"),
                                      typeOfTable = "fullTable", lightLoad = FALSE, tablePerPixel = TRUE,
@@ -66,8 +67,8 @@ BCRLCC05 <- Cache(makeBCRandLCC, pathData = pathData, userTags = c("objectName:B
                   overwrite = TRUE, omitArgs = c("overwrite", "userTags", "useCache")) # rasterToMatch = BCRLCC05$LCC05
 
 fullTableAllBirds <- lapply(X = species, function(bird){
-  completeSummaryFile <- file.path(wd, "outputs/posthocAnalysis",
-                                   paste0("fullPixelTable", bird, ".rds"))
+  completeSummaryFile <- file.path(folderForTables,
+                                   paste0("fullPixelTable", bird, paste0(spatialScale, "m"), ".rds"))
   if (file.exists(completeSummaryFile)){
     message(crayon::green("Full pixel table (predictions + rates) exists for ", bird))
     return(completeSummaryFile)
