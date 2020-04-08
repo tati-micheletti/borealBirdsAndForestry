@@ -157,24 +157,23 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
       # THis is the most likely abundance if we consider that the same type of forest regenerates after logging. 
       # That's why I am keeping it here
       # 5.1 Attach the `realAbund0` to the full table
-#<<<<<<< HEAD ==> NOT SURE WHAT IS CORRECT HERE, seems like both showld be here? 
       fullTableList <- merge(fullTableList, fullDensityTable, by = c("pixelID", "species"))
       names(fullTableList)[names(fullTableList) == "abundance"] <- "realAbund0"  # Inside returnBirdAbundance/areaAndAbundance, 
       # we are already multiplying by area (i.e. converting density into abundance) using prod(raster::res(birdRas))/10000
-#=======
-      # Now real density
-      spDensityTable <- lapply(X = species, FUN = function(sp){
-        maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
-        fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
-                                               full.names = TRUE), patterns = c("density", sp,".tif"))
-        fullDensityTable <- Cache(returnBirdAbundance, filepath = fl, type = "density",
-                                                fullTableFilename = paste0("densityFullTable", sp, ".rds"),
-                                                summarizedTableFileName = paste0("summarizedTableFileName", sp),
-                                                whichToLoad = "fullTable", tablePerPixel = TRUE,
-                                  userTags = c(paste0("objectName:fullDensityTable", sp), "typeOfTable:fullTable"))
-      })
-      names(spDensityTable) <- species
-#>>>>>>> bb3614078f6989cf0572cc2f17405710d27180ab
+# #=======
+#       # Now real density
+#       spDensityTable <- lapply(X = species, FUN = function(sp){
+#         maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
+#         fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
+#                                                full.names = TRUE), patterns = c("density", sp,".tif"))
+#         fullDensityTable <- Cache(returnBirdAbundance, filepath = fl, type = "density",
+#                                                 fullTableFilename = paste0("densityFullTable", sp, ".rds"),
+#                                                 summarizedTableFileName = paste0("summarizedTableFileName", sp),
+#                                                 whichToLoad = "fullTable", tablePerPixel = TRUE,
+#                                   userTags = c(paste0("objectName:fullDensityTable", sp), "typeOfTable:fullTable"))
+#       })
+#       names(spDensityTable) <- species
+# #>>>>>>> bb3614078f6989cf0572cc2f17405710d27180ab
       
       # # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
       # Will be re-done is a next step, as it needs to be done considering uncertainty regarding which type of forest
