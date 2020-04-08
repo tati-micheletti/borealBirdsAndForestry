@@ -93,15 +93,22 @@ fullTableAllBirds <- lapply(X = species, function(bird){
       message(crayon::yellow(paste0("Full pixel table doesn't exist for ", bird, ". Creating...")))
       
       library("data.table")
-      # Loading `realAbund0` that comes from the densityBIRD.tif. It loads already as abundance, but the name stays as density until step 5.
+      # Loading `realAbund0` that comes from the densityBIRD.tif.
+      # These seem to be the original density tables (from Solymos Stralberg) 08APR20 
+      # It loads already as abundance, but the name stays as density until step 5.
 dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullTables"), create = TRUE)
         fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
                                                full.names = TRUE), patterns = c("density", bird,".tif"))
-        fullDensityTable <- Cache(returnBirdAbundance, filepath = fl, type = "density",
+        fullDensityTable <- Cache(returnBirdAbundance, 
+                                  filepath = fl, 
+                                  type = "density",
                                   fullTableFilename = file.path(dfullTpath, paste0("densityFullTable", bird, ".rds")), 
                                   summarizedTableFileName = paste0("summarizedTableFileName", bird),
-                                  whichToLoad = "fullTable", tablePerPixel = TRUE, onlyNA = TRUE,
-                                  userTags = c(paste0("objectName:fullDensityTable", bird), paste0("species:", bird), "script:paperPlots",
+                                  whichToLoad = "fullTable", 
+                                  tablePerPixel = TRUE, 
+                                  onlyNA = TRUE,
+                                  userTags = c(paste0("objectName:fullDensityTable", bird), 
+                                               paste0("species:", bird), "script:paperPlots",
                                                "typeOfTable:fullTable"),
                                   omitArgs = "useCache")
         setkey(fullDensityTable, "pixelID")
@@ -382,6 +389,8 @@ finalPixelTableList <- lapply(pixelTablesWithUncertaintyPre05, FUN = function(ea
   eachBIRD[Abund == 0, paste(toConvertToZero) := 0]
 })
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# MANAGED FOREST VS NON-MANAGED FOREST #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # Here is where we can do any sort of summary by polygon. After this point, I go for summarizing all the tables
 # 1. Load a shapefile and extract the ID by pixel (i.e. have a dt with pixelID and a new column region)
 managedForest <- Cache(prepInputs, url = "https://drive.google.com/open?id=1tgqn8FajD1iSj0aECONGhFzwInau0-q8",
@@ -389,14 +398,16 @@ managedForest <- Cache(prepInputs, url = "https://drive.google.com/open?id=1tgqn
                             alsoExtract = "similar",
                             studyArea = BCRLCC05$BCR, rasterToMatch = BCRLCC05$LCC05, 
                             overwrite = TRUE, omitArgs = c("overwrite"),
-                            destinationPath = file.path(getwd(), "inputs"), userTags = "objectName:managedForest")
+                            destinationPath = file.path(getwd(), "inputs"), 
+                       userTags = "objectName:managedForest")
 
 # Need to rasterize the shapefile for getting pixelID
 managedForestSF <- sf::st_as_sf(x = managedForest)
 managedForestSF$value <- c(1, 2) # Length of the dataset
 # MANAGED = 1
 # NON-MANAGED = 2
-managedForestRAS <- fasterize::fasterize(sf = managedForestSF, raster = BCRLCC05$LCC05, field = "value")
+managedForestRAS <- fasterize::fasterize(sf = managedForestSF, 
+                                         raster = BCRLCC05$LCC05, field = "value")
 plot(managedForestRAS)
 managedForestDT <- data.table::data.table(pixelID = 1:ncell(managedForestRAS), 
                                           value = raster::getValues(managedForestRAS))
