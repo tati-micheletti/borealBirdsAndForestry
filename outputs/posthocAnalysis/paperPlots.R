@@ -19,7 +19,7 @@ googledrive::drive_auth(email = "tati.micheletti@gmail.com")
 SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
 species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
 spatialScale <- 100 # 500m DONE! 
-doAssertions <- TRUE
+doAssertions <- TRUE # Should NOT be turned off
 freeUpMem <- FALSE
 lightLoadFinalTable <- FALSE
 
@@ -158,31 +158,20 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
       })
       )
       setkey(fullTableList, "pixelID")
-      # 5. Calculate the AbundXXXX in each year: `realAbundXXXX` (using `realAbund0`+(`realAbund0`*`cummRateXXXX`))
-      # THis is the most likely abundance if we consider that the same type of forest regenerates after logging. 
-      # That's why I am keeping it here
+      # 5. Calculate the AbundXXXX in each year: 
+      # `realAbundXXXX` (using `realAbund0`+(`realAbund0`*`cummRateXXXX`)). 
+      # THis is the most likely abundance if we consider that the same type of 
+      # forest regenerates after logging. That's why I am keeping it here
+      
       # 5.1 Attach the `realAbund0` to the full table
       fullTableList <- merge(fullTableList, fullDensityTable, by = c("pixelID", "species"))
-      names(fullTableList)[names(fullTableList) == "abundance"] <- "realAbund0"  # Inside returnBirdAbundance/areaAndAbundance, 
-      # we are already multiplying by area (i.e. converting density into abundance) using prod(raster::res(birdRas))/10000
-# #=======
-#       # Now real density
-#       spDensityTable <- lapply(X = species, FUN = function(sp){
-#         maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
-#         fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
-#                                                full.names = TRUE), patterns = c("density", sp,".tif"))
-#         fullDensityTable <- Cache(returnBirdAbundance, filepath = fl, type = "density",
-#                                                 fullTableFilename = paste0("densityFullTable", sp, ".rds"),
-#                                                 summarizedTableFileName = paste0("summarizedTableFileName", sp),
-#                                                 whichToLoad = "fullTable", tablePerPixel = TRUE,
-#                                   userTags = c(paste0("objectName:fullDensityTable", sp), "typeOfTable:fullTable"))
-#       })
-#       names(spDensityTable) <- species
-# #>>>>>>> bb3614078f6989cf0572cc2f17405710d27180ab
+      names(fullTableList)[names(fullTableList) == "abundance"] <- "realAbund0"  
+      # Inside returnBirdAbundance/areaAndAbundance, we are already multiplying by area 
+      # (i.e. converting density into abundance) using prod(raster::res(birdRas))/10000
       
-      # # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
-      # Will be re-done is a next step, as it needs to be done considering uncertainty regarding which type of forest
-      # was harvested pre-2005
+      # 5.2 calculating the real abundance (based on the original densities and the rate of loss)
+      # Will be re-done is a next step, as it needs to be done considering uncertainty regarding 
+      # which type of forest was harvested pre-2005
       cummRates <- usefun::grepMulti(x = names(fullTableList), patterns = "cumm")
       lapply(X = cummRates, FUN = function(cum){
         newColName <- paste0("realAbund",
@@ -198,27 +187,39 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
 })
   names(fullTableAllBirds) <- species
 
-# To correct for LCC previous to 2005 that we don't know what type of forest was, we can use the minimum and the maximum values of 
+# To correct for LCC previous to 2005 that we don't know what type of forest was, we 
+# can use the minimum and the maximum values of 
 # each one of the forest cover types that were harvested until 2011 for each pixel.
-# 1. I need to extract the values of a raster stack BCR LCC PROV using the density raster for each species
+# 1. I need to extract the values of a raster stack BCR LCC PROV using the density raster 
+# for each species
 # Here I need the table table BCR, Prov, LCC, ExpD so I can check the min, max and average for 
 # each combination of BCR + Prov for forested LCC (classes: 1:15)
 
 # For each species...
 pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
-  finalFolder <-  reproducible::checkPath(file.path(getwd(), "outputs/posthocAnalysis/finalFullTables"), create = TRUE)
-  finalFullTablePath <- file.path(finalFolder, paste0("finalFullTable", BIRD, ".rds"))
+  finalFullTablePath <- file.path(folderForTables, 
+                                  paste0("finalFullTable", BIRD, 
+                                         spatialScale,"m.rds"))
   if (!file.exists(finalFullTablePath)){
   message(crayon::red(paste0("finalFullTable for ", BIRD, " does not exist. Creating...")))
-    densityTable <- Cache(prepInputs, url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
-                          targetFile = "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv", # OBS. Not all species have densities for all combinations of LCC_PROV_BCR. Not all species are everywhere!
+    densityTable <- Cache(prepInputs, 
+                          url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
+                          targetFile = "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv", 
+# OBS. Not all species have densities for all combinations of LCC_PROV_BCR. 
+# Not all species are everywhere!
+# I need this table because I need all possible combinations of the bird density and 
+# a cover class, not only the predicted one by Solymos Stralberg (that one is the 
+# "most likely scenario", though)
                           destinationPath = asPath(pathData), fun = "data.table::fread",
-                          userTags = c("objectName:densityEstimates", "script:paperPlots")) # Also checked if it was pooled with other BCR, but not.
+                          userTags = c("objectName:densityEstimates", "script:paperPlots")) 
+# Also checked if it was pooled with other BCR, but not.
     densityTable <- densityTable[SPECIES %in% species,]
     source(file.path(getwd(), 'functions/createBCR_PROV_LCC_EstimatesPosthoc.R'))
     BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_EstimatesPosthoc, BCR = BCRLCC05$BCR,
-                          LCC05 = BCRLCC05$LCC05, justBCRProvLCC = TRUE, pathToDSave = maskedDensityRasFolder, 
-                          densityMap = file.path(maskedDensityRasFolder, "densityBBWA.tif"), # Can be used for all species as it is a template for rtm! 
+                          LCC05 = BCRLCC05$LCC05, justBCRProvLCC = TRUE, 
+                          pathToDSave = maskedDensityRasFolder, 
+                          densityMap = file.path(maskedDensityRasFolder, "densityBBWA.tif"), 
+# Can be used for all species as it is a template for RTM! 
                           omitArgs = c("userTags", "useCache"),
                           userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))
 
@@ -230,20 +231,32 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     # Exclude uninportant columns 
     densityTableSub <- densityTable[SPECIES == BIRD, c("LCC", "BCR", "PROV", "D", "D_se")]
     # Merge to get the Density per BCR_Prov_LCC per pixel
-    densityTableSubPixelID <- Cache(merge, BCR_Prov_LCC, densityTableSub, by = c("BCR", "PROV", "LCC"), 
+    densityTableSubPixelID <- Cache(merge, BCR_Prov_LCC, densityTableSub, 
+                                    by = c("BCR", "PROV", "LCC"), 
                                     all.x = TRUE, omitArgs = c("useCache"), 
-                                    userTags = c("script:paperPlots", "objectName:densityTableSubPixelID"))
+                                    userTags = c("script:paperPlots", 
+                                                 "objectName:densityTableSubPixelID"))
     setkey(densityTableSubPixelID, "pixelID")
-    
-    # assertion regarding the original density form Solymos&Stralber being the same as realAbund0/mostLikelyAbund and abundance from the full tables
-    # browser() # Check the table now ==> Assertions are fine... go figure?!
-    if (doAssertions){ # For BLPW (and maybe other birds?) a few pixels are not agreeing (Abund and realAbund0|originalDMaps). 
-      # Anywhere where I use Abund, I should be using realAbund0 instead until I figure this one out 
-      # (Should NOT turn off this assertion because I fixed it up in here. Exchanged Abund for realAbund0. If the assertion fails, I'm in shit...)! [19Sept19]
+    # Assertion regarding the original density form Solymos&Stralber 
+    # being the same as realAbund0/mostLikelyAbund and abundance from the full tables
+    if (doAssertions){ 
+      # For BLPW (and maybe other birds?) a few pixels are not agreeing 
+      # (Abund and realAbund0|originalDMaps).
+      # Anywhere where I use Abund, I should be using realAbund0 instead 
+      # until I figure this one out --> [08APR2020] we detected a problem in postProcess a few
+      # weeks ago. Should be fixed now, but means I should probably re-run all these analysis at 
+      # some point].
+      # (Should NOT turn off this assertion because I fixed it up in here. 
+      # Exchanged Abund for realAbund0. If the assertion fails, I'm in shit...)! [19Sept19]
       # 1. originalDMaps <- DENSITY MAPS * 6.25
-      originalDens <- raster(file.path(wd, paste0("outputs/posthocAnalysis/maskedDensityRas/density", BIRD, ".tif")))
-      originalDensPostProc <- Cache(reproducible::postProcess, originalDens, rasterToMatch = NULL, #BCRLCC05$LCC05, 
-                                    userTags = c("script:paperPlots", "goal:snappingDensityRas", paste0("species:", BIRD)))
+      originalDens <- raster(file.path(wd, 
+                                       paste0("outputs/posthocAnalysis/maskedDensityRas/density", 
+                                              BIRD, ".tif")))
+      originalDensPostProc <- Cache(reproducible::postProcess, 
+                                    originalDens, rasterToMatch = NULL, #BCRLCC05$LCC05, 
+                                    userTags = c("script:paperPlots", 
+                                                 "goal:snappingDensityRas", 
+                                                 paste0("species:", BIRD)))
       testTable <- data.table(pixelID = 1:raster::ncell(originalDensPostProc), 
                               originalDMaps = getValues(originalDensPostProc)*6.25)
       # 2. BIRDfullTableD <- Abundance COMING FROM THIS TABLE "BIRDfullTable" (realAbund0)
@@ -379,9 +392,10 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
 })
 names(pixelTablesWithUncertaintyPre05) <- species
 
-# 21NOV19: Some @241,000 pixels have Abund == 0 and no min or max. I think this is also an artifact. I checked all columns and none
-# has the max value at more than 1.1875e-08. So I decided to convert all values of *Abund* (i.e. minrealAbund, realAbund, Abund_se)
-# to zero. This avoid NA's on the final table.
+# 21NOV19: Some @241,000 pixels have Abund == 0 and no min or max. I think this is also an artifact. 
+# I checked all columns and none has the max value at more than 1.1875e-08. So I decided to convert 
+# all values of *Abund* (i.e. minrealAbund, realAbund, Abund_se) to zero. This avoid NA's on the 
+# final table.
 
 # Select the columns that have Abund in the name
 toConvertToZero <- usefun::grepMulti(x = names(pixelTablesWithUncertaintyPre05[[1]]), patterns = "Abund") # can be 1 because it is a template just for name 
