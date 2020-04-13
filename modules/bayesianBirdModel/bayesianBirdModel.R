@@ -71,7 +71,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                              })
       names(sim$yearDT) <- sim$birdSpecies
       
-      sim$predictHierarchicalModel <- lapply(X = seq_along(sim$birdSpecies),
+      sim$predictedHierarchicalModel <- lapply(X = seq_along(sim$birdSpecies),
                                          FUN = function(index){
                                            predictHierarchicalModel(
                                              bird = index,
