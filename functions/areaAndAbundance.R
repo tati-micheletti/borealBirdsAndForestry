@@ -28,7 +28,6 @@ areaAndAbundance <- function(filepath,
                      rasterToMatch = rasterToMatch, 
                      filename2 = NULL,
                      destinationPath = dirname(filepath), 
-                     overwrite = TRUE,
                      userTags = c("objectName:birdRas", 
                                   "script:paperPlots", 
                                   "goal:reprojectedDensityBIRDtobirdDensity"))
