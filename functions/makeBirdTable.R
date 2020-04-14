@@ -7,6 +7,7 @@ makeBirdTable <- function(species = NULL,
                           locationReturnBirdAbundanceFUN,
                           typeOfTable = "summarizedTable", 
                           lightLoad = FALSE, 
+                          useCache = NULL,
                           tablePerPixel = NULL,
                           spatialScale = 500,
                           rasterToMatch = NULL,
@@ -42,7 +43,7 @@ makeBirdTable <- function(species = NULL,
                                                                 "outputs/posthocAnalysis/cache"),
                                           tablePerPixel = tablePerPixel, 
                                           overwriteInternals = overwriteInternals,
-                                          useCache = overwriteInternals,
+                                          useCache = useCache,
                                           omitArgs = c("useCache", "cacheRepo"))
       densityTable$year <- paste0("year", y)
       return(densityTable)

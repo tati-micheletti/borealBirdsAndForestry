@@ -53,6 +53,7 @@ fullTablePixels <- future_lapply(species, FUN = function(sp){
                            spatialScale = spatialScale,
                            overwriteInternals = overwriteInternals,
                            rasterToMatch = RTM,
+                           useCache = "overwrite", # <~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ UPDATE!!! CHANGE
                            folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
                            locationReturnBirdAbundanceFUN = file.path(wd, paste0("functions/return",
                                                                                  "BirdAbundance.R")),
