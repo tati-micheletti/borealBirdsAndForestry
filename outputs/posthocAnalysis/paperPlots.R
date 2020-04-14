@@ -9,19 +9,21 @@ if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/mnt/data/Micheletti/b
   warning("Make sure you are in the correct working directory!")
   setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
 }
-maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
-originalDensFolder <- file.path(wd, "modules/birdDensityBCR_Prov_LCC/data")
-source(file.path(getwd(), "functions/returnBirdAbundance.R"))
-
-
 # googledrive::drive_auth(use_oob = TRUE) # ONLY ONCE: USING RStudio Server. Doesn't work for the first time in RGui
 googledrive::drive_auth(email = "tati.micheletti@gmail.com")
 SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
-species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
-spatialScale <- 100 # 500m DONE! 
+species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", 
+             "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", 
+             "TEWA", "WETA", "YRWA")
+spatialScale <- 500 # 500m DONE! 
 doAssertions <- TRUE # Should NOT be turned off
 freeUpMem <- FALSE
 lightLoadFinalTable <- FALSE
+
+maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
+originalDensFolder <- file.path(wd, "modules/birdDensityBCR_Prov_LCC/data")
+folderForTables <- checkPath(file.path(wd, "outputs/posthocAnalysis", 
+                                       paste0(spatialScale, "m")), create = TRUE)
 
 # 1. Calculate prediction area for each bird species: `birdSpecies` and `predArea`
 # 2. Estimate total abundance from Peter&Diana's paper for this area * 6.25: `realAbund0`
@@ -31,67 +33,49 @@ lightLoadFinalTable <- FALSE
 # expected density and predicted rasters
 
 # Pixel by pixel basis: 
+source(file.path(getwd(), "functions/returnBirdAbundance.R"))
 source(file.path(wd, "functions/makeBirdTable.R"))
-tableFileName <- "birdsTableAbundFull"
-folderForTables <- checkPath(file.path(wd, "outputs/posthocAnalysis", paste0(spatialScale, "m")), create = TRUE)
-fullTablePixelsFile <- file.path(folderForTables, paste0(tableFileName, ".rds")) 
-if (file.exists(fullTablePixelsFile)){ # THIS COULD BE DEPRECATED. ITS SUPER MEMORY CONSUMING. 
-  # ITS BETTER TO JOIN ALL BIRDS AFTERWARDS 
-  message(crayon::green("Full table of predictions exist for all birds. Loading..."))
-  fullTablePixels <- readRDS(fullTablePixelsFile)
-} else {
-  message(crayon::yellow("Full table of predictions doesn't exist for all birds. Creating..."))
-  # Make a density table. This has the original DENSITY, per pixel, taken out straight from the density/predicted rasters
+  # Make a density table for each species. 
+  # This has the original DENSITY, per pixel, taken out straight from the density/predicted rasters
   # CALCULATED/PREDICTED DENSITY, NOT THE ORIGINAL Solymos/Stralberg density!!
-  fullTablePixels <- lapply(species, FUN = function(sp){
-    tableFileName <- paste0("birdsTableAbund",sp, spatialScale, "m")
-    fullTablePixels <- Cache(makeBirdTable, species = sp, tableFileName = tableFileName,
-                                     folderForTables = folderForTables,
-                                     spatialScale = spatialScale,
-                                     folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
-                                     locationReturnBirdAbundanceFUN = file.path(wd, "functions/returnBirdAbundance.R"),
-                                     typeOfTable = "fullTable", lightLoad = FALSE, tablePerPixel = TRUE,
-                             onlyNA = TRUE,
-                             userTags = c(paste0("objectName:fullTablePixels", sp), "typeOfTable:fullTable"),
-                             omitArgs = c("overwriteInternals", "useCache", "userTags", "destinationPath"))
-  })
-}
+fullTablePixels <- lapply(species, FUN = function(sp){
+  tableFileName <- paste0("birdsTableAbund",sp, spatialScale, "m")
+  fullTablePixels <- Cache(makeBirdTable, species = sp, tableFileName = tableFileName,
+                           folderForTables = folderForTables,
+                           spatialScale = spatialScale,
+                           folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
+                           locationReturnBirdAbundanceFUN = file.path(wd, paste0("functions/return",
+                                                                                 "BirdAbundance.R")),
+                           typeOfTable = "fullTable", 
+                           lightLoad = FALSE, 
+                           tablePerPixel = TRUE,
+                           onlyNA = TRUE,
+                           userTags = c(paste0("objectName:fullTablePixels", sp), 
+                                        "typeOfTable:fullTable"),
+                           omitArgs = c("overwriteInternals", "useCache", 
+                                        "userTags", "destinationPath"))
+})
 names(fullTablePixels) <- species
-downloadFullTableBirdsFromURL <- FALSE # If these tables are not present and 
-                                       #  you don't want to calculate these (i.e. download the originally calculated from GoogleDrive), 
-                                       # set it to TRUE ==> Not yet fully implemented
 
-source(file.path(getwd(), 'outputs/posthocAnalysis/makeBCRandLCC.R'))
+source(file.path(getwd(), 'functions/makeBCRandLCC.R'))
 pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
-BCRLCC05 <- Cache(makeBCRandLCC, pathData = pathData, userTags = c("objectName:BCRLCC05", "script:paperPlots"), 
-                  overwrite = TRUE, omitArgs = c("overwrite", "userTags", "useCache")) # rasterToMatch = BCRLCC05$LCC05
+BCRLCC05 <- Cache(makeBCRandLCC, 
+                  pathData = pathData,
+                  RTM = raster(file.path(maskedDensityRasFolder, "densityBBWA.tif")),
+                  userTags = c("objectName:BCRLCC05",
+                               "script:paperPlots"), 
+                  overwrite = TRUE, omitArgs = c("overwrite", 
+                                                 "userTags", "useCache"))
 
 fullTableAllBirds <- lapply(X = species, function(bird){
   completeSummaryFile <- file.path(folderForTables,
-                                   paste0("fullPixelTable", bird, paste0(spatialScale, "m"), ".rds"))
+                                   paste0("fullPixelTable", bird, 
+                                          paste0(spatialScale, "m"), ".rds"))
   if (file.exists(completeSummaryFile)){
     message(crayon::green("Full pixel table (predictions + rates) exists for ", bird))
     return(completeSummaryFile)
   } else {
-    if (downloadFullTableBirdsFromURL) { # THIS IS FOR WHEN I NEED TO RUN IT SOMEWHERE ELSE
-      message(crayon::cyan("Full pixel table (predictions + rates)  doesn't exist for ", bird, ". Downloading..."))
-      library("data.table")
-      library("googledrive")
-      fl <- Cache(drive_ls, path = as_id("1DI9k8rx4dY8P7TbMdXX9Wpv6KqXl6t4m"), 
-                  recursive = TRUE, userTags = c("objectName:completeSummaryFile", 
-                                                 paste0("birdSpecies:", bird)))
-      browser() # Match the file id with the `bird` object. DO NOT APPLY!
-      # fl <- fl[match(bird)]
-        destPath <- file.path(getwd(), "outputs/posthocAnalysis", fl$drive_resource$name)
-        url <- paste0("https://drive.google.com/open?id=", eachTable$drive_resource$id)
-        tablePath <- reproducible::preProcess(url = url, destinationPath = destPath,
-                                              targetFile = eachTable$drive_resource$name)
-      browser() # Check 
-      # names(completeSummaryFile) <- 
-      return(completeSummaryFile)
-    } else {
       message(crayon::yellow(paste0("Full pixel table doesn't exist for ", bird, ". Creating...")))
-      
       library("data.table")
       # Loading `realAbund0` that comes from the densityBIRD.tif.
       # These seem to be the original density tables (from Solymos Stralberg) 08APR20 
@@ -102,8 +86,11 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
         fullDensityTable <- Cache(returnBirdAbundance, 
                                   filepath = fl, 
                                   type = "density",
-                                  fullTableFilename = file.path(dfullTpath, paste0("densityFullTable", bird, ".rds")), 
-                                  summarizedTableFileName = paste0("summarizedTableFileName", bird),
+                                  fullTableFilename = file.path(dfullTpath, 
+                                                                paste0("densityFullTable", 
+                                                                       bird, ".rds")), 
+                                  summarizedTableFileName = paste0("summarizedTableFileName", 
+                                                                   bird),
                                   whichToLoad = "fullTable", 
                                   tablePerPixel = TRUE, 
                                   onlyNA = TRUE,
@@ -183,7 +170,6 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
       saveRDS(fullTableList, file = completeSummaryFile)
       return(completeSummaryFile) 
     }
-  }
 })
   names(fullTableAllBirds) <- species
 
@@ -196,12 +182,15 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
 # each combination of BCR + Prov for forested LCC (classes: 1:15)
 
 # For each species...
+overwrite <- TRUE
 pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
   finalFullTablePath <- file.path(folderForTables, 
                                   paste0("finalFullTable", BIRD, 
                                          spatialScale,"m.rds"))
-  if (!file.exists(finalFullTablePath)){
-  message(crayon::red(paste0("finalFullTable for ", BIRD, " does not exist. Creating...")))
+  if (any(overwrite, !file.exists(finalFullTablePath))){
+  message(crayon::red(paste0("finalFullTable for ", BIRD, 
+                             " does not exist or needs to be overwritten. ",
+                             "Creating...")))
     densityTable <- Cache(prepInputs, 
                           url = "https://drive.google.com/open?id=1SEcJdS25YkIoRMmrgGNe4-HKG90OtYjX",
                           targetFile = "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv", 
@@ -217,7 +206,7 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     source(file.path(getwd(), 'functions/createBCR_PROV_LCC_EstimatesPosthoc.R'))
     BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_EstimatesPosthoc, BCR = BCRLCC05$BCR,
                           LCC05 = BCRLCC05$LCC05, justBCRProvLCC = TRUE, 
-                          pathToDSave = maskedDensityRasFolder, 
+                          pathToDSave = maskedDensityRasFolder,
                           densityMap = file.path(maskedDensityRasFolder, "densityBBWA.tif"), 
 # Can be used for all species as it is a template for RTM! 
                           omitArgs = c("userTags", "useCache"),
@@ -253,7 +242,7 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
                                        paste0("outputs/posthocAnalysis/maskedDensityRas/density", 
                                               BIRD, ".tif")))
       originalDensPostProc <- Cache(reproducible::postProcess, 
-                                    originalDens, rasterToMatch = NULL, #BCRLCC05$LCC05, 
+                                    originalDens, rasterToMatch = BCRLCC05$LCC05, #BCRLCC05$LCC05, 
                                     userTags = c("script:paperPlots", 
                                                  "goal:snappingDensityRas", 
                                                  paste0("species:", BIRD)))
@@ -308,7 +297,7 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     # DwhereSEisNA <- densityTableSubPixelID[is.na(D_se), D]
     # br <- seq(0, 0.006, by = 0.001)
     # ranges <- paste(head(br, -1), br[-1], sep = " - ")
-    # freq <- hist(DwhereSEisNA, breaks = br, include.lowest=TRUE, plot = TRUE)
+    # freq <- hist(DwhereSEisNA, breaks = br, include.lowest = TRUE, plot = TRUE)
     # data.frame(range = ranges, frequency = freq$counts)
     # onlyLower <- DwhereSEisNA[DwhereSEisNA < 0.002 & !is.na(DwhereSEisNA)]
     # max(onlyLower) # 1.28e-08
@@ -438,7 +427,7 @@ finalPixelTableList <- lapply(pixelTablesWithUncertaintyPre05, FUN = function(ea
 })
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# MANAGED FOREST VS NON-MANAGED FOREST #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+#####
 # Here is where we can do any sort of summary by polygon. After this point, I go for summarizing all the tables
 # 1. Load a shapefile and extract the ID by pixel (i.e. have a dt with pixelID and a new column region)
 managedForest <- Cache(prepInputs, url = "https://drive.google.com/open?id=1tgqn8FajD1iSj0aECONGhFzwInau0-q8",
@@ -463,15 +452,15 @@ managedForestDT <- data.table::data.table(pixelID = 1:ncell(managedForestRAS),
 # Now I can put together the managedForest raster and the birds table
 finalPixelTableList <- lapply(names(finalPixelTableList), function(sp){
   finalPixelTableList[[sp]] <- merge(finalPixelTableList[[sp]], managedForestDT, by = "pixelID")
-  tbName <- file.path(dirname(maskedDensityRasFolder), 
-                      paste0("finalPixelTable_forSummary_", sp,".rds"))
+  tbName <- file.path(folderForTables, 
+                      paste0("finalPixelTable_forSummary_", sp, spatialScale, "m.rds"))
   saveRDS(finalPixelTableList[[sp]], file = tbName)
   return(tbName)
 })
 names(finalPixelTableList) <- species
-
+#####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# MANAGED FOREST FOR EACH PROVINCE #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-
+#####
 # Here is where we can do any sort of summary by polygon. After this point, I go for summarizing all the tables
 # 1. Load a shapefile and extract the ID by pixel (i.e. have a dt with pixelID and a new column region)
 managedForest <- Cache(prepInputs, url = "https://drive.google.com/open?id=1tgqn8FajD1iSj0aECONGhFzwInau0-q8",
@@ -541,107 +530,273 @@ finalPixelTableListBCRPROV <- lapply(names(finalPixelTableList), function(sp){
                                      managedForestProvBCR, by = "pixelID")
   # REMOVE NA's --> NA's in any of the columns == non-managed forests!
   finalPixelTableList[[sp]] <- na.omit(finalPixelTableList[[sp]])
-  tbName <- file.path(dirname(maskedDensityRasFolder), 
-                      paste0("finalPixTab_BCRPROV_forSummary_", sp,".rds"))
+  tbName <- file.path(folderForTables, 
+                      paste0("finalPixTab_BCRPROV_forSummary_", sp, spatialScale,"m.rds"))
   saveRDS(finalPixelTableList[[sp]], file = tbName)
   return(tbName)
 })
 names(finalPixelTableListBCRPROV) <- species
+#####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# STUDY AREA ALBERTA #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#####
+# Here is where we can do any sort of summary by polygon. After this point, I go for summarizing all the tables
+# 1. Load a shapefile and extract the ID by pixel (i.e. have a dt with pixelID and a new column region)
+# QUEBEC: 
+albertaSA <- Cache(prepInputs, url = "https://drive.google.com/open?id=1Ix_FgdB6UNvu_K3-ZJ_ibLpW3Fg2G0k8",
+                  targetFile = "ecodistricts_ALPAC.shp", archive = "ecodistricts_ALPAC.zip",
+                  alsoExtract = "similar",
+                  # studyArea = BCRLCC05$BCR, 
+                  rasterToMatch = BCRLCC05$LCC05,
+                  overwrite = TRUE, omitArgs = c("overwrite"),
+                  destinationPath = file.path(getwd(), "inputs"), 
+                  userTags = "objectName:albertaSA")
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# MANAGED FOREST FOR EACH PROVINCE #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Need to rasterize the shapefile for getting pixelID
+albertaSASF <- sf::st_as_sf(x = albertaSA)
+albertaSASF$value <- 1 # Length of the dataset
+albertaSARAS <- fasterize::fasterize(sf = albertaSASF,
+                                    raster = BCRLCC05$LCC05, field = "value")
+plot(albertaSARAS)
+albertaSADT <- data.table::data.table(pixelID = 1:ncell(albertaSARAS), 
+                                     value = raster::getValues(albertaSARAS))
 
-# TABLE WITH MANAGED AND UNMAGAED FORESTS
-# SHORTCUT:: run from here on only
-finalPixelTableList <- lapply(species, function(sp){
-  tbName <- file.path(dirname(maskedDensityRasFolder),
-                      paste0("finalPixelTable_forSummary_", sp,".rds"))
+# Now I can put together the albertaSA raster and the birds table
+finalPixelTableList <- lapply(names(finalPixelTableList), function(sp){
+  finalPixelTableList[[sp]] <- merge(finalPixelTableList[[sp]], albertaSADT, by = "pixelID")
+  tbName <- file.path(folderForTables, 
+                      paste0("finalPixelTable_Alberta_forSummary_", sp, spatialScale, "m.rds"))
+  saveRDS(finalPixelTableList[[sp]], file = tbName)
   return(tbName)
 })
 names(finalPixelTableList) <- species
+
+#####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# STUDY AREA QUEBEC #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#####
+# Here is where we can do any sort of summary by polygon. After this point, I go for summarizing all the tables
+# 1. Load a shapefile and extract the ID by pixel (i.e. have a dt with pixelID and a new column region)
+# 
+# QUEBEC: [12APRIL20: It seems that we don't have any pixels in our predictions matching the 
+# study area in Quebec]
+# 
+# quebecSA <- Cache(prepInputs, url = "https://drive.google.com/open?id=1zTvVqFi4-rFjVjQL0g_Dk-op56aIQDUq",
+#                        targetFile = "FM2014_polygons.shp", archive = "FM2014_polygons.zip",
+#                        alsoExtract = "similar",
+#                        # studyArea = BCRLCC05$BCR, 
+#                   rasterToMatch = BCRLCC05$LCC05, 
+#                        overwrite = TRUE, omitArgs = c("overwrite"),
+#                        destinationPath = file.path(getwd(), "inputs"), 
+#                        userTags = "objectName:quebecSA")
+# 
+# # Need to rasterize the shapefile for getting pixelID
+# quebecSASF <- sf::st_as_sf(x = quebecSA)
+# 
+# quebecSASF$value <- 1 # Length of the dataset
+# quebecSARAS <- fasterize::fasterize(sf = quebecSASF, 
+#                                          raster = BCRLCC05$LCC05, field = "value")
+# # plot(quebecSARAS)
+# quebecSADT <- data.table::data.table(pixelID = 1:ncell(quebecSARAS), 
+#                                           value = raster::getValues(quebecSARAS))
+# 
+# # Now I can put together the quebecSA raster and the birds table
+# finalPixelTableList <- lapply(names(finalPixelTableList), function(sp){
+#   finalPixelTableList[[sp]] <- merge(finalPixelTableList[[sp]], quebecSADT, by = "pixelID")
+#   tbName <- file.path(folderForTables, 
+#                       paste0("finalPixelTable_quebec_forSummary_", sp, spatialScale, "m.rds"))
+#   saveRDS(finalPixelTableList[[sp]], file = tbName)
+#   return(tbName)
+# })
+# names(finalPixelTableList) <- species
+# #####
+
+############ # SHORTCUT:: run from here on only
+library(reproducible)
+library(data.table)
+species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
+spatialScale <- 500 # 500m DONE! 
+folderForTables <- checkPath(file.path(getwd(), "outputs/posthocAnalysis", 
+                                       paste0(spatialScale, "m")), create = TRUE)
+doAssertions <- TRUE
+
+# TABLE WITH MANAGED AND UNMAGAED FORESTS
+finalPixelTableList <- lapply(species, function(sp){
+  tbName <- file.path(folderForTables,
+                      paste0("finalPixelTable_forSummary_", sp, spatialScale, "m.rds"))
+  return(tbName)
+})
+names(finalPixelTableList) <- species
+
  
-# TABLE WITH MANAGED FOREST ONLY
+# TABLE WITH MANAGED FOREST BCR PROVB
 finalPixelTableListBCRPROV <- lapply(species, function(sp){
-  tbName <- file.path(dirname(maskedDensityRasFolder),
-                      paste0("finalPixTab_BCRPROV_forSummary_", sp,".rds"))
+  tbName <- file.path(folderForTables,
+                      paste0("finalPixTab_BCRPROV_forSummary_", sp, spatialScale, "m.rds"))
   return(tbName)
 })
 names(finalPixelTableListBCRPROV) <- species
 
+# TABLE WITH ALBERTA SA
+finalPixelTableListAlberta <- lapply(species, function(sp){
+  tbName <- file.path(folderForTables,
+                      paste0("finalPixelTable_Alberta_forSummary_", sp, spatialScale, "m.rds"))
+  return(tbName)
+})
+names(finalPixelTableListAlberta) <- species
+
+#TODO HERE <~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# [Note 12APRIL20: I should only add BCR, PROV, BCR_PROV and Alberta's 'value' column to existing 
+# table and have only one big final table! This way I can use the same table for all maps... 
+# just need to rename columns]
+# finalPixelTableList
+# finalPixelTableListBCRPROV
+# finalPixelTableListAlberta
+# [13APRIL20: Not as simple as it seems... Will leave for later]
+
+# # TABLE WITH QUEBEC SA
+# finalPixelTableListQuebec <- lapply(species, function(sp){
+#   tbName <- file.path(folderForTables,
+#                       paste0("finalPixelTable_quebec_forSummary_", sp, spatialScale, "m.rds"))
+#   return(tbName)
+# })
+# names(finalPixelTableListQuebec) <- species
 
 # CREATING FINAL TABLES
+# [13APR20: These tables are general tables summarized for regions with:
+# c("species", "region", "abund0", "abund1985", "minAbund1985", 
+# "maxAbund1985", "abund2011", "diff2011_1985min", "diff2011_1985max", 
+# "diff2011_1985exp", "diff2011_0", "range", "diffPerYear0", "diffPerYearMin", 
+# "diffPerYearMax", "diffPerYearExp", "propDiff0", "propDiffExp", 
+# "propDiffMin1985", "propDiffMax1985"). Therefore, these are not the ones to make 
+# through time plots]
 
-borealTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixels.rds", 
-                                             maskedDensityRasFolder = maskedDensityRasFolder, 
-                                             column = "value", finalPixelTableList = finalPixelTableList,
+borealTable <- makesummarizedTableFromPixels(tabName = paste0("summarizedTableFromPixelsBoreal", 
+                                                              spatialScale,"m.rds"), 
+                                             foldWhereToSave = folderForTables, 
+                                             column = "value", 
+                                             finalPixelTableList = finalPixelTableList,
                                              species = species)
-bcrTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixelsBCR.rds", 
-                                          maskedDensityRasFolder = maskedDensityRasFolder, 
-                                          column = "BCR",  finalPixelTableList = finalPixelTableListBCRPROV,
+bcrTable <- makesummarizedTableFromPixels(tabName = paste0("summarizedTableFromPixelsBCR", 
+                                                           spatialScale,"m.rds"), 
+                                          foldWhereToSave = folderForTables, 
+                                          column = "BCR",  
+                                          finalPixelTableList = finalPixelTableListBCRPROV,
                                           species = species)
-provinceTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixelsProv.rds", 
-                                               maskedDensityRasFolder = maskedDensityRasFolder, 
-                                               column = "PROV", finalPixelTableList = finalPixelTableListBCRPROV,
+provinceTable <- makesummarizedTableFromPixels(tabName = paste0("summarizedTableFromPixelsProv", 
+                                                                spatialScale,"m.rds"), 
+                                               foldWhereToSave = folderForTables, 
+                                               column = "PROV", 
+                                               finalPixelTableList = finalPixelTableListBCRPROV,
                                                species = species)
-provinceBcrTable <- makesummarizedTableFromPixels(tabName = "summarizedTableFromPixelsProv_BCR.rds", 
-                                                  maskedDensityRasFolder = maskedDensityRasFolder, 
-                                                  column = "PROV_BCR", finalPixelTableList = finalPixelTableListBCRPROV, 
+provinceBcrTable <- makesummarizedTableFromPixels(tabName = paste0("summarizedTableFromPixelsBCR_Prov", 
+                                                                   spatialScale,"m.rds"), 
+                                                  foldWhereToSave = folderForTables, 
+                                                  column = "PROV_BCR", 
+                                                  finalPixelTableList = finalPixelTableListBCRPROV, 
                                                   species = species)
 
+albertaTable <- makesummarizedTableFromPixels(tabName = paste0("summarizedTableFromPixelsAlberta", 
+                                                                   spatialScale,"m.rds"), 
+                                                  foldWhereToSave = folderForTables, 
+                                                  column = "value", 
+                                                  finalPixelTableList = finalPixelTableListAlberta, 
+                                                  species = species)
+
+
+# quebecTable <- makesummarizedTableFromPixels(tabName = paste0("summarizedTableFromPixelsQuebec", 
+#                                                                    spatialScale,"m.rds"), 
+#                                                   foldWhereToSave = folderForTables, 
+#                                                   column = "value", 
+#                                                   finalPixelTableList = finalPixelTableListQuebec, 
+#                                                   species = species)
+
 # RUN ON LOCAL COMPUTER ONLY, AFTER UPLOADING TABLES AND DOWNLOADING TO FOLDER DATA
-borealTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixels.rds"))
-bcrTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsBCR.rds"))
-provinceTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsProv.rds"))
-provinceBcrTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsProv_BCR.rds"))
+borealTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsBoreal500m.rds"))
+bcrTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsBCR500m.rds"))
+provinceTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsProv500m.rds"))
+provinceBcrTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsProv_BCR500m.rds"))
+# quebecTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsQuebec500m.rds"))
+albertaTable <- readRDS(file.path(getwd(), "data/summarizedTableFromPixelsAlberta500m.rds"))
 
 
         #########
         # PLOTS #
         #########
+library("reproducible")
 
-# HERE!!! <<<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-reg <- summarizedTable
-
-# ABOUT TO IMPLEMENT THIS -- BUT FIRST SUMMARIZE THINGS BY PROVINCE!
-# lapply(unique(summarizedTable$region), function(reg){
-#   
-# })
 # Prepping to compare our data to Rosenberg 2019
 rosenberg2019 <- prepInputs(url = "https://drive.google.com/open?id=1nZDjJs4-NED0ic4uhL6ZM-M_i8Svr5aq",
-                            destinationPath = dirname(maskedDensityRasFolder), targetFile = "popChangeRosenberg2019.csv",
+                            destinationPath = ifelse(pemisc::user() == "tmichele", 
+                                                     dirname(maskedDensityRasFolder),
+                                                     file.path(getwd(), "data")), 
+                            targetFile = "popChangeRosenberg2019.csv",
                             fun = "data.table::fread")
 names(rosenberg2019)[names(rosenberg2019) == "Four Letter Code"] <- "species"
 rosenberg2019[, V1 := NULL]
-summarizedTableCom <- merge(rosenberg2019, summarizedTable, by = "species")
+summarizedTableCom <- merge(rosenberg2019, borealTable[region == 1,], by = "species")
 # Check if the values we found are inside their CI95%
-# 1. Create the values expected for 1985 and 2011 using Rosenberg 2019. For that, need to recreate the population in 1970
-summarizedTableCom[, c("abund1970_R", "minAbund1970_R", "maxAbund1970_R") := list(popest+Loss_med, popestlci+Loss_lci, popestuci+Loss_uci)]
+# 1. Create the values expected for 1985 and 2011 using Rosenberg 2019. 
+# For that, need to recreate the population in 1970
+summarizedTableCom[, c("abund1970_R", "minAbund1970_R", "maxAbund1970_R") := 
+                     list(popest+Loss_med, popestlci+Loss_lci, popestuci+Loss_uci)]
 # 2. Calculate 1985 based on average yearly loss 
-summarizedTableCom[, c("abund1985_R", "minAbund1985_R", "maxAbund1985_R") := list(abund1970_R-(abund1970_R*(1985-1970)*lossPercYear), 
-                                                                                  minAbund1970_R-(minAbund1970_R*(1985-1970)*lossUpPercYear), 
-                                                                                  maxAbund1970_R-(maxAbund1970_R*(1985-1970)*lossLoPercYear))]
+summarizedTableCom[, c("abund1985_R", "minAbund1985_R", "maxAbund1985_R") := 
+                     list(abund1970_R-(abund1970_R*(1985-1970)*lossPercYear),
+                          minAbund1970_R-(minAbund1970_R*(1985-1970)*lossUpPercYear),
+                          maxAbund1970_R-(maxAbund1970_R*(1985-1970)*lossLoPercYear))]
 # 3. Calculate 2011 based on average yearly loss 
-summarizedTableCom[, c("abund2011_R", "minAbund2011_R", "maxAbund2011_R") := list(abund1970_R-(abund1970_R*(2011-1970)*lossPercYear), 
-                                                                                  minAbund1970_R-(minAbund1970_R*(2011-1970)*lossUpPercYear), 
-                                                                                  maxAbund1970_R-(maxAbund1970_R*(2011-1970)*lossLoPercYear))]
+summarizedTableCom[, c("abund2011_R", "minAbund2011_R", "maxAbund2011_R") := 
+                     list(abund1970_R-(abund1970_R*(2011-1970)*lossPercYear),
+                          minAbund1970_R-(minAbund1970_R*(2011-1970)*lossUpPercYear),
+                          maxAbund1970_R-(maxAbund1970_R*(2011-1970)*lossLoPercYear))]
+saveRDS(summarizedTableCom, file.path(ifelse(pemisc::user() == "tmichele", 
+                                              folderForTables,
+                                              file.path(getwd(), "data")), 
+                                       paste0("comparisonTableRosenberg", 
+                                              spatialScale,"m.rds")))
 
-
-# Not sure here... Can I or can't I have this? Does it really not work if focal is not cummulative? I believe I was wrong. I think it does work! [ 12th SEPT ]
-# PLOT1: rate of decrease for each year -- is forestry reducing? (DOES PIXEL vs TOTAL AGREE? -- only works if focal is not cummulative, # so it is not working, cause focal is cummulative):. Therefore we can only do it regarding the totals [ August ]
+# Not sure here... Can I or can't I have this? Does it really not work if focal is
+#  not cummulative? I believe I was wrong. I think it does work! [ 12th SEPT ]
+# PLOT1: rate of decrease for each year -- is forestry reducing? (DOES PIXEL vs TOTAL AGREE? 
+# -- only works if focal is not cummulative, # so it is not working, cause focal is cummulative):. 
+# Therefore we can only do it regarding the totals [ August ]
  
-# HOW DO I KNOW the general effects of forestry are reducing in birds? If the 'rate' from one year is smaller than the previous
-source(file.path(getwd(), "functions/effectsOfForestryWithTime.R"))
-plot1 <- effectsOfForestryWithTime(fullTableList = fullTableAllBirds, pathToSave = dirname(maskedDensityRasFolder), 
-                                   calculate = TRUE, addError = TRUE, separatePlots = TRUE) # TODO add to this plot the one showing forestry activities!
+# HOW DO I KNOW the general effects of forestry are reducing in birds? If the 'rate' 
+# from one year is smaller than the previous
 
-# PLOT2: How much did habitat supply change from 1984 to the given year (cummulative rate of habitat loss) 
+source(file.path(getwd(), "functions/effectsOfForestryWithTime.R"))
+  plot1 <- effectsOfForestryWithTime(fullTableList = finalPixelTableList,
+                                     spatialScale = spatialScale,
+                                     # justPlot = TRUE,
+                                     # lapply over BIRD "fullPixelTableBIRD500m.rds" OR 
+                                     # "plot1TableXXX500m.rds" + justPlot = TRUE
+                                   pathToSave = ifelse(pemisc::user() == "tmichele", 
+                                                       folderForTables,
+                                                       file.path(getwd(), "data")),
+                                   subsetName = "value", subsetValue = 1,
+                                   # outputs/posthocAnalysis/ 
+                                   calculate = TRUE, 
+                                   addError = TRUE, 
+                                   separatePlots = TRUE)
+# TODO add to this plot the one showing forestry activities!
+
+
+# PLOT2: How much did habitat supply change from 1984 to the given year 
+# (cummulative rate of habitat loss) 
 # Exclusively related to forest activities
 source(file.path(getwd(), "functions/changeInHabitatSupplyThroughTime.R"))
-plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pathToSave = dirname(maskedDensityRasFolder), 
-                                          calculate = TRUE, addError = FALSE, separatePlots = FALSE)
-# WHICH SPECIES DID WE LOOSE MOST? ARE THESE THE MOST ABUNDANT ONES?  OR ARE THESE MORE RELATED TO MATURE FOREST?
+plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, 
+                                          # lapply over BIRD "fullPixelTableBIRD500m.rds" OR 
+                                          # "summarizedOPTableXXXm.rds" + justPlot = TRUE
+                                          pathToSave = dirname(maskedDensityRasFolder), 
+                                          calculate = TRUE, addError = FALSE, 
+                                          separatePlots = FALSE)
+# WHICH SPECIES DID WE LOOSE MOST? ARE THESE THE MOST ABUNDANT ONES?  
+# OR ARE THESE MORE RELATED TO MATURE FOREST?
 
-# PLOT4: For each species, the percentage of pixels that showed significant decline: ~~ NOT FOR NOW...
+# PLOT4: For each species, the percentage of pixels that showed significant 
+# decline: ~~ NOT FOR NOW... 
+# [08APR20: Not sure its possible... 
+# How do you classify significant decline in a time series of 1 (each pixel)?]
 
 # significant <- sum(significantSlope[significantSlope > 0])
 # allNotNA <- sum(significantSlope[!is.na(significantSlope)])
@@ -654,19 +809,27 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
 
 # MAPS
 
-# MAP 1: Map of change in disturbance: mergedFocal2011 -- only works if this is cummulative (which is)! [ UPLOADED ]
-    mergedFocal2011 <- raster("/mnt/data/Micheletti/borealBirdsAndForestry/modules/focalCalculation/data/mergedFocal2011-500Res250m.tif")
-    
+# MAP 1: Map of change in disturbance: mergedFocal2011 -- only works if this 
+# is cummulative (which is)! [ UPLOADED ]
+    mergedFocal2011 <- raster(file.path(getwd(),
+                                     "modules/focalCalculation/data",
+                                     paste0("mergedFocal2011-", spatialScale,
+                                            "Res250m.tif")))
+    # Here: check places with lots of disturbance and make potentially histograms 
+    # for areas we "know were super disturbed" (i.e. Alberta's ALPAC -- already have the table)
     
 # MAP2: Change in habitat supply (absolute number -- realAbund2011-realAbund0) for each species
-    d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
+    d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif")) # RTM
     source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
       absoluteHabitatSupplyMAP <- changeInHabitatSupply(tble = pixelTablesWithUncertaintyPre05,
+                                                        # This needs to be done in 58. 
+                                                        # pixelTablesWithUncertaintyPre05 == 
                                                         RTM = d,
                                                         whichType = "absolute", # absolute, proportional
                                                         whichBirds = species, # "BIRD" OR "all"
                                                         pathToSave = dirname(maskedDensityRasFolder),
-                                                        upload = FALSE) # type = each one of the columns for the maps below... The map needs to be uploaded to GDrive
+                                                        upload = FALSE) # type = each one of the 
+      # columns for the maps below... The map needs to be uploaded to GDrive
       # NOT JUST MAP, BUT ALSO PLOT OF SUMMARY -- FOR EACH BIRD
       
 # MAP2B: Change in habitat supply (absolute number -- realAbund2011-realAbund0) for all species together
@@ -675,18 +838,22 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
       absoluteHabitatSupplyMAPall <-  changeInHabitatSupplyAll(tble = pixelTablesWithUncertaintyPre05,
                                                             RTM = d,
                                                             whichType = "absolute", # absolute, proportional
-                                                            pathToSave = dirname(maskedDensityRasFolder)) # type = each one of the columns for the maps below... The map needs to be uploaded to GDrive
+                                                            pathToSave = dirname(maskedDensityRasFolder)) 
+      # type = each one of the columns for the maps below... The map needs to be uploaded to GDrive
       
       # NOT JUST MAP, BUT ALSO PLOT OF SUMMARY --  IN TOTAL
       # WHERE DID WE LOSE MORE SPECIES?
       
 # Plot 6
       # WHAT IS THE PERCENT OF AREA AFFECTED BY ANY CHANGE IN BIRD ABUNDANCE FOR EACH SPECIES? --> SAVED THIS OBJ!
-      fl <- usefun::grepMulti(x = list.files(dirname(maskedDensityRasFolder), #file.path(getwd(), "modules/focalCalculation/data/", "outputs/posthocAnalysis/"
-                                             full.names=T), patterns = "percentChange")
+      fl <- usefun::grepMulti(x = list.files(dirname(maskedDensityRasFolder), 
+                                             #file.path(getwd(), "modules/focalCalculation/data/", 
+                                             #"outputs/posthocAnalysis/"
+                                             full.names = TRUE), patterns = "percentChange")
     allChanges <- rbindlist(lapply(X = fl, FUN = function(ch){
       change <- readRDS(ch)
-      species <- usefun::substrBoth(tools::file_path_sans_ext(ch), howManyCharacters = 4, fromEnd = TRUE)
+      species <- usefun::substrBoth(tools::file_path_sans_ext(ch), howManyCharacters = 4, 
+                                    fromEnd = TRUE)
       dt <- data.table(species = species, change = change)
     }))
     addTo <- data.table(species = c("BBWA", "BLPW"), change = c(0.24, 0.03))
@@ -705,10 +872,11 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
     # HOW MUCH THE LOSS IS COMPARED TO POPULATION ABUNDANCE PROJECTIONS (abund0)?
     d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
     source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
-        proportionalHabitatSupplyMAPeach <- Cache(changeInHabitatSupply, tble = pixelTablesWithUncertaintyPre05,
-                                                          whichType = "proportional", # absolute, proportional
-                                                          RTM = d,
-                                                          pathToSave = dirname(maskedDensityRasFolder)) # type = each one of the columns for the maps below... The map needs to be uploaded to GDrive
+        proportionalHabitatSupplyMAPeach <- Cache(changeInHabitatSupply, 
+                                                  tble = pixelTablesWithUncertaintyPre05,
+                                                  whichType = "proportional", # absolute, proportional
+                                                  RTM = d,
+                                                  pathToSave = dirname(maskedDensityRasFolder)) # type = each one of the columns for the maps below... The map needs to be uploaded to GDrive
 
       # MAP4: Change in habitat supply (proportional -- (minrealAbund2011-realAbund0)/realAbund0) AND (maxrealAbund2011-realAbund0)/realAbund0) -- 
       # NOT JUST MAP, BUT ALSO PLOT OF SUMMARY
@@ -716,10 +884,11 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
       # HOW MUCH THE LOSS IS COMPARED TO POPULATION ABUNDANCE PROJECTIONS (abund0)?
         d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
         source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
-      proportionalHabitatSupplyMAPall <-  Cache(changeInHabitatSupplyAll, tble = pixelTablesWithUncertaintyPre05, # LATER
-                                                            whichType = "proportional", # absolute, proportional
-                                                            RTM = d,
-                                                            pathToSave = dirname(maskedDensityRasFolder)) # type = each one of the columns for the maps below... The map needs to be uploaded to GDrive
+      proportionalHabitatSupplyMAPall <-  Cache(changeInHabitatSupplyAll, 
+                                                tble = pixelTablesWithUncertaintyPre05, # LATER
+                                                whichType = "proportional", # absolute, proportional
+                                                RTM = d,
+                                                pathToSave = dirname(maskedDensityRasFolder)) # type = each one of the columns for the maps below... The map needs to be uploaded to GDrive
     
       
 # PLOT3: For each species, check if the decrease is happening in areas where the birds 
@@ -736,22 +905,26 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
       colNames <- c("species", "expected", "minimum", "maximum")
       dt1 <- summarizedTableCom[, ..colsToKeep1]
       dt0 <- c(dt1$propDiffExp, dt1$propDiffMin1985, dt1$propDiffMax1985)
-      dt0 <- data.table(species = dt1$species, proportionalDifference = dt0, type = rep(c("expected", "minimum", "maximum"), each = 15))
+      dt0 <- data.table(species = dt1$species, proportionalDifference = dt0, 
+                        type = rep(c("expected", "minimum", "maximum"), each = 15))
       
       dt2 <- summarizedTableCom[, ..colsToKeep2]
       dt3 <- c(dt2$abund1985, dt2$minAbund1985, dt2$maxAbund1985)
-      dt3 <- data.table(species = dt2$species, abundance2011_Solymos2013 = dt3, type = rep(c("expected", "minimum", "maximum"), each = 15))
+      dt3 <- data.table(species = dt2$species, abundance2011_Solymos2013 = dt3, 
+                        type = rep(c("expected", "minimum", "maximum"), each = 15))
       
       dt <- merge(dt0, dt3)
       
       typeForPlot <- "expected"
       p <- ggplot(data = dt[type == typeForPlot], aes(x = proportionalDifference,
-                                                      y = abundance2011_Solymos2013, color = species, label = species)) +
+                                                      y = abundance2011_Solymos2013, 
+                                                      color = species, label = species)) +
         geom_point(size = 4) +
         geom_text(aes(label = species, color = species), hjust = 0.5, vjust = -1) + 
         labs(x = "Proportional Difference from 2011 in relation to 1985 ((2011-1985)/1985)",
              y = "Abundance of birds (Solymos 2013)") +
-        theme(legend.position =  "none") # GROUP THE BIRDS IN SOME CATEGORY? Not that I could see...
+        theme(legend.position =  "none") 
+      # GROUP THE BIRDS IN SOME CATEGORY? Not that I could see...
       
 # PLOT4: Compare our calculations to Rosenberg 2019
 
@@ -802,7 +975,8 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
         theme(legend.title = element_blank(),
               legend.position = "bottom")
       
-# PLOT5: Which species presented the highest percentage loss in comparison to its population size? are these the most abundant? There is such trend
+# PLOT5: Which species presented the highest percentage loss in comparison to its population size? 
+# are these the most abundant? There is such trend
       # Should I calculate the proportional difference also for Rosenberg 2019?
       
       colsToKeep1 <- c("species", 
@@ -812,22 +986,26 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
       colNames <- c("species", "expected", "minimum", "maximum")
       dt1 <- summarizedTableCom[, ..colsToKeep1]
       dt0 <- c(dt1$propDiffExp, dt1$propDiffMin1985, dt1$propDiffMax1985)
-      dt0 <- data.table(species = dt1$species, proportionalDifference = dt0, type = rep(c("expected", "minimum", "maximum"), each = 15))
+      dt0 <- data.table(species = dt1$species, proportionalDifference = dt0, 
+                        type = rep(c("expected", "minimum", "maximum"), each = 15))
 
       dt2 <- summarizedTableCom[, ..colsToKeep2]
       dt3 <- c(dt2$abund1985_R, dt2$minAbund1985_R, dt2$maxAbund1985_R)
-      dt3 <- data.table(species = dt2$species, abundance2011_Rosenberg2019 = dt3, type = rep(c("expected", "minimum", "maximum"), each = 15))
+      dt3 <- data.table(species = dt2$species, abundance2011_Rosenberg2019 = dt3, 
+                        type = rep(c("expected", "minimum", "maximum"), each = 15))
       
       dt <- merge(dt0, dt3)
       
       typeForPlot <- "expected"
       p <- ggplot(data = dt[type == typeForPlot], aes(x = proportionalDifference,
-                                 y = abundance2011_Rosenberg2019, color = species, label = species)) +
+                                 y = abundance2011_Rosenberg2019, 
+                                 color = species, label = species)) +
         geom_point(size = 4) +
         geom_text(aes(label = species, color = species), hjust = 0.5, vjust = -1) + 
         labs(x = "Proportional Difference from 2011 in relation to 1985 ((2011-1985)/1985)",
              y = "Abundance of birds") +
-        theme(legend.position =  "none") # GROUP THE BIRDS IN SOME CATEGORY? Not that I could see...
+        theme(legend.position =  "none") 
+      # GROUP THE BIRDS IN SOME CATEGORY? Not that I could see...
       
       
       
