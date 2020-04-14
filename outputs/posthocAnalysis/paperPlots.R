@@ -19,6 +19,11 @@ spatialScale <- 500 # 500m DONE!
 doAssertions <- TRUE # Should NOT be turned off
 freeUpMem <- FALSE
 lightLoadFinalTable <- FALSE
+RTM <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
+
+############### CAUTION #####################
+overwriteInternals <- TRUE # CHANGE AS SOON AS THE NEW RASTERS ARE DONE!!
+############### CAUTION #####################
 
 maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
 originalDensFolder <- file.path(wd, "modules/birdDensityBCR_Prov_LCC/data")
@@ -36,13 +41,16 @@ folderForTables <- checkPath(file.path(wd, "outputs/posthocAnalysis",
 source(file.path(getwd(), "functions/returnBirdAbundance.R"))
 source(file.path(wd, "functions/makeBirdTable.R"))
   # Make a density table for each species. 
-  # This has the original DENSITY, per pixel, taken out straight from the density/predicted rasters
-  # CALCULATED/PREDICTED DENSITY, NOT THE ORIGINAL Solymos/Stralberg density!!
-fullTablePixels <- lapply(species, FUN = function(sp){
+  # This has the CALCULATED/PREDICTED DENSITY, NOT THE ORIGINAL Solymos/Stralberg density!!
+future::plan("multicore")
+fullTablePixels <- future_lapply(species, FUN = function(sp){
   tableFileName <- paste0("birdsTableAbund",sp, spatialScale, "m")
-  fullTablePixels <- Cache(makeBirdTable, species = sp, tableFileName = tableFileName,
+  fullTablePixels <- Cache(makeBirdTable, species = sp, 
+                           tableFileName = tableFileName,
                            folderForTables = folderForTables,
                            spatialScale = spatialScale,
+                           overwriteInternals = overwriteInternals,
+                           rasterToMatch = RTM,
                            folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
                            locationReturnBirdAbundanceFUN = file.path(wd, paste0("functions/return",
                                                                                  "BirdAbundance.R")),
@@ -61,7 +69,7 @@ source(file.path(getwd(), 'functions/makeBCRandLCC.R'))
 pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
 BCRLCC05 <- Cache(makeBCRandLCC, 
                   pathData = pathData,
-                  RTM = raster(file.path(maskedDensityRasFolder, "densityBBWA.tif")),
+                  RTM = RTM,
                   userTags = c("objectName:BCRLCC05",
                                "script:paperPlots"), 
                   overwrite = TRUE, omitArgs = c("overwrite", 
@@ -80,10 +88,12 @@ fullTableAllBirds <- lapply(X = species, function(bird){
       # Loading `realAbund0` that comes from the densityBIRD.tif.
       # These seem to be the original density tables (from Solymos Stralberg) 08APR20 
       # It loads already as abundance, but the name stays as density until step 5.
-dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullTables"), create = TRUE)
+dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullTables"), 
+                        create = TRUE)
         fl <- usefun::grepMulti(x = list.files(path = maskedDensityRasFolder,
-                                               full.names = TRUE), patterns = c("density", bird,".tif"))
-        fullDensityTable <- Cache(returnBirdAbundance, 
+                                               full.names = TRUE), 
+                                patterns = c("density", bird,".tif"))
+        fullDensityTable <- Cache(returnBirdAbundance, # ORIGINAL DENSITY FROM SOLYMOS/STRALBERG
                                   filepath = fl, 
                                   type = "density",
                                   fullTableFilename = file.path(dfullTpath, 
@@ -101,7 +111,7 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
         setkey(fullDensityTable, "pixelID")
       # 4.2 RATE YEARS 1984 - 2011 PER BIRD
       # 4.2.1 Rate per year: rate
-      fullTableList <- readRDS(fullTablePixels[[bird]])
+      fullTableList <- readRDS(fullTablePixels[[bird]]) # CALCULATED TABLE WITH CHANGES
       dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, value.var = "density")
       ys <- usefun::substrBoth(unique(fullTableList$year), howManyCharacters = 4, fromEnd = TRUE)
       newNames <- c(names(dcastedTable)[1:2], paste0("abund", ys))
@@ -182,7 +192,7 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
 # each combination of BCR + Prov for forested LCC (classes: 1:15)
 
 # For each species...
-overwrite <- TRUE
+overwrite <- FALSE
 pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
   finalFullTablePath <- file.path(folderForTables, 
                                   paste0("finalFullTable", BIRD, 
@@ -207,7 +217,7 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     BCR_Prov_LCC <- Cache(createBCR_PROV_LCC_EstimatesPosthoc, BCR = BCRLCC05$BCR,
                           LCC05 = BCRLCC05$LCC05, justBCRProvLCC = TRUE, 
                           pathToDSave = maskedDensityRasFolder,
-                          densityMap = file.path(maskedDensityRasFolder, "densityBBWA.tif"), 
+                          RTM = RTM, 
 # Can be used for all species as it is a template for RTM! 
                           omitArgs = c("userTags", "useCache"),
                           userTags = c("objectName:BCR_Prov_LCC", "script:paperPlot"))
@@ -367,7 +377,8 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     # Identify which pixels changed before 2005
     BIRDfullTable[, pixelChanged := ifelse(cummRate1985-cummRate2005 != 0, TRUE, FALSE)] 
     #all(LCC %in% 1:15)
-    source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/percentOfAreaAffectedByDisturbance.R')
+    source(paste0('/mnt/data/Micheletti/borealBirdsAndForestry/functions/",
+                  "percentOfAreaAffectedByDisturbance.R'))
     percChange <- percentOfAreaAffectedByDisturbance(tableWithChange = BIRDfullTable, 
                                                      logicalColChange = "pixelChanged")
     message(crayon::cyan(paste0("Percent area that is affected by ANY change for ", BIRD, ": ", 
