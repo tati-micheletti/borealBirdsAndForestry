@@ -9,7 +9,10 @@ makeBirdTable <- function(species = NULL,
                           lightLoad = FALSE, 
                           tablePerPixel = NULL,
                           spatialScale = 500,
+                          rasterToMatch = NULL,
                           overwriteInternals = NULL){ # or "overwrite"; basically Cache argument 'useCache'
+  library("future")
+  library("future.apply")
   bigTableName <- file.path(folderForTables, paste0(tableFileName, ".rds"))
   if (!file.exists(bigTableName)){
     if (is.null(year))
@@ -22,21 +25,30 @@ makeBirdTable <- function(species = NULL,
       summarizedTableFileName <- file.path(folderForTables,
                                            paste0("birdsTable",species, y,".rds"))
       fl <- usefun::grepMulti(x = list.files(path = folderForPredictedRasters, 
-                                             full.names = TRUE), patterns = c("predicted", species, spatialScale, "mYear", y, ".tif"))
+                                             full.names = TRUE), patterns = c("predicted", 
+                                                                              species, spatialScale, 
+                                                                              "mYear", y, ".tif"))
       source(locationReturnBirdAbundanceFUN)
-      densityTable <- reproducible::Cache(returnBirdAbundance, filepath = fl, type = y,
+      densityTable <- reproducible::Cache(returnBirdAbundance, 
+                                          filepath = fl, 
+                                          type = y,
                                           fullTableFilename = fullTableFilename, 
                                           summarizedTableFileName = summarizedTableFileName,
-                                          whichToLoad = typeOfTable, lightLoad = lightLoad, 
+                                          whichToLoad = typeOfTable, 
+                                          lightLoad = lightLoad, 
                                           onlyNA = onlyNA,
-                                          cacheRepo = file.path(getwd(), "outputs/posthocAnalysis/cache"),
-                                          tablePerPixel = tablePerPixel, useCache = overwriteInternals,
+                                          rasterToMatch = rasterToMatch,
+                                          cacheRepo = file.path(getwd(), 
+                                                                "outputs/posthocAnalysis/cache"),
+                                          tablePerPixel = tablePerPixel, 
+                                          useCache = overwriteInternals,
                                           omitArgs = c("useCache", "cacheRepo"))
       densityTable$year <- paste0("year", y)
       return(densityTable)
     }))
     # browser() # Not sure why I had a browser here. Probably forgotten? 08APR20
-    dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, value.var = "density")
+    dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, 
+                          value.var = "density")
     saveRDS(object = fullTableList, file = bigTableName)
     rm(fullTableList)
     gc()
