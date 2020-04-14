@@ -34,11 +34,11 @@ changeInHabitatSupply <- function(tble, RTM, # RTM for number of pixels
         } else {
           dt[, finalCol := (value2011-value0)/value0]
         }
-      ras <- raster(RTM)
-      ras <- raster::setValues(x = ras, values = dt$finalCol)
-      names(ras) <- rasName
-      writeRaster(x = ras, filename = rasName, format = "GTiff")
-      rm(ras); rm(dt); gc()
+        ras <- raster(RTM)
+        ras <- raster::setValues(x = ras, values = dt$finalCol)
+        names(ras) <- rasName
+        writeRaster(x = ras, filename = rasName, format = "GTiff")
+        rm(ras); rm(dt); gc()
       if (upload)
         googledrive::drive_upload(media = paste0(rasName, ".tif"), 
                                   path = googledrive::as_id("12iUWhrSBDS8dDXI42uSFqns_7akFSr1R"))

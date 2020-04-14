@@ -17,13 +17,13 @@ effectsOfForestryWithTime <- function(fullTableList, calculate = TRUE, pathToSav
         rateDT <- readRDS(plot1Table)
       } else {
         fullTableList <- rbindlist(lapply(names(fullTableList), function(BIRD){
-        t1 <- Sys.time()
-        if (is(fullTableList[[BIRD]], "character")){
-          tbl <- readRDS(fullTableList[[BIRD]])
-        } else {
-          tbl <- fullTableList[[BIRD]] 
-        }
-        tbl <- tbl[get(subsetName) == subsetValue, ] # subsetting for region
+          t1 <- Sys.time()
+          if (is(fullTableList[[BIRD]], "character")){
+            tbl <- readRDS(fullTableList[[BIRD]])
+          } else {
+            tbl <- fullTableList[[BIRD]] 
+          }
+          tbl <- tbl[get(subsetName) == subsetValue, ] # subsetting for region
         ratesNames <- usefun::grepMulti(x = names(tbl), patterns = "rate")
         tbl <- rbindlist(lapply(X = c("mean", "sd", "min", "max"), FUN = function(op){
           tb <- tbl[, lapply(.SD, get(op), na.rm = TRUE), by = species, .SDcols = ratesNames] 
@@ -34,12 +34,12 @@ effectsOfForestryWithTime <- function(fullTableList, calculate = TRUE, pathToSav
         )
         })
         )
-      rateDT <- fullTableList
-      rateDT <- melt(rateDT, id.vars = c("species", "operation"))     # Convert data from wide to long
-      rateDT <- dcast(data = rateDT, formula = species + variable ~ operation) # Putting operation back as column
-      rateDT$year <- as.numeric(usefun::substrBoth(as.character(rateDT$variable), 4, TRUE))
-      saveRDS(rateDT, plot1Table)
-    }} # If passing the whole summarized table goes straight here
+        rateDT <- fullTableList
+        rateDT <- melt(rateDT, id.vars = c("species", "operation"))     # Convert data from wide to long
+        rateDT <- dcast(data = rateDT, formula = species + variable ~ operation) # Putting operation back as column
+        rateDT$year <- as.numeric(usefun::substrBoth(as.character(rateDT$variable), 4, TRUE))
+        saveRDS(rateDT, plot1Table)
+      }} # If passing the whole summarized table goes straight here
   if (!calculate){
     ratesNames <- usefun::grepMulti(x = names(fullTableList), patterns = "rate")
     ratesNames <- c("species", ratesNames)

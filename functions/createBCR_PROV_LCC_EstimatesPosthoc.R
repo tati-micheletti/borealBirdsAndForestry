@@ -1,5 +1,6 @@
 createBCR_PROV_LCC_EstimatesPosthoc <- function(BCR, pathToDSave,
-                                         LCC05, densityMap,
+                                         LCC05, 
+                                         RTM,
                                          densityEstimates = NULL,
                                          justBCRProvLCC = FALSE){
   
@@ -11,17 +12,23 @@ createBCR_PROV_LCC_EstimatesPosthoc <- function(BCR, pathToDSave,
   BCRsf <- BCRsf[BCRsf$COUNTRY == "CANADA",] # Excluding the USA from the analysis
   rasBCR <- fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "BCR")
   rasBCR[] <- rasBCR[]
-  rasBCR <- Cache(postProcess, x = rasBCR, destinationPath = pathToDSave, 
-                  rasterToMatch = raster(densityMap), 
+  rasBCR <- Cache(postProcess, x = rasBCR, 
+                  destinationPath = pathToDSave, 
+                  rasterToMatch = RTM, 
                   filename2 = NULL,  
                   format = "GTiff")
   
   # # ==========+ PROV
   message(crayon::yellow(paste0("Fasterizing PROV")))
-  PROV_ID <- data.table(PROVINCE_S = unique(BCRsf$PROVINCE_S), ID = seq(200, 199 + length(unique(BCRsf$PROVINCE_S))))
+  PROV_ID <- data.table(PROVINCE_S = unique(BCRsf$PROVINCE_S), 
+                        ID = seq(200, 199 + length(unique(BCRsf$PROVINCE_S))))
   BCRsf$PROV_ID <- PROV_ID$ID[match(BCRsf$PROVINCE_S, PROV_ID$PROVINCE_S)]
-  rasPROV <- fasterize::fasterize(sf = BCRsf, raster = LCC05, field = "PROV_ID")
-  rasPROV <- Cache(postProcess, rasPROV, rasterToMatch = raster(densityMap),
+  rasPROV <- fasterize::fasterize(sf = BCRsf, 
+                                  raster = LCC05, 
+                                  field = "PROV_ID")
+  rasPROV <- Cache(postProcess, 
+                   rasPROV, 
+                   rasterToMatch = RTM,
                    destinationPath = pathToDSave,
                    filename2 = NULL, 
                    format = "GTiff")
@@ -71,7 +78,10 @@ createBCR_PROV_LCC_EstimatesPosthoc <- function(BCR, pathToDSave,
   
   if (is.null(densityEstimates)) stop("densityEstimates can only be null if justBCRProvLCC = TRUE")
   
-  densityEstimates <- Cache(plyr::join, densityEstimates, PROVabb, userTags = "densityEstimatesIntegers")
+  densityEstimates <- Cache(plyr::join, 
+                            densityEstimates, 
+                            PROVabb, 
+                            userTags = "densityEstimatesIntegers")
   out <- list(PROV_BCR_LCC = PROV_BCR_LCC, 
               densityEstimates = densityEstimates)
   return(out)

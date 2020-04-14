@@ -34,8 +34,8 @@ makesummarizedTableFromPixels <- function(tabName,
       diff2011_1985exp <- abund2011-abund1985
       summarizedTable <- data.table::data.table(species = BIRD,
                                                 region = reg, # Each region/polygon of the shapefile
-      abund0 = abund0,
-      abund1985 = abund1985,
+                                                abund0 = abund0,
+                                                abund1985 = abund1985,
       minAbund1985 = minAbund1985,
       maxAbund1985 = maxAbund1985,
       abund2011 = abund2011,
