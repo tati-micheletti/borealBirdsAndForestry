@@ -3,8 +3,6 @@ createBCR_PROV_LCC_EstimatesPosthoc <- function(BCR, pathToDSave,
                                          densityEstimates = NULL,
                                          justBCRProvLCC = FALSE){
   
-  LCC05 <- Cache(postProcess, LCC05, rasterToMatch = raster(densityMap), filename2 = file.path(pathToDSave, "RTMedLCC05_posthoc"), format = "GTiff")
-  
   # 2. Rasterize (fasterize) both PROV and BCR.
   # =========== BCR 
   message(crayon::yellow(paste0("Fasterizing BCR")))
