@@ -1,0 +1,2 @@
+"file" "checksum" "filesize" "algorithm"
+"popChangeRosenberg2019.csv" "c8fb8eb426fb2d39" "3260" "xxhash64"
