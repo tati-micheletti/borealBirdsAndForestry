@@ -1,7 +1,9 @@
 changeInHabitatSupplyThroughTime <- function(fullTableList, calculate, pathToSave = getwd(),
-                                             addError = FALSE, separatePlots = FALSE){ # Use calculate = TRUE when passing pixel table list
+                                             addError = FALSE, separatePlots = FALSE, justPlot = FALSE,
+                                             spatialScale){ 
+  # Use calculate = TRUE when passing pixel table list
   if (calculate){
-    summarizedOPTablePath <- file.path(pathToSave, "summarizedOPTableCum.rds")
+    summarizedOPTablePath <- file.path(pathToSave, "summarizedOPTableCum", spatialScale, "m.rds")
     if (file.exists(summarizedOPTablePath)){
       message(crayon::green(paste0("Summarized operations' table exist for all birds. Returning...")))
       rateDT <- readRDS(summarizedOPTablePath)
