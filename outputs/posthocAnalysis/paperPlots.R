@@ -43,6 +43,8 @@ source(file.path(wd, "functions/makeBirdTable.R"))
   # Make a density table for each species. 
   # This has the CALCULATED/PREDICTED DENSITY, NOT THE ORIGINAL Solymos/Stralberg density!!
 future::plan("multicore")
+library("future")
+library("future.apply")
 fullTablePixels <- future_lapply(species, FUN = function(sp){
   tableFileName <- paste0("birdsTableAbund",sp, spatialScale, "m")
   fullTablePixels <- Cache(makeBirdTable, species = sp, 
