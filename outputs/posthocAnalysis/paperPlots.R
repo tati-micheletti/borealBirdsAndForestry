@@ -22,7 +22,7 @@ lightLoadFinalTable <- FALSE
 RTM <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
 
 ############### CAUTION #####################
-overwriteInternals <- TRUE # CHANGE AS SOON AS THE NEW RASTERS ARE DONE!!
+overwriteInternals <- FALSE # CHANGE AS SOON AS THE NEW RASTERS ARE DONE!!
 ############### CAUTION #####################
 
 maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
@@ -45,15 +45,16 @@ source(file.path(wd, "functions/makeBirdTable.R"))
 future::plan("multicore")
 library("future")
 library("future.apply")
+
+# 1. THIS CREATES THE CALCULATED/PREDICTED DENSITIES
 fullTablePixels <- future_lapply(species, FUN = function(sp){
-  tableFileName <- paste0("birdsTableAbund",sp, spatialScale, "m")
+  tableFileName <- paste0("birdsTableAbund", sp, spatialScale, "m")
   fullTablePixels <- Cache(makeBirdTable, species = sp, 
                            tableFileName = tableFileName,
                            folderForTables = folderForTables,
                            spatialScale = spatialScale,
                            overwriteInternals = overwriteInternals,
                            rasterToMatch = RTM,
-                           useCache = "overwrite", # <~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ UPDATE!!! CHANGE
                            folderForPredictedRasters = file.path(wd, "modules/predictBirds/data/"),
                            locationReturnBirdAbundanceFUN = file.path(wd, paste0("functions/return",
                                                                                  "BirdAbundance.R")),
@@ -68,16 +69,7 @@ fullTablePixels <- future_lapply(species, FUN = function(sp){
 })
 names(fullTablePixels) <- species
 
-source(file.path(getwd(), 'functions/makeBCRandLCC.R'))
-pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
-BCRLCC05 <- Cache(makeBCRandLCC, 
-                  pathData = pathData,
-                  RTM = RTM,
-                  userTags = c("objectName:BCRLCC05",
-                               "script:paperPlots"), 
-                  overwrite = TRUE, omitArgs = c("overwrite", 
-                                                 "userTags", "useCache"))
-
+# 2. THIS USES THE PREDICTED TABLES TO CREATE RATES OF CHANGE
 fullTableAllBirds <- lapply(X = species, function(bird){
   completeSummaryFile <- file.path(folderForTables,
                                    paste0("fullPixelTable", bird, 
@@ -97,6 +89,7 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
                                                full.names = TRUE), 
                                 patterns = c("density", bird,".tif"))
         fullDensityTable <- Cache(returnBirdAbundance, # ORIGINAL DENSITY FROM SOLYMOS/STRALBERG
+                                  # This doesn't need RTM because is the original densityXXXX.tif
                                   filepath = fl, 
                                   type = "density",
                                   fullTableFilename = file.path(dfullTpath, 
@@ -186,17 +179,27 @@ dfullTpath <- checkPath(file.path(dirname(maskedDensityRasFolder), "densityFullT
 })
   names(fullTableAllBirds) <- species
 
-# To correct for LCC previous to 2005 that we don't know what type of forest was, we 
-# can use the minimum and the maximum values of 
-# each one of the forest cover types that were harvested until 2011 for each pixel.
-# 1. I need to extract the values of a raster stack BCR LCC PROV using the density raster 
-# for each species
-# Here I need the table table BCR, Prov, LCC, ExpD so I can check the min, max and average for 
-# each combination of BCR + Prov for forested LCC (classes: 1:15)
-
-# For each species...
+# 3.  THIS CREATES BCR AND LCC05
+source(file.path(getwd(), 'functions/makeBCRandLCC.R'))
+pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
+BCRLCC05 <- Cache(makeBCRandLCC, 
+                    pathData = pathData,
+                    RTM = RTM,
+                    userTags = c("objectName:BCRLCC05",
+                                 "script:paperPlots"), 
+                    overwrite = TRUE, omitArgs = c("overwrite", 
+                                                   "userTags", "useCache"))
+  
+# 4. THIS CREATES THE UNCERTAINTY COLUMNS BASED ON PRE-2005
 overwrite <- FALSE
 pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
+  # To correct for LCC previous to 2005 that we don't know what type of forest was, we 
+  # can use the minimum and the maximum values of 
+  # each one of the forest cover types that were harvested until 2011 for each pixel.
+  # 1. I need to extract the values of a raster stack BCR LCC PROV using the density raster 
+  # for each species
+  # Here I need the table table BCR, Prov, LCC, ExpD so I can check the min, max and average for 
+  # each combination of BCR + Prov for forested LCC (classes: 1:15)
   finalFullTablePath <- file.path(folderForTables, 
                                   paste0("finalFullTable", BIRD, 
                                          spatialScale,"m.rds"))
