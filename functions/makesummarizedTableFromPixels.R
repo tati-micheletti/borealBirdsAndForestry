@@ -13,16 +13,16 @@ makesummarizedTableFromPixels <- function(tabName,
       # 23NOV19 --> I still have 605 pixels that are NA for Abund. don't know where this is coming from.... Making a temporary fix --> PROBABLY THE POTENTIAL PROBLEM MENTIONED IN potentialProblem.R
       tableSummaryByRegion <- rbindlist(lapply(unique(birdTable[[column]])[!is.na(unique(birdTable[[column]]))], 
                                                function(reg){
-    if (doAssertions){# Make assertions to make sure we have the same amount of pixels with info
-      ok1 <- sum(!is.na(birdTable$minrealAbund1985)) == NROW(birdTable)
-      ok2 <- sum(!is.na(birdTable$maxrealAbund1985)) == NROW(birdTable)
-      ok3 <- sum(!is.na(birdTable$minrealAbund2011)) == NROW(birdTable)
-      ok4 <- sum(!is.na(birdTable$maxrealAbund2011)) == NROW(birdTable)
-      birdTable <- na.omit(birdTable, cols = "Abund")
-      if(!all(ok1, ok2, ok3, ok4)){
-      message("There are still NA's in the birdTable. Debug")
-      } 
-    }
+                                                 if (doAssertions){# Make assertions to make sure we have the same amount of pixels with info
+                                                   ok1 <- sum(!is.na(birdTable$minrealAbund1985)) == NROW(birdTable)
+                                                   ok2 <- sum(!is.na(birdTable$maxrealAbund1985)) == NROW(birdTable)
+                                                   ok3 <- sum(!is.na(birdTable$minrealAbund2011)) == NROW(birdTable)
+                                                   ok4 <- sum(!is.na(birdTable$maxrealAbund2011)) == NROW(birdTable)
+                                                   birdTable <- na.omit(birdTable, cols = "Abund")
+                                                   if(!all(ok1, ok2, ok3, ok4)){
+                                                     message("There are still NA's in the birdTable. Debug")
+                                                   } 
+                                                 }
       abund0 <- birdTable[get(column) == reg, sum(realAbund0)]
       abund1985 <- birdTable[get(column) == reg, sum(realAbund1985)]
       minAbund1985 <- birdTable[get(column) == reg, sum(minrealAbund1985)]
@@ -33,7 +33,7 @@ makesummarizedTableFromPixels <- function(tabName,
       diff2011_1985max <- abund2011-maxAbund1985
       diff2011_1985exp <- abund2011-abund1985
       summarizedTable <- data.table::data.table(species = BIRD,
-      region = reg, # Each region/polygon of the shapefile
+                                                region = reg, # Each region/polygon of the shapefile
       abund0 = abund0,
       abund1985 = abund1985,
       minAbund1985 = minAbund1985,
