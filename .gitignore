@@ -109,10 +109,6 @@ outputs/TableS1-2.csv
 sshkeygen
 .httr-oauth
 
-borealBirdsAndForestryManuscripts
-
-\.gitmodules
-
 !densChangeCMWA_100.png
 !densChangeBBWA_100.png
 !densChangeBTNW_100.png
