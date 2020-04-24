@@ -38,6 +38,16 @@ predictHierarchicalModel <- function(bird,
   library("nimble")
 startTime <- Sys.time()
   iSMCode <- nimbleCode({
+    # Preparing cluster factors
+    for (j in 1:NClusters) {
+      clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+    }
+    for (y in 1:NYears) {
+      YearRanEff[y] ~ dnorm(0, tau.year)
+    }
+    for (b in 1:Nbeta) {
+      beta[b] ~ dnorm(mu.beta, tau.beta)
+    }
     #N is abundance, i is the sample (data row), k is the beta parameter
     # Neighborhood scale
     for (i in 1:nvisits){ # each sample point / each row of the data table
@@ -45,21 +55,41 @@ startTime <- Sys.time()
       # sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
       # tau.year <- pow(sd.year, -2)
       # sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
-      # Cluster[i] ~ dnorm(0, tau.cluster) # random cluster effects in log(density)
+      # Cluster[i] ~ dnorm(0, tau.cluster) # random cluster effects in log(density) # Instead of the 0, I 
       # Year[i] ~ dnorm(0, tau.year) # random year effects in log(density)
-      omega[i] ~ dbern(phi) # ZI part (‘suitability’ of the sample site). Phi = 0, habitat is not suitable; phi = 1, is suitable
-      NN[i]  ~ dpois(mu.poisson[i])
-      mu.poisson[i] <- omega[i] * lambda1[i]
-      lambda1[i] <- beta0N + 
-                    betaN[1]*density[i] + 
-                    betaN[2]*State_P_500[i] + 
-                    betaN[3]*(1-State_P_500[i])*sqrt(correctedAge[i]) +
-                    offset[i] #+
-                  # Cluster[i] * switchCluster + Year[i] * switchYear # Random Effects
+      NN[i]  ~ dpois(lambda1[i]) # we can also remove the NN, put the N equation inside the local one
+      lambda1[i] <- density[i] + 
+                    beta[1] * State_P_500[i] + 
+                    # betaN[3]*(1-State_P_500[i])*sqrt(correctedAge[i]) +
+                    offset[i] +
+                    clusterRanEff[ClusterIndex[i]] * switchCluster + 
+                    YearRanEff[YearIndex[i]] * switchYear # Random Effects
+                    # Cluster[i] * switchCluster + Year[i] * switchYear # Random Effects
       
       # Local scale
-      counts[i]  ~ dpois(lambda2[i])
-      lambda2[i] <- beta0L + NN[i] + betaL[1]*State_P_100[i] + betaN[2]*(1-State_P_100[i])*sqrt(correctedAge[i])
+      omega[i] ~ dbern(phi) # ZI part (‘suitability’ of the sample site). Phi = 0, habitat is not suitable; phi = 1, is suitable
+      mu.poisson[i] <- omega[i] * lambda2[i]
+      counts[i]  ~ dpois(mu.poisson[i])
+      lambda2[i] <- betaL[1] * NN[i] + beta[2] * State_P_100[i] #+ betaL[2]*(1-State_P_100[i])*sqrt(correctedAge[i])
+      # Maybe add a coefficient for NN[i]
+      # beta0L + # We removed the intercept from the local scale
+      # We removed age, which is accounted in the landcover
+      # Cluster ID needs to be sequential and is gonna be used as an index
+      # as.integer(factor(Data$Cluster))
+      # Data$CYear <- scale(Data$Year) # --> but keep track of what year the 
+      # we removed the intercept and the coefficient for density: beta0N + betaN[1]*
+      # Because the density + offset becomes the intercept 
+      # And we have two random effects that will modify the intercept
+      # We could also have betaL[2] and betaN[1] being drawn from the same hyperparameter 
+      # if we think that we can have similar effects on N and L
+      # We will check: mixing (betaL[1] and beta[1])
+      
+      # If subsetting, do it by cluster
+      
+      # Factorial of this
+      # 1) as is
+      # 2) We might take NN out and just put one equation in the other and remove betaL[1]
+      # 3) Multivariate normal for beta: b ~ mvnorm(mu.beta, omega.beta) where omega.beta is a matrix? Check
       
     } # end i
     })
@@ -142,7 +172,6 @@ startTime <- Sys.time()
                          monitors = params,
                          nchains = 2, niter = 10000,
                          summary = TRUE, WAIC = FALSE)
-
   browser()
   message(crayon::green(paste0("Predictions for ", crayon::yellow(birdSp), 
                                  " for year ", currentTime, 
