@@ -1,0 +1,3 @@
+[submodule "borealBirdsAndForestryManuscripts"]
+	path = borealBirdsAndForestryManuscripts
+	url = git@github.com:tati-micheletti/borealBirdsAndForestryManuscripts.git
