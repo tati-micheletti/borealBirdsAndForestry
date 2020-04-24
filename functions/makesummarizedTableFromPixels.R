@@ -36,24 +36,24 @@ makesummarizedTableFromPixels <- function(tabName,
                                                 region = reg, # Each region/polygon of the shapefile
                                                 abund0 = abund0,
                                                 abund1985 = abund1985,
-      minAbund1985 = minAbund1985,
-      maxAbund1985 = maxAbund1985,
-      abund2011 = abund2011,
-      diff2011_1985min = diff2011_1985min,
-      diff2011_1985max = diff2011_1985max,
-      diff2011_1985exp = diff2011_1985exp,
-      diff2011_0 = diff2011_0,
-      range = NROW(birdTable),
-      diffPerYear0 = diff2011_0/27, # We have a time series of 27 years
-      diffPerYearMin = diff2011_1985min/27,
-      diffPerYearMax = diff2011_1985max/27,
-      diffPerYearExp = diff2011_1985exp/27,
-      propDiff0 = (abund2011-abund0)/abund0,
-      propDiffExp = (abund2011-abund1985)/abund1985,
-      propDiffMin1985 = (abund2011-minAbund1985)/minAbund1985,
-      propDiffMax1985 = (abund2011-maxAbund1985)/maxAbund1985)
+                                                minAbund1985 = minAbund1985,
+                                                maxAbund1985 = maxAbund1985,
+                                                abund2011 = abund2011,
+                                                diff2011_1985min = diff2011_1985min,
+                                                diff2011_1985max = diff2011_1985max,
+                                                diff2011_1985exp = diff2011_1985exp,
+                                                diff2011_0 = diff2011_0,
+                                                range = NROW(birdTable),
+                                                diffPerYear0 = diff2011_0 / 27, # We have a time series of 27 years
+                                                diffPerYearMin = diff2011_1985min / 27,
+                                                diffPerYearMax = diff2011_1985max / 27,
+                                                diffPerYearExp = diff2011_1985exp / 27,
+                                                propDiff0 = (abund2011 - abund0) / abund0,
+                                                propDiffExp = (abund2011 - abund1985) / abund1985,
+                                                propDiffMin1985 = (abund2011 - minAbund1985) / minAbund1985,
+                                                propDiffMax1985 = (abund2011 - maxAbund1985) / maxAbund1985)
       return(summarizedTable)
-  }))
+                                               }))
       rm(birdTable); gc()
       message(crayon::white("Summarized table finished for ", BIRD))
       return(tableSummaryByRegion)
