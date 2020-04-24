@@ -55,8 +55,8 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
     model = {
       message(paste0("Building the statistical data frame..."))
       sim$fixedDT <- dataframeBuilding(birdData = sim$data, 
-                                  birdSpecies = sim$birdSpecies,
-                                  ageMap = sim$ageMap)
+                                       birdSpecies = sim$birdSpecies,
+                                       ageMap = sim$ageMap)
       
       sim$yearDT <- lapply(X = seq_along(sim$birdSpecies), 
                            FUN = function(index){
@@ -68,18 +68,18 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                                fixedDT = sim$fixedDT[[index]],
                                focalRasters = sim$focalRasters,
                                birdDensityRasters = sim$birdDensityRasters[[index]])
-                             })
+                           })
       names(sim$yearDT) <- sim$birdSpecies
       
       sim$predictedHierarchicalModel <- lapply(X = seq_along(sim$birdSpecies),
-                                         FUN = function(index){
-                                           predictHierarchicalModel(
-                                             bird = index,
-                                             birdList = sim$birdSpecies,
-                                             currentYearBirdData = sim$yearDT[[index]],
-                                             currentTime = time(sim),
-                                             pathData = dataPath(sim))
-                                           })
+                                               FUN = function(index){
+                                                 predictHierarchicalModel(
+                                                   bird = index,
+                                                   birdList = sim$birdSpecies,
+                                                   currentYearBirdData = sim$yearDT[[index]],
+                                                   currentTime = time(sim),
+                                                   pathData = dataPath(sim))
+                                               })
       browser() # Rebuild the rasters
     },
     
