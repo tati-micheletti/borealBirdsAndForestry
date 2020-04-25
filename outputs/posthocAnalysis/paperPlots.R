@@ -113,7 +113,7 @@ saveRDS(summarizedTableCom, file.path(ifelse(pemisc::user() == "tmichele",
 # PLOT2: How much did habitat supply change from 1984 to the given year 
 # (cummulative rate of habitat loss) 
 # Exclusively related to forest activities
-  
+  #### THIS IS POTENTIALLY WRONG, AS ITS NOT PIXEL BASED!
   source(file.path(getwd(), "functions/effectsOfForestryWithTime.R"))
   namesTabs <- c("Managed Forest", "Unmanaged Forest") # Names you want
   names(namesTabs) <- c("1", "2") # Names in the dataset
