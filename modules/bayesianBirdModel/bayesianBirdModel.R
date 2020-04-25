@@ -11,7 +11,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "bayesianBirdModel.Rmd"),
-  reqdPkgs = list("googledrive", "data.table", "raster", "stats", "gstat", "LandR", "stringr", "nimble"),
+  reqdPkgs = list("googledrive", "data.table", "raster", "stats", "gstat", "LandR", "stringr", "nimble", "tati-micheletti/usefun@development"),
   parameters = rbind(
     defineParameter(".useCache", "logical", TRUE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant"),
     defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?")
@@ -36,7 +36,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
-
+      
       if (any(nchar(start(sim)) < 4, nchar(end(sim)) < 4)) # Sanity check on years
         stop("This module deals with explictit years (1985 - 2011). Please provide the time in YYYY format.")
       
@@ -45,18 +45,13 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                              targetFile = "data.rds",
                              destinationPath = dataPath(sim))
       
-      sim$ageMap <- loadAndProcessAgeMap(dataPath = dataPath(sim), 
-                                         projection = "+proj=longlat +datum=WGS84",
-                                         filename2 = "ageMap2004")
-      
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim), "bayesianBirdModel", "model")
     },
     model = {
-      message(paste0("Building the statistical data frame..."))
+      message(paste0("Building the statistical data frame...")) # Takes about 40Gb per species. Paralellize!
       sim$fixedDT <- dataframeBuilding(birdData = sim$data, 
-                                       birdSpecies = sim$birdSpecies,
-                                       ageMap = sim$ageMap)
+                                       birdSpecies = sim$birdSpecies)
       
       sim$yearDT <- lapply(X = seq_along(sim$birdSpecies), 
                            FUN = function(index){
@@ -64,7 +59,6 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                                currentTime = time(sim),
                                pathData = dataPath(sim),
                                rP = sim$rP,
-                               ageMap = sim$ageMap,
                                fixedDT = sim$fixedDT[[index]],
                                focalRasters = sim$focalRasters,
                                birdDensityRasters = sim$birdDensityRasters[[index]])
@@ -123,9 +117,9 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
   
   if (!suppliedElsewhere("birdSpecies", sim)){
     sim$birdSpecies = c("BBWA", "BLPW", "BOCH", "BRCR",
-                                   "BTNW", "CAWA", "CMWA","CONW",
-                                   "OVEN", "PISI", "RBNU", "SWTH",
-                                   "TEWA", "WETA", "YRWA")
+                        "BTNW", "CAWA", "CMWA","CONW",
+                        "OVEN", "PISI", "RBNU", "SWTH",
+                        "TEWA", "WETA", "YRWA")
   }
   if (!suppliedElsewhere("birdDensityRasters", sim)){
     sim$birdDensityRasters <- raster::stack(lapply(X = sim$birdSpecies, FUN = function(sp){
@@ -144,4 +138,4 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
   }
   
   return(invisible(sim))
-  }
+}

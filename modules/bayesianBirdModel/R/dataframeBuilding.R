@@ -1,6 +1,5 @@
 dataframeBuilding <- function(birdData,
-                              birdSpecies, 
-                              ageMap
+                              birdSpecies
                               ){
 
   forestListName <- grepMulti(x = names(birdData), patterns = c("Transitional"))
@@ -19,20 +18,9 @@ dataframeBuilding <- function(birdData,
   uniqueLocations <- apply(X = uniqueLocations,
                            MARGIN = 2, FUN = as.numeric)
   uniqueLocationsMatrix <- as.matrix(uniqueLocations)
-  ageValues <- raster::extract(x = ageMap, y = uniqueLocationsMatrix)
   ageDT <- data.table(X = uniqueLocations[,1], 
-                      Y = uniqueLocations[,2], 
-                      age2004 = ageValues)
+                      Y = uniqueLocations[,2])
   birdDataFinal <- merge(birdDataFinal, ageDT, on = c("X", "Y"))
-  
-  #  3. Correct age2004 for correct age based on the column YYYY
-
-  birdDataFinal[, correctedAge := (YYYY - 2004) + age2004]
-  
-  # A few (n = 16) point counts have a mismatch between the age and the disturbance. 
-  # This can be due to bad data in a few places, but should be minor, especially because 
-  # it is a 2 year mismatch (not too bad). Will correct these specific points to zero.
-  birdDataFinal[correctedAge < 0, correctedAge := 0]
   
   # 4. dataframeBuilding function needs to make a list with copies of all the values of the model 
   # and the specific bird sp offset and log and count (bird names on the cols): each element of 
@@ -42,14 +30,14 @@ dataframeBuilding <- function(birdData,
   
   listOfTables <- lapply(X = birdSpecies, FUN = function(sp){
     birdDependentVars <- grepMulti(x = names(birdDataFinal), patterns = sp)[-2] # Hack for excluding DENSITY (keep logDENSITY)
-    IndependentVars <- c("X", "Y", "State_P_100", "State_P_500", "correctedAge", "YYYY", "ClusterSP")
+    IndependentVars <- c("X", "Y", "State_P_100", "State_P_500", "YYYY", "ClusterSP")
     varsToKeep <- c(IndependentVars, birdDependentVars)
     spDT <- birdDataFinal[, ..varsToKeep]
     return(spDT)
   })
   names(listOfTables) <- birdSpecies
   
-return(listOfTables)
+  return(listOfTables)
 }
 
 

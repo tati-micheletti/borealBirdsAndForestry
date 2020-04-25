@@ -28,30 +28,48 @@ offsets = NA
 
 ```{r module_usage}
 library("SpaDES")
+library("reproducible")
+library("raster")
 
-setPaths(modulePath = file.path(getwd(), "modules"))
+setPaths(modulePath = file.path(getwd(), "modules"),
+         cachePath = file.path(getwd(), "cache"),
+         inputPath = file.path(getwd(), "inputs"),
+         outputPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian"))
 getPaths() # shows where the 4 relevant paths are
-invisible(sapply(X = list.files(file.path(getwd(), "functions"), full.names = TRUE), FUN = source))
+# invisible(sapply(X = list.files(file.path(getwd(), "functions"), full.names = TRUE), FUN = source))
 
 times <- list(start = 1985, end = 1985)
 
 parameters <- list(
 )
-
+posthocFolder <- file.path(getwd(),"outputs/posthocAnalysis")
 modules <- list("bayesianBirdModel")
+maskedDensityRasFolder <- file.path(posthocFolder, "maskedDensityRas")
+RTM <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
+  source(file.path(getwd(), 'functions/makeBCRandLCC.R'))
+  pathData <- file.path(getwd(), "modules/birdDensityBCR_Prov_LCC/data/")
+  BCRLCC05 <- Cache(makeBCRandLCC, 
+                    pathData = pathData,
+                    RTM = RTM,
+                    userTags = c("objectName:BCRLCC05",
+                                 "script:paperPlots"), 
+                    overwrite = TRUE, omitArgs = c("overwrite", 
+                                                   "userTags", "useCache"))
+  managedForest <- Cache(prepInputs, url = "https://drive.google.com/open?id=1tgqn8FajD1iSj0aECONGhFzwInau0-q8",
+                       targetFile = "NIR2016_MF.shp", archive = "NIR2016_MF.zip",
+                       alsoExtract = "similar",
+                       studyArea = BCRLCC05$BCR, rasterToMatch = BCRLCC05$LCC05, 
+                       overwrite = TRUE, omitArgs = c("overwrite"),
+                       destinationPath = file.path(getwd(), "inputs"), 
+                       userTags = "objectName:managedForest")
 
-rp <- Cache(defineStudyArea, testArea = TRUE, 
-                          specificTestArea = "boreal",
-                          mapSubset = "Alberta")
-
-.objects <- list("rP" = rp,
+objects <- list("rP" = managedForest,
                  "birdSpecies" = c("BBWA", "BOCH"))
 inputs <- list()
 outputs <- list()
 
 bayes <- simInitAndSpades(times = times, params = parameters, modules = modules,
-                 objects = .objects, debug = 2)
-
+                 objects = objects, debug = 2)
 ```
 
       # Observations
