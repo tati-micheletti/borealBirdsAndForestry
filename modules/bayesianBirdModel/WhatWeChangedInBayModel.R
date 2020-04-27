@@ -13,6 +13,6 @@
 # If subsetting, do it by cluster
 
 # Factorial of this TODO
-# 1) as is
-# 2) We might take NN out and just put one equation in the other and remove betaL[1]
+# 1) as is: 
+# 2) We might take NN out and just put one equation in the other and remove betaL[1]: This works, but gives warnings about the indexing -- should be ok
 # 3) Multivariate normal for beta: b ~ mvnorm(mu.beta, omega.beta) where omega.beta is a matrix? Check

@@ -27,7 +27,6 @@ dataframeBuilding <- function(birdData,
   # the named list is a data.frame with all info for one bird species
   # What I need from the data.table here:
   # X, Y, BIRD, YYYY, ClusterSP, State_P_100, State_P_500, OFFSET_BIRD, logDENSITY_BIRD, correctedAge
-  
   listOfTables <- lapply(X = birdSpecies, FUN = function(sp){
     birdDependentVars <- grepMulti(x = names(birdDataFinal), patterns = sp)[-2] # Hack for excluding DENSITY (keep logDENSITY)
     IndependentVars <- c("X", "Y", "State_P_100", "State_P_500", "YYYY", "ClusterSP")

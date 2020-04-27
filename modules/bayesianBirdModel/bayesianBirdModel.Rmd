@@ -41,6 +41,9 @@ getPaths() # shows where the 4 relevant paths are
 times <- list(start = 1985, end = 1985)
 
 parameters <- list(
+  "bayesianBirdModel" = list(
+      "modelType" = 1
+  )
 )
 posthocFolder <- file.path(getwd(),"outputs/posthocAnalysis")
 modules <- list("bayesianBirdModel")
@@ -64,12 +67,21 @@ RTM <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
                        userTags = "objectName:managedForest")
 
 objects <- list("rP" = managedForest,
-                 "birdSpecies" = c("BBWA", "BOCH"))
+                 "birdSpecies" = c("BBWA"))
 inputs <- list()
 outputs <- list()
 
-bayes <- simInitAndSpades(times = times, params = parameters, modules = modules,
+bayes1 <- simInitAndSpades(times = times, params = parameters, modules = modules,
                  objects = objects, debug = 2)
+
+parameters <- list(
+  "bayesianBirdModel" = list(
+      "modelType" = 2
+  )
+)
+bayes2 <- simInitAndSpades(times = times, params = parameters, modules = modules,
+                 objects = objects, debug = 2)
+
 ```
 
       # Observations
