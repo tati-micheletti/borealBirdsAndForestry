@@ -40,11 +40,6 @@ getPaths() # shows where the 4 relevant paths are
 
 times <- list(start = 1985, end = 1985)
 
-parameters <- list(
-  "bayesianBirdModel" = list(
-      "modelType" = 1
-  )
-)
 posthocFolder <- file.path(getwd(),"outputs/posthocAnalysis")
 modules <- list("bayesianBirdModel")
 maskedDensityRasFolder <- file.path(posthocFolder, "maskedDensityRas")
@@ -71,15 +66,13 @@ objects <- list("rP" = managedForest,
 inputs <- list()
 outputs <- list()
 
-bayes1 <- simInitAndSpades(times = times, params = parameters, modules = modules,
-                 objects = objects, debug = 2)
-
 parameters <- list(
   "bayesianBirdModel" = list(
-      "modelType" = 2
+      "modelType" = 1
   )
 )
-bayes2 <- simInitAndSpades(times = times, params = parameters, modules = modules,
+
+bayes1 <- simInitAndSpades(times = times, params = parameters, modules = modules,
                  objects = objects, debug = 2)
 
 ```

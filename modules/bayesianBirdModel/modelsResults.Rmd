@@ -22,6 +22,34 @@ Require("basicMCMCplots")
 Model 1 is composed of one equation, where the coefficients for disturbance come from the same hyperprior. 
 
 ```{r model1_design, eval=FALSE}
+     ######## PRIORS ########
+      #Zero inflation - habitat suitability
+      phi ~ dunif(0, 1) # proportion of suitable sites (we need to keep phi between 0 and 1)
+      
+      # Coefficient for disturbance
+      mu.beta ~ dnorm(0, 0.01)
+      tau.beta <- pow(sd.beta, -2)
+      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (b in 1:Nbeta) {
+        beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
+      }
+      
+      # Random effect
+      tau.clusters <- pow(sd.cluster, -2)
+      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
+      tau.year <- pow(sd.year, -2)
+      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (j in 1:NClusters) {
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        # random cluster effects in log(density)
+      }
+      for (y in 1:NYears) {
+        YearRanEff[y] ~ dnorm(0, tau.year)
+        # random year effects in log(density)
+      }
+      
+      ##### END OF PRIORS ####
+      
       for (i in 1:nvisits){ # each sample point / each row of the data table
         omega[i] ~ dbern(phi) # Habitat suitability --> zero inflation (if phi = 0, unsuitable)
         # Local scale
@@ -39,7 +67,7 @@ Model 1 is composed of one equation, where the coefficients for disturbance come
 #### Loading 
 
 ```{r load1, echo=TRUE}
-model1 <- prepInputs(url = "https://drive.google.com/open?id=1s4sgskS9DyQGBtOLrgqphmx70fHmZzJP",
+model1 <- prepInputs(url = "https://drive.google.com/open?id=1jZHlCKP8goQZ1W-nFXcaiBabxSTzEQv4",
                      destinationPath = tempdir(),
                      fun = "readRDS")
 ```
@@ -108,14 +136,41 @@ Model 2 is composed of two equations, one for neighborhood, one for local. Neigh
 OBS.: NN needs to be initialized as well as local lambda
 
 ```{r model2_design, eval=FALSE}
+          ######## PRIORS ########
+      #Zero inflation - habitat suitability
+      phi ~ dunif(0, 1) # proportion of suitable sites (we need to keep phi between 0 and 1)
+      
+      # Coefficient for disturbance
+      mu.beta ~ dnorm(0, 0.01)
+      tau.beta <- pow(sd.beta, -2)
+      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (b in 1:Nbeta) {
+        beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
+      }
+      
+      # Random effect
+      tau.clusters <- pow(sd.cluster, -2)
+      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
+      tau.year <- pow(sd.year, -2)
+      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (j in 1:NClusters) {
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        # random cluster effects in log(density)
+      }
+      for (y in 1:NYears) {
+        YearRanEff[y] ~ dnorm(0, tau.year)
+        # random year effects in log(density)
+      }
+      
+      ##### END OF PRIORS ####
+      
       for (i in 1:nvisits){ # each sample point / each row of the data table
         omega[i] ~ dbern(phi) # Habitat suitability --> zero inflation (if phi = 0, unsuitable)
         # Neighborhood scale
         yearInd <- YearIndex[i]
         clusterInd <- ClusterIndex[i]
         
-        NN[i] ~ dpois(mu.poissonN[i])
-        mu.poissonN[i] <- omega[i] * lambdaN[i] 
+        NN[i] ~ dpois(lambdaN[i])
         lambdaN[i] <- exp(loglambdaN[i])
         
         loglambdaN[i] <- density[i] +
@@ -125,8 +180,8 @@ OBS.: NN needs to be initialized as well as local lambda
           YearRanEff[yearInd] * switchYear # Random Effects
         
         # Local scale
-        counts[i]  ~ dpois(mu.poissonL[i])
-        mu.poissonL[i] <- omega[i] * lambdaL[i] 
+        counts[i]  ~ dpois(lambdaLOmega[i])
+        lambdaLOmega[i] <- omega[i] * lambdaL[i] 
         lambdaL[i] <- exp(loglambdaL[i])
         loglambdaL[i] <- NN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
       } # end i
@@ -135,7 +190,7 @@ OBS.: NN needs to be initialized as well as local lambda
 #### Loading 
 
 ```{r load2, echo=TRUE}
-model2 <- prepInputs(url = "https://drive.google.com/open?id=1Op4klDDQztsemVnSiobfmfW0dYKR-tvm",
+model2 <- prepInputs(url = "https://drive.google.com/open?id=1774Hwx9yFVkOn58eI5rEdGTerve6aqOA",
                      destinationPath = tempdir(),
                      fun = "readRDS")
 ```
@@ -196,22 +251,223 @@ allOmega <- c(chain2Omega, as.numeric(unlist(x = chain2[, ..omega], recursive = 
 hist(allOmega, main = "Average Habitat Suitability: Model 2", xlab = "omega")
 ```
 
+### Model 3: 
+Model 3 is composed of one equation, where the coefficients for disturbance come from the same hyperprior, but has no Zero Inflation.
+```{r model3_design, eval=FALSE}
+     ######## PRIORS ########
+      #Zero inflation - habitat suitability
+      
+      # Coefficient for disturbance
+      mu.beta ~ dnorm(0, 0.01)
+      tau.beta <- pow(sd.beta, -2)
+      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (b in 1:Nbeta) {
+        beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
+      }
+      
+      # Random effect
+      tau.clusters <- pow(sd.cluster, -2)
+      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
+      tau.year <- pow(sd.year, -2)
+      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (j in 1:NClusters) {
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        # random cluster effects in log(density)
+      }
+      for (y in 1:NYears) {
+        YearRanEff[y] ~ dnorm(0, tau.year)
+        # random year effects in log(density)
+      }
+      
+      ##### END OF PRIORS ####
+      
+      for (i in 1:nvisits){ # each sample point / each row of the data table
+        # Local scale
+        yearInd <- YearIndex[i]
+        clusterInd <- ClusterIndex[i]
+        counts[i]  ~ dpois(lambda[i])
+        lambda[i] <- exp(loglambda[i])
+        loglambda[i] <- density[i] + beta[1] * State_P_500[i] + beta[2] * State_P_100[i] + offset[i] + 
+          clusterRanEff[clusterInd] * switchCluster +
+          YearRanEff[yearInd] * switchYear # Random Effects
+      } # end i
+```
+
+#### Loading 
+
+```{r load3, echo=TRUE}
+model3 <- prepInputs(url = "https://drive.google.com/open?id=1UWoaLN1lNOjVQBSzSD2WpA1185i1x9ne",
+                     destinationPath = tempdir(),
+                     fun = "readRDS")
+```
+
+#### Plots  
+
+First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
+
+```{r chains3, echo = TRUE, eval = FALSE}
+basicMCMCplots::chainsPlot(samplesList = model3$samples)
+basicMCMCplots::chainsSummary(samplesList = model3$samples)
+basicMCMCplots::samplesPlot(samples = model3$samples)
+```
+
+
+After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
+```{r lambda3, echo = TRUE}
+# Original densities
+originalDensities <- prepInputs(url = "https://drive.google.com/open?id=1KOmGJxRivRNgc8AAoCrinl7-ZHQOPUGm",
+                     destinationPath = tempdir(),
+                     fun = "readRDS")
+model3DT <- data.table(model3$summary$all.chains, keep.rownames = TRUE)
+lambda <- model3DT[rn %in% grepMulti(model3DT$rn, patterns = "lambda"),] 
+hist(originalDensities, main = "Average density: Original", xlim = c(0, 3), breaks = 15) # Average density
+hist(lambda[, Mean], main = "Average density: Model 3", xlim = c(0, 3), breaks = 30) # Average density
+```
+
+Now the coefficient for disturbance, beta. Beta[1] is the neighborhood disturbance coefficient, and beta[2] is the local disturbance coefficient.
+```{r beta3, echo = TRUE}
+beta <- c(grepMulti(model3DT$rn, patterns = c("beta", "1")),
+                   grepMulti(model3DT$rn, patterns = c("beta", "2")),
+                   grepMulti(model3DT$rn, patterns = c("beta", "mu")))
+dt <- data.frame(model3DT[rn %in% beta,c("rn", "Mean")])
+boxplot(Mean ~ rn, data = dt, main = "Disturbance Coefficients: Model 3", xlab = "beta[1] = neighborhood; beta[2] = local\n mu.beta = hyperparameter average")
+```
+
+Now we look at the random effects for parameters: Year and Cluster
+```{r RE3, echo = TRUE}
+RE <- c(grepMulti(model3DT$rn, patterns = c("YearRanEff")),
+          grepMulti(model3DT$rn, patterns = c("clusterRanEff")))
+model3DT[rn %in% RE,]
+dtRE <- data.frame(model3DT[rn %in% RE, c("rn", "Mean")])
+# count how many 
+ys <- length(grepMulti(dtRE$rn, "Year"))
+dtRE$RE <- c(rep("YearRandomEffect", times = ys), rep("ClusterRandomEffect", times = NROW(dtRE)-ys))
+boxplot(Mean ~ RE, data = dtRE, main = "Random effects: Model 3")
+```
+
+### Model 4: 
+Model 4 is composed of two equations, one for neighborhood, one for local. Neighborhood lambda has a poisson distribution, and the coefficients for disturbance come from the same hyperprior, but no Zero Inflation.
+OBS.: NN needs to be initialized as well as local lambda
+
+```{r model4_design, eval=FALSE}
+      ######## PRIORS ########
+      # Coefficient for disturbance
+      mu.beta ~ dnorm(0, 0.01)
+      tau.beta <- pow(sd.beta, -2)
+      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (b in 1:Nbeta) {
+        beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
+      }
+      
+      # Random effect
+      tau.clusters <- pow(sd.cluster, -2)
+      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
+      tau.year <- pow(sd.year, -2)
+      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      for (j in 1:NClusters) {
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        # random cluster effects in log(density)
+      }
+      for (y in 1:NYears) {
+        YearRanEff[y] ~ dnorm(0, tau.year)
+        # random year effects in log(density)
+      }
+      
+      ##### END OF PRIORS ####
+      
+      for (i in 1:nvisits){ # each sample point / each row of the data table
+        # Neighborhood scale
+        yearInd <- YearIndex[i]
+        clusterInd <- ClusterIndex[i]
+        
+        NN[i] ~ dpois(lambdaN[i])
+        lambdaN[i] <- exp(loglambdaN[i])
+        
+        loglambdaN[i] <- density[i] +
+          beta[1] * State_P_500[i] +
+          offset[i] +
+          clusterRanEff[clusterInd] * switchCluster +
+          YearRanEff[yearInd] * switchYear # Random Effects
+        
+        # Local scale
+        counts[i]  ~ dpois(lambdaL[i])
+        lambdaL[i] <- exp(loglambdaL[i])
+        loglambdaL[i] <- NN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
+      } # end i
+```
+
+#### Loading 
+
+```{r load4, echo=TRUE}
+model4 <- prepInputs(url = "https://drive.google.com/open?id=1YvG-FFvimDB_hHtSCsYfeZY9rwKfDjue",
+                     destinationPath = tempdir(),
+                     fun = "readRDS")
+```
+
+#### Plots  
+
+First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
+
+```{r chains4, echo = TRUE, eval = FALSE}
+basicMCMCplots::chainsPlot(samplesList = model4$samples)
+basicMCMCplots::chainsSummary(samplesList = model4$samples)
+basicMCMCplots::samplesPlot(samples = model4$samples)
+```
+
+After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
+```{r lambda4, echo = TRUE}
+# Estimated densities
+model4DT <- data.table(model4$summary$all.chains, keep.rownames = TRUE)
+lambdaL <- model4DT[rn %in% grepMulti(model4DT$rn, patterns = "lambdaL"),]
+lambdaN <- model4DT[rn %in% grepMulti(model4DT$rn, patterns = "lambdaN"),]
+hist(originalDensities, main = "Average density: Original", xlim = c(0, 3), breaks = 15) # Average density
+hist(lambdaL[,Mean], main = "Average density local: Model 4", xlim = c(0, 3), breaks = 30) # Average density
+hist(lambdaN[,Mean], main = "Average density neighborhood: Model 4", xlim = c(0, 3), breaks = 30) # Average density
+```
+
+Now the coefficient for disturbance, beta. Beta[1] is the neighborhood disturbance coefficient, and beta[2] is the local disturbance coefficient.
+```{r beta4, echo = TRUE}
+beta <- c(grepMulti(model4DT$rn, patterns = c("beta", "1")),
+                   grepMulti(model4DT$rn, patterns = c("beta", "2")),
+                   grepMulti(model4DT$rn, patterns = c("beta", "mu")))
+dt <- data.frame(model4DT[rn %in% beta,c("rn", "Mean")])
+boxplot(Mean ~ rn, data = dt, main = "Disturbance Coefficients: Model 4", xlab = "beta[1] = neighborhood; beta[2] = local\n mu.beta = hyperparameter average")
+```
+
+Now we look at the random effects for parameters: Year and Cluster
+```{r RE4, echo = TRUE}
+RE <- c(grepMulti(model4DT$rn, patterns = c("YearRanEff")),
+          grepMulti(model4DT$rn, patterns = c("clusterRanEff")))
+model4DT[rn %in% RE,]
+dtRE <- data.frame(model4DT[rn %in% RE, c("rn", "Mean")])
+# count how many 
+ys <- length(grepMulti(dtRE$rn, "Year"))
+dtRE$RE <- c(rep("YearRandomEffect", times = ys), rep("ClusterRandomEffect", times = NROW(dtRE)-ys))
+boxplot(Mean ~ RE, data = dtRE, main = "Random effects: Model 4")
+```
+
+
 ## Results summary:
 
-*Model 1 (one equation)*  
+*Model 1 (one equation + ZI)*  
   - Higher habitat suitability proportion  
   - Apparently more realistic densities (in comparison to Solymos& Stralberg densities)  
   - RE around 0  
   - Less negative beta coefficients  
 
-*Model 2 (two equations)*  
+*Model 2 (two equations + ZI)*  
   - Lower habitat suitability proportion,  
   - Apparently less realistic densities (in comparison to Solymos& Stralberg densities)  
   - RE around 0  
-  - Less negative beta coefficients  
+  - Less negative beta coefficients
   
+*Model 3 (one equation no ZI)*  
   
-## Conclusion: Model 1 seems better  
+
+*Model 4 (two equations no ZI)*  
+
+  
+## Conclusion: Model X seems better  
 
 
 
