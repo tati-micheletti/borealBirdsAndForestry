@@ -14,6 +14,7 @@ library(ggplot2)
 library(data.table)
 library(googledrive)
 Require("basicMCMCplots")
+modelsPath <- file.path(getwd(), "modules/bayesianBirdModel/data")
 ```
 
 ## Hierarchical scale model
@@ -68,7 +69,7 @@ Model 1 is composed of one equation, where the coefficients for disturbance come
 
 ```{r load1, echo=TRUE}
 model1 <- prepInputs(url = "https://drive.google.com/open?id=1jZHlCKP8goQZ1W-nFXcaiBabxSTzEQv4",
-                     destinationPath = tempdir(),
+                     destinationPath = modelsPath, targetFile = "model1.rds",
                      fun = "readRDS")
 ```
 
@@ -77,9 +78,10 @@ model1 <- prepInputs(url = "https://drive.google.com/open?id=1jZHlCKP8goQZ1W-nFX
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains1, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model1$samples)
-basicMCMCplots::chainsSummary(samplesList = model1$samples)
-basicMCMCplots::samplesPlot(samples = model1$samples)
+betaChain <- prepParamForChainCheck(samplesList = model1$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain)
+basicMCMCplots::chainsSummary(samplesList = betaChain)
+basicMCMCplots::samplesPlot(samples = betaChain)
 ```
 
 
@@ -191,7 +193,7 @@ OBS.: NN needs to be initialized as well as local lambda
 
 ```{r load2, echo=TRUE}
 model2 <- prepInputs(url = "https://drive.google.com/open?id=1774Hwx9yFVkOn58eI5rEdGTerve6aqOA",
-                     destinationPath = tempdir(),
+                     destinationPath = modelsPath, targetFile = "model2.rds",
                      fun = "readRDS")
 ```
 
@@ -200,9 +202,10 @@ model2 <- prepInputs(url = "https://drive.google.com/open?id=1774Hwx9yFVkOn58eI5
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains2, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model2$samples)
-basicMCMCplots::chainsSummary(samplesList = model2$samples)
-basicMCMCplots::samplesPlot(samples = model2$samples)
+betaChain2 <- prepParamForChainCheck(samplesList = model2$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain2)
+basicMCMCplots::chainsSummary(samplesList = betaChain2)
+basicMCMCplots::samplesPlot(samples = betaChain2)
 ```
 
 After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
@@ -297,7 +300,7 @@ Model 3 is composed of one equation, where the coefficients for disturbance come
 
 ```{r load3, echo=TRUE}
 model3 <- prepInputs(url = "https://drive.google.com/open?id=1UWoaLN1lNOjVQBSzSD2WpA1185i1x9ne",
-                     destinationPath = tempdir(),
+                     destinationPath = modelsPath, targetFile = "model3.rds",
                      fun = "readRDS")
 ```
 
@@ -306,9 +309,10 @@ model3 <- prepInputs(url = "https://drive.google.com/open?id=1UWoaLN1lNOjVQBSzSD
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains3, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model3$samples)
-basicMCMCplots::chainsSummary(samplesList = model3$samples)
-basicMCMCplots::samplesPlot(samples = model3$samples)
+betaChain3 <- prepParamForChainCheck(samplesList = model3$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain3)
+basicMCMCplots::chainsSummary(samplesList = betaChain3)
+basicMCMCplots::samplesPlot(samples = betaChain3)
 ```
 
 
@@ -400,7 +404,7 @@ OBS.: NN needs to be initialized as well as local lambda
 
 ```{r load4, echo=TRUE}
 model4 <- prepInputs(url = "https://drive.google.com/open?id=1YvG-FFvimDB_hHtSCsYfeZY9rwKfDjue",
-                     destinationPath = tempdir(),
+                     destinationPath = modelsPath, targetFile = "model4.rds",
                      fun = "readRDS")
 ```
 
@@ -409,9 +413,10 @@ model4 <- prepInputs(url = "https://drive.google.com/open?id=1YvG-FFvimDB_hHtSCs
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains4, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model4$samples)
-basicMCMCplots::chainsSummary(samplesList = model4$samples)
-basicMCMCplots::samplesPlot(samples = model4$samples)
+betaChain4 <- prepParamForChainCheck(samplesList = model4$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain4)
+basicMCMCplots::chainsSummary(samplesList = betaChain4)
+basicMCMCplots::samplesPlot(samples = betaChain4)
 ```
 
 After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
@@ -450,20 +455,11 @@ boxplot(Mean ~ RE, data = dtRE, main = "Random effects: Model 4")
 ## Results summary:
 
 *Model 1 (one equation + ZI)*  
-  - Higher habitat suitability proportion  
-  - Apparently more realistic densities (in comparison to Solymos& Stralberg densities)  
-  - RE around 0  
-  - Less negative beta coefficients  
 
 *Model 2 (two equations + ZI)*  
-  - Lower habitat suitability proportion,  
-  - Apparently less realistic densities (in comparison to Solymos& Stralberg densities)  
-  - RE around 0  
-  - Less negative beta coefficients
-  
+
 *Model 3 (one equation no ZI)*  
   
-
 *Model 4 (two equations no ZI)*  
 
   
