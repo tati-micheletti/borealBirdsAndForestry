@@ -68,11 +68,11 @@ outputs <- list()
 
 parameters <- list(
   "bayesianBirdModel" = list(
-      "modelType" = 1
+      "modelType" = 5
   )
 )
 
-bayes1 <- simInitAndSpades(times = times, params = parameters, modules = modules,
+bayes5 <- simInitAndSpades(times = times, params = parameters, modules = modules,
                  objects = objects, debug = 2)
 
 ```

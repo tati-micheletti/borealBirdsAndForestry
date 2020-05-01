@@ -68,8 +68,8 @@ Model 1 is composed of one equation, where the coefficients for disturbance come
 
 ```{r load1, echo=TRUE}
 model1 <- prepInputs(url = "https://drive.google.com/open?id=1jZHlCKP8goQZ1W-nFXcaiBabxSTzEQv4",
-                     destinationPath = tempdir(),
-                     fun = "readRDS")
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
+                     fun = "readRDS", targetFile = "model1.rds")
 ```
 
 #### Plots  
@@ -87,7 +87,7 @@ After looking into chain mixing, we check lambda. Note that this is the summary 
 ```{r lambda1, echo = TRUE}
 # Original densities
 originalDensities <- prepInputs(url = "https://drive.google.com/open?id=1KOmGJxRivRNgc8AAoCrinl7-ZHQOPUGm",
-                     destinationPath = tempdir(),
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
                      fun = "readRDS")
 model1DT <- data.table(model1$summary$all.chains, keep.rownames = TRUE)
 lambda <- model1DT[rn %in% grepMulti(model1DT$rn, patterns = "lambda"),] 
@@ -191,8 +191,8 @@ OBS.: NN needs to be initialized as well as local lambda
 
 ```{r load2, echo=TRUE}
 model2 <- prepInputs(url = "https://drive.google.com/open?id=1774Hwx9yFVkOn58eI5rEdGTerve6aqOA",
-                     destinationPath = tempdir(),
-                     fun = "readRDS")
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
+                     fun = "readRDS", targetFile = "model2.rds")
 ```
 
 #### Plots  
@@ -297,8 +297,8 @@ Model 3 is composed of one equation, where the coefficients for disturbance come
 
 ```{r load3, echo=TRUE}
 model3 <- prepInputs(url = "https://drive.google.com/open?id=1UWoaLN1lNOjVQBSzSD2WpA1185i1x9ne",
-                     destinationPath = tempdir(),
-                     fun = "readRDS")
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
+                     fun = "readRDS", targetFile = "model3.rds")
 ```
 
 #### Plots  
@@ -316,7 +316,7 @@ After looking into chain mixing, we check lambda. Note that this is the summary 
 ```{r lambda3, echo = TRUE}
 # Original densities
 originalDensities <- prepInputs(url = "https://drive.google.com/open?id=1KOmGJxRivRNgc8AAoCrinl7-ZHQOPUGm",
-                     destinationPath = tempdir(),
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
                      fun = "readRDS")
 model3DT <- data.table(model3$summary$all.chains, keep.rownames = TRUE)
 lambda <- model3DT[rn %in% grepMulti(model3DT$rn, patterns = "lambda"),] 
@@ -400,8 +400,8 @@ OBS.: NN needs to be initialized as well as local lambda
 
 ```{r load4, echo=TRUE}
 model4 <- prepInputs(url = "https://drive.google.com/open?id=1YvG-FFvimDB_hHtSCsYfeZY9rwKfDjue",
-                     destinationPath = tempdir(),
-                     fun = "readRDS")
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
+                     fun = "readRDS", targetFile = "model4.rds")
 ```
 
 #### Plots  
@@ -447,27 +447,125 @@ boxplot(Mean ~ RE, data = dtRE, main = "Random effects: Model 4")
 ```
 
 
+### Model 5: 
+Model 5 is composed of one equation, where the coefficients for disturbance come from the same hyperprior, but has no Zero Inflation.
+```{r model5_design, eval=FALSE}
+
+```
+
+#### Loading 
+
+```{r load5, echo=TRUE}
+model5 <- prepInputs(url = "https://drive.google.com/open?id=1QauVdsz4OQ0z9mrK8iGchIkOv2paq7Zy",
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
+                     fun = "readRDS", targetFile = "model5.rds")
+```
+
+#### Plots  
+
+First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
+
+```{r chains5, echo = TRUE, eval = FALSE}
+basicMCMCplots::chainsPlot(samplesList = model5$samples)
+basicMCMCplots::chainsSummary(samplesList = model5$samples)
+basicMCMCplots::samplesPlot(samples = model5$samples)
+```
+
+
+After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
+```{r lambda5, echo = TRUE}
+# Original densities
+originalDensities <- prepInputs(url = "https://drive.google.com/open?id=1KOmGJxRivRNgc8AAoCrinl7-ZHQOPUGm",
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
+                     fun = "readRDS")
+model5DT <- data.table(model5$summary$all.chains, keep.rownames = TRUE)
+lambda <- model5DT[rn %in% grepMulti(model5DT$rn, patterns = "lambda"),] 
+hist(originalDensities, main = "Average density: Original", xlim = c(0, 3), breaks = 15) # Average density
+hist(lambda[, Mean], main = "Average density: Model 5", xlim = c(0, 3), breaks = 30) # Average density
+```
+
+Now the coefficient for disturbance, beta. Beta[1] is the neighborhood disturbance coefficient, and beta[2] is the local disturbance coefficient.
+```{r beta5, echo = TRUE}
+beta <- c(grepMulti(model5DT$rn, patterns = c("beta", "1")),
+                   grepMulti(model5DT$rn, patterns = c("beta", "2")),
+                   grepMulti(model5DT$rn, patterns = c("beta", "mu")))
+dt <- data.frame(model5DT[rn %in% beta,c("rn", "Mean")])
+boxplot(Mean ~ rn, data = dt, main = "Disturbance Coefficients: Model 5", xlab = "beta[1] = neighborhood; beta[2] = local\n mu.beta = hyperparameter average")
+```
+
+Now we look at the random effects for parameters: Year and Cluster
+```{r RE5, echo = TRUE}
+RE <- c(grepMulti(model5DT$rn, patterns = c("YearRanEff")),
+          grepMulti(model5DT$rn, patterns = c("clusterRanEff")))
+model5DT[rn %in% RE,]
+dtRE <- data.frame(model5DT[rn %in% RE, c("rn", "Mean")])
+# count how many 
+ys <- length(grepMulti(dtRE$rn, "Year"))
+dtRE$RE <- c(rep("YearRandomEffect", times = ys), rep("ClusterRandomEffect", times = NROW(dtRE)-ys))
+boxplot(Mean ~ RE, data = dtRE, main = "Random effects: Model 5")
+```
+
+### Model 6: 
+Model 6 is composed of two equations, one for neighborhood, one for local. Neighborhood lambda has a poisson distribution, and the coefficients for disturbance come from the same hyperprior, but no Zero Inflation.
+OBS.: NN needs to be initialized as well as local lambda
+
+```{r model6_design, eval=FALSE}
+  
+```
+
+#### Loading 
+
+```{r load6, echo=TRUE}
+model6 <- prepInputs(url = "https://drive.google.com/open?id=1_fk6sxP_yu2pDI_LCPbVlwTiK855UwJe",
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/"),
+                     fun = "readRDS", targetFile = "model6.rds")
+```
+
+#### Plots  
+
+First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
+
+```{r chains6, echo = TRUE, eval = FALSE}
+basicMCMCplots::chainsPlot(samplesList = model6$samples)
+basicMCMCplots::chainsSummary(samplesList = model6$samples)
+basicMCMCplots::samplesPlot(samples = model6$samples)
+```
+
+After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
+```{r lambda6, echo = TRUE}
+# Estimated densities
+model6DT <- data.table(model6$summary$all.chains, keep.rownames = TRUE)
+lambdaL <- model6DT[rn %in% grepMulti(model6DT$rn, patterns = "lambdaL"),]
+lambdaN <- model6DT[rn %in% grepMulti(model6DT$rn, patterns = "lambdaN"),]
+hist(originalDensities, main = "Average density: Original", xlim = c(0, 3), breaks = 15) # Average density
+hist(lambdaL[,Mean], main = "Average density local: Model 6", xlim = c(0, 3), breaks = 30) # Average density
+hist(lambdaN[,Mean], main = "Average density neighborhood: Model 6", xlim = c(0, 3), breaks = 30) # Average density
+```
+
+Now the coefficient for disturbance, beta. Beta[1] is the neighborhood disturbance coefficient, and beta[2] is the local disturbance coefficient.
+```{r beta6, echo = TRUE}
+beta <- c(grepMulti(model6DT$rn, patterns = c("beta", "1")),
+                   grepMulti(model6DT$rn, patterns = c("beta", "2")),
+                   grepMulti(model6DT$rn, patterns = c("beta", "mu")))
+dt <- data.frame(model6DT[rn %in% beta,c("rn", "Mean")])
+boxplot(Mean ~ rn, data = dt, main = "Disturbance Coefficients: Model 6", xlab = "beta[1] = neighborhood; beta[2] = local\n mu.beta = hyperparameter average")
+```
+
+Now we look at the random effects for parameters: Year and Cluster
+```{r RE6, echo = TRUE}
+RE <- c(grepMulti(model6DT$rn, patterns = c("YearRanEff")),
+          grepMulti(model6DT$rn, patterns = c("clusterRanEff")))
+model6DT[rn %in% RE,]
+dtRE <- data.frame(model6DT[rn %in% RE, c("rn", "Mean")])
+# count how many 
+ys <- length(grepMulti(dtRE$rn, "Year"))
+dtRE$RE <- c(rep("YearRandomEffect", times = ys), rep("ClusterRandomEffect", times = NROW(dtRE)-ys))
+boxplot(Mean ~ RE, data = dtRE, main = "Random effects: Model 6")
+```
+
+
 ## Results summary:
 
-*Model 1 (one equation + ZI)*  
-  - Higher habitat suitability proportion  
-  - Apparently more realistic densities (in comparison to Solymos& Stralberg densities)  
-  - RE around 0  
-  - Less negative beta coefficients  
-
-*Model 2 (two equations + ZI)*  
-  - Lower habitat suitability proportion,  
-  - Apparently less realistic densities (in comparison to Solymos& Stralberg densities)  
-  - RE around 0  
-  - Less negative beta coefficients
-  
-*Model 3 (one equation no ZI)*  
-  
-
-*Model 4 (two equations no ZI)*  
-
-  
-## Conclusion: Model X seems better  
 
 
 
