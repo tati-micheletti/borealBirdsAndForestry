@@ -14,6 +14,7 @@ library(ggplot2)
 library(data.table)
 library(googledrive)
 Require("basicMCMCplots")
+modelsPath <- file.path(getwd(), "modules/bayesianBirdModel/data")
 ```
 
 ## Hierarchical scale model
@@ -77,9 +78,10 @@ model1 <- prepInputs(url = "https://drive.google.com/open?id=1jZHlCKP8goQZ1W-nFX
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains1, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model1$samples)
-basicMCMCplots::chainsSummary(samplesList = model1$samples)
-basicMCMCplots::samplesPlot(samples = model1$samples)
+betaChain <- prepParamForChainCheck(samplesList = model1$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain)
+basicMCMCplots::chainsSummary(samplesList = betaChain)
+basicMCMCplots::samplesPlot(samples = betaChain)
 ```
 
 
@@ -200,9 +202,10 @@ model2 <- prepInputs(url = "https://drive.google.com/open?id=1774Hwx9yFVkOn58eI5
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains2, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model2$samples)
-basicMCMCplots::chainsSummary(samplesList = model2$samples)
-basicMCMCplots::samplesPlot(samples = model2$samples)
+betaChain2 <- prepParamForChainCheck(samplesList = model2$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain2)
+basicMCMCplots::chainsSummary(samplesList = betaChain2)
+basicMCMCplots::samplesPlot(samples = betaChain2)
 ```
 
 After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
@@ -306,9 +309,10 @@ model3 <- prepInputs(url = "https://drive.google.com/open?id=1UWoaLN1lNOjVQBSzSD
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains3, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model3$samples)
-basicMCMCplots::chainsSummary(samplesList = model3$samples)
-basicMCMCplots::samplesPlot(samples = model3$samples)
+betaChain3 <- prepParamForChainCheck(samplesList = model3$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain3)
+basicMCMCplots::chainsSummary(samplesList = betaChain3)
+basicMCMCplots::samplesPlot(samples = betaChain3)
 ```
 
 
@@ -409,9 +413,10 @@ model4 <- prepInputs(url = "https://drive.google.com/open?id=1YvG-FFvimDB_hHtSCs
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains4, echo = TRUE, eval = FALSE}
-basicMCMCplots::chainsPlot(samplesList = model4$samples)
-basicMCMCplots::chainsSummary(samplesList = model4$samples)
-basicMCMCplots::samplesPlot(samples = model4$samples)
+betaChain4 <- prepParamForChainCheck(samplesList = model4$samples, param = "beta")
+basicMCMCplots::chainsPlot(samplesList = betaChain4)
+basicMCMCplots::chainsSummary(samplesList = betaChain4)
+basicMCMCplots::samplesPlot(samples = betaChain4)
 ```
 
 After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.
@@ -470,6 +475,15 @@ basicMCMCplots::chainsPlot(samplesList = model5$samples)
 basicMCMCplots::chainsSummary(samplesList = model5$samples)
 basicMCMCplots::samplesPlot(samples = model5$samples)
 ```
+=======
+*Model 1 (one equation + ZI)*  
+
+*Model 2 (two equations + ZI)*  
+
+*Model 3 (one equation no ZI)*  
+  
+*Model 4 (two equations no ZI)*  
+>>>>>>> 86003e2efc6ddfeca9cb7e26694c624865611e55
 
 
 After looking into chain mixing, we check lambda. Note that this is the summary average, not original posterior.

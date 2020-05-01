@@ -10,7 +10,8 @@ makeBCRandLCC <- function(pathData, overwrite = FALSE, RTM){
                                 overwrite = overwrite,
                                 rasterToMatch = RTM)
   
-  BCR <- Cache(prepInputs, url = "https://www.birdscanada.org/research/gislab/download/bcr_terrestrial_shape.zip",
+  BCR <- Cache(prepInputs, url = paste0("https://www.birdscanada.org/research/gislab",
+                                        "/download/bcr_terrestrial_shape.zip"),
                targetFile = "BCR_Terrestrial_master.shp",
                alsoExtract = "similar",
                destinationPath = pathData,
