@@ -22,7 +22,7 @@ predictHierarchicalModel <- function(bird,
   # MODEL CALL nimbleModel
   library("nimble")
   startTime <- Sys.time()
-  
+
   if (modelType == 1){
     ################################### 
     #MODEL 1: 1 equation + ZI
@@ -33,20 +33,20 @@ predictHierarchicalModel <- function(bird,
       phi ~ dunif(0, 1) # proportion of suitable sites (we need to keep phi between 0 and 1)
       
       # Coefficient for disturbance
-      mu.beta ~ dnorm(0, 0.01)
-      tau.beta <- pow(sd.beta, -2)
-      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      mu.beta ~ dnorm(0, 100)
+      tau.beta ~ dgamma(1, 0.01)
+      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
       
       # Random effect
-      tau.clusters <- pow(sd.cluster, -2)
-      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
-      tau.year <- pow(sd.year, -2)
-      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      tau.clusters ~ dgamma(1, 0.01)
+      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
+      tau.year ~ dgamma(1, 0.01)
+      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
       for (j in 1:NClusters) {
-        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
       }
       for (y in 1:NYears) {
@@ -64,7 +64,7 @@ predictHierarchicalModel <- function(bird,
         counts[i]  ~ dpois(mu.poisson[i])
         mu.poisson[i] <- omega[i] * lambda[i] 
         lambda[i] <- exp(loglambda[i])
-        loglambda[i] <- density[i] + beta[1] * State_P_500[i] + beta[2] * State_P_100[i] + offset[i] + 
+        loglambda[i] <- logDensity[i] + beta[1] * State_P_500[i] + beta[2] * State_P_100[i] + offset[i] + 
           clusterRanEff[clusterInd] * switchCluster +
           YearRanEff[yearInd] * switchYear # Random Effects
       } # end i
@@ -74,7 +74,7 @@ predictHierarchicalModel <- function(bird,
     
     # Data (doesn't need init)
     iSMdata <- list(counts = currentYearBirdData$counts,  
-                    density = currentYearBirdData$density,
+                    logDensity = currentYearBirdData$density,
                     State_P_100 = currentYearBirdData$State_P_100,
                     State_P_500 = currentYearBirdData$State_P_500,
                     offset = currentYearBirdData$offset,
@@ -97,17 +97,11 @@ predictHierarchicalModel <- function(bird,
     iSMinits <- list(
       # Coefficients
       phi = runif(1, 0, 1), # ZI part (‘suitability’ of the sample site).
-      # interceptL = rnorm(1, 0, 0.1), # Intercept local
       beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
       omega = rep(1, times = nvisits), # Bernoulli of phi, sample site ‘suitability’ ~ Has distribution, not sure need to provide
-      # NN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
-      # mu.poisson = currentYearBirdData$counts, # Distribution of counts <- Is assigned, not sure need to provide # REMOVED FOR NOW --> Simplified
-      # lambda2 = lambda2, # Local model, poisson of counts <- Is assigned 
-      # loglambda2 = log(lambda2), # log of lambda2
-      # lambda1 = rep(1, times = nvisits), # Neighborhood model, poisson of NN: effect in Local model <- Is assigned not sure need to provide
-      sd.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      sd.cluster = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      sd.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
+      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
+      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
+      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
       mu.beta = runif(1, 0, 1),
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
@@ -126,20 +120,22 @@ predictHierarchicalModel <- function(bird,
       phi ~ dunif(0, 1) # proportion of suitable sites (we need to keep phi between 0 and 1)
       
       # Coefficient for disturbance
-      mu.beta ~ dnorm(0, 0.01)
-      tau.beta <- pow(sd.beta, -2)
-      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      mu.beta ~ dnorm(0, 100)
+      tau.beta ~ dgamma(1, 0.01)
+      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
+      tau.NN ~ dgamma(1, 0.01)
+      sd.NN <- 1/pow(tau.NN, 2) # cluster heterogeneity in NN
       
       # Random effect
-      tau.clusters <- pow(sd.cluster, -2)
-      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
-      tau.year <- pow(sd.year, -2)
-      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      tau.clusters ~ dgamma(1, 0.01)
+      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
+      tau.year ~ dgamma(1, 0.01)
+      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
       for (j in 1:NClusters) {
-        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
       }
       for (y in 1:NYears) {
@@ -155,10 +151,8 @@ predictHierarchicalModel <- function(bird,
         yearInd <- YearIndex[i]
         clusterInd <- ClusterIndex[i]
         
-        NN[i] ~ dpois(lambdaN[i])
-        lambdaN[i] <- exp(loglambdaN[i])
-        
-        loglambdaN[i] <- density[i] +
+        logNN[i] ~ dnorm(loglambdaN[i], tau.NN)
+        loglambdaN[i] <- logDensity[i] +
           beta[1] * State_P_500[i] +
           offset[i] +
           clusterRanEff[clusterInd] * switchCluster +
@@ -166,9 +160,9 @@ predictHierarchicalModel <- function(bird,
         
         # Local scale
         counts[i]  ~ dpois(lambdaLOmega[i])
-        lambdaLOmega[i] <- omega[i] * lambdaL[i] 
+        lambdaLOmega[i] <- omega[i] * lambdaL[i]
         lambdaL[i] <- exp(loglambdaL[i])
-        loglambdaL[i] <- NN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
+        loglambdaL[i] <- logNN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
       } # end i
     })
     
@@ -176,7 +170,7 @@ predictHierarchicalModel <- function(bird,
     
     # Data (doesn't need init)
     iSMdata <- list(counts = currentYearBirdData$counts,  
-                    density = currentYearBirdData$density,
+                    logDensity = currentYearBirdData$density, # Its says density, but it really is logDensity
                     State_P_100 = currentYearBirdData$State_P_100,
                     State_P_500 = currentYearBirdData$State_P_500,
                     offset = currentYearBirdData$offset,
@@ -200,23 +194,23 @@ predictHierarchicalModel <- function(bird,
     iSMinits <- list(
       # Coefficients
       phi = runif(1, 0, 1), # ZI part (‘suitability’ of the sample site).
-      # interceptL = rnorm(1, 0, 0.1), # Intercept local
       beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
       omega = rep(1, times = nvisits), # Bernoulli of phi, sample site ‘suitability’ ~ Has distribution, not sure need to provide
-      NN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
+      logNN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
       lambdaLOmega = currentYearBirdData$counts, # Distribution of counts <- Is assigned, not sure need to provide # REMOVED FOR NOW --> Simplified
       lambdaL = lambdaL, # Local model, poisson of counts <- Is assigned
       loglambdaL = log(lambdaL), # log of lambda2
-      # lambda1 = rep(1, times = nvisits), # Neighborhood model, poisson of NN: effect in Local model <- Is assigned not sure need to provide
-      sd.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      sd.cluster = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      sd.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
+      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
+      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
+      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
+      tau.NN = runif(1, 0, 1), # Deviation of logNN
       mu.beta = runif(1, 0, 1),
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
     )
-    params <- c("beta", "mu.beta", "lambdaN", 
-                "NN", "lambdaL", "omega", "lambdaLOmega",
+    params <- c("beta", "mu.beta", "loglambdaN", "sd.year", "sd.cluster", 
+                "sd.beta", "sd.NN",
+                "logNN", "lambdaL", "omega", "lambdaLOmega",
                 "phi", "clusterRanEff", "YearRanEff")
   }
   
@@ -228,20 +222,20 @@ predictHierarchicalModel <- function(bird,
       #Zero inflation - habitat suitability
       
       # Coefficient for disturbance
-      mu.beta ~ dnorm(0, 0.01)
-      tau.beta <- pow(sd.beta, -2)
-      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      mu.beta ~ dnorm(0, 100)
+      tau.beta ~ dgamma(1, 0.01)
+      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
       
       # Random effect
-      tau.clusters <- pow(sd.cluster, -2)
-      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
-      tau.year <- pow(sd.year, -2)
-      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      tau.clusters ~ dgamma(1, 0.01)
+      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
+      tau.year ~ dgamma(1, 0.01)
+      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
       for (j in 1:NClusters) {
-        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
       }
       for (y in 1:NYears) {
@@ -257,7 +251,7 @@ predictHierarchicalModel <- function(bird,
         clusterInd <- ClusterIndex[i]
         counts[i]  ~ dpois(lambda[i])
         lambda[i] <- exp(loglambda[i])
-        loglambda[i] <- density[i] + beta[1] * State_P_500[i] + beta[2] * State_P_100[i] + offset[i] + 
+        loglambda[i] <- logDensity[i] + beta[1] * State_P_500[i] + beta[2] * State_P_100[i] + offset[i] + 
           clusterRanEff[clusterInd] * switchCluster +
           YearRanEff[yearInd] * switchYear # Random Effects
       } # end i
@@ -267,7 +261,7 @@ predictHierarchicalModel <- function(bird,
     
     # Data (doesn't need init)
     iSMdata <- list(counts = currentYearBirdData$counts,  
-                    density = currentYearBirdData$density,
+                    logDensity = currentYearBirdData$density,
                     State_P_100 = currentYearBirdData$State_P_100,
                     State_P_500 = currentYearBirdData$State_P_500,
                     offset = currentYearBirdData$offset,
@@ -289,16 +283,10 @@ predictHierarchicalModel <- function(bird,
     
     iSMinits <- list(
       # Coefficients
-      # interceptL = rnorm(1, 0, 0.1), # Intercept local
       beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
-      # NN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
-      # mu.poisson = currentYearBirdData$counts, # Distribution of counts <- Is assigned, not sure need to provide # REMOVED FOR NOW --> Simplified
-      # lambda2 = lambda2, # Local model, poisson of counts <- Is assigned 
-      # loglambda2 = log(lambda2), # log of lambda2
-      # lambda1 = rep(1, times = nvisits), # Neighborhood model, poisson of NN: effect in Local model <- Is assigned not sure need to provide
-      sd.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      sd.cluster = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      sd.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
+      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
+      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
+      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
       mu.beta = runif(1, 0, 1),
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
@@ -314,20 +302,22 @@ predictHierarchicalModel <- function(bird,
       
       ######## PRIORS ########
       # Coefficient for disturbance
-      mu.beta ~ dnorm(0, 0.01)
-      tau.beta <- pow(sd.beta, -2)
-      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
+      mu.beta ~ dnorm(0, 100)
+      tau.beta ~ dgamma(1, 0.01)
+      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
+      tau.NN ~ dgamma(1, 0.01)
+      sd.NN <- 1/pow(tau.NN, 2) # cluster heterogeneity in NN
       
       # Random effect
-      tau.clusters <- pow(sd.cluster, -2)
-      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
-      tau.year <- pow(sd.year, -2)
-      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
+      tau.clusters ~ dgamma(1, 0.01)
+      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
+      tau.year ~ dgamma(1, 0.01)
+      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
       for (j in 1:NClusters) {
-        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
+        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
       }
       for (y in 1:NYears) {
@@ -342,10 +332,8 @@ predictHierarchicalModel <- function(bird,
         yearInd <- YearIndex[i]
         clusterInd <- ClusterIndex[i]
         
-        NN[i] ~ dpois(lambdaN[i])
-        lambdaN[i] <- exp(loglambdaN[i])
-        
-        loglambdaN[i] <- density[i] +
+        logNN[i] ~ dnorm(loglambdaN[i], tau.NN)
+        loglambdaN[i] <- logDensity[i] +
           beta[1] * State_P_500[i] +
           offset[i] +
           clusterRanEff[clusterInd] * switchCluster +
@@ -354,7 +342,7 @@ predictHierarchicalModel <- function(bird,
         # Local scale
         counts[i]  ~ dpois(lambdaL[i])
         lambdaL[i] <- exp(loglambdaL[i])
-        loglambdaL[i] <- NN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
+        loglambdaL[i] <- logNN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
       } # end i
     })
     
@@ -362,7 +350,7 @@ predictHierarchicalModel <- function(bird,
     
     # Data (doesn't need init)
     iSMdata <- list(counts = currentYearBirdData$counts,  
-                    density = currentYearBirdData$density,
+                    logDensity = currentYearBirdData$density,
                     State_P_100 = currentYearBirdData$State_P_100,
                     State_P_500 = currentYearBirdData$State_P_500,
                     offset = currentYearBirdData$offset,
@@ -385,218 +373,21 @@ predictHierarchicalModel <- function(bird,
     lambdaL <- runif(1, 0, 5)# Abundance. Needs reasonable values between 0 and 5?
     iSMinits <- list(
       # Coefficients
-      # interceptL = rnorm(1, 0, 0.1), # Intercept local
       beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
-      NN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
+      logNN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
       lambdaL = lambdaL, # Local model, poisson of counts <- Is assigned
       loglambdaL = log(lambdaL), # log of lambda2
-      # lambda1 = rep(1, times = nvisits), # Neighborhood model, poisson of NN: effect in Local model <- Is assigned not sure need to provide
-      sd.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      sd.cluster = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      sd.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
+      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
+      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
+      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
+      tau.NN = runif(1, 0, 1), # Deviation of NN ~ Has distribution
       mu.beta = runif(1, 0, 1),
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
     )
-    params <- c("beta", "mu.beta", "lambdaN", 
-                "NN", "lambdaL",
-                "clusterRanEff", "YearRanEff")
-  }
-  
-  if (modelType == 5){
-    ################################### MODEL 2: 2 equations + ZI
-    iSMCode <- nimbleCode({
-      
-      ######## PRIORS ########
-      #Zero inflation - habitat suitability
-      phi ~ dunif(0, 1) # proportion of suitable sites (we need to keep phi between 0 and 1)
-      
-      # Coefficient for disturbance
-      mu.beta ~ dnorm(0, 0.01)
-      tau.beta <- pow(sd.beta, -2)
-      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
-      for (b in 1:Nbeta) {
-        beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
-      }
-      
-      # Random effect
-      tau.clusters <- pow(sd.cluster, -2)
-      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
-      tau.year <- pow(sd.year, -2)
-      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
-      for (j in 1:NClusters) {
-        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
-        # random cluster effects in log(density)
-      }
-      for (y in 1:NYears) {
-        YearRanEff[y] ~ dnorm(0, tau.year)
-        # random year effects in log(density)
-      }
-      
-      ##### END OF PRIORS ####
-      
-      for (i in 1:nvisits){ # each sample point / each row of the data table
-        omega[i] ~ dbern(phi) # Habitat suitability --> zero inflation (if phi = 0, unsuitable)
-        # Neighborhood scale
-        yearInd <- YearIndex[i]
-        clusterInd <- ClusterIndex[i]
-        
-        # NN[i] ~ dpois(lambdaN[i])
-        lambdaN[i] <- exp(loglambdaN[i])
-        
-        loglambdaN[i] <- density[i] +
-          beta[1] * State_P_500[i] +
-          offset[i] +
-          clusterRanEff[clusterInd] * switchCluster +
-          YearRanEff[yearInd] * switchYear # Random Effects
-        
-        # Local scale
-        counts[i]  ~ dpois(lambdaLOmega[i])
-        lambdaLOmega[i] <- omega[i] * lambdaL[i] 
-        lambdaL[i] <- exp(loglambdaL[i])
-        loglambdaL[i] <- lambdaN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
-      } # end i
-    })
-    
-    ################################### MODEL
-    
-    # Data (doesn't need init)
-    iSMdata <- list(counts = currentYearBirdData$counts,  
-                    density = currentYearBirdData$density,
-                    State_P_100 = currentYearBirdData$State_P_100,
-                    State_P_500 = currentYearBirdData$State_P_500,
-                    offset = currentYearBirdData$offset,
-                    ClusterIndex = currentYearBirdData$ClusterSP,
-                    YearIndex = currentYearBirdData$YYYY)
-    # Constants
-    nvisits <- NROW(currentYearBirdData)
-    NClusters <- length(unique(currentYearBirdData$ClusterSP))
-    NYears <- length(unique(currentYearBirdData$YYYY))
-    Nbeta <- 2 # Number of different beta coefficients (coming from the same hyperparameter)
-    iSMconstants <- list(nvisits = nvisits,
-                         NClusters = NClusters,
-                         NYears = NYears,
-                         Nbeta = Nbeta, # number of coefficients, currently: beta[1] and beta[2]
-                         # Switches
-                         switchYear = 1, # or 0 to turn off random effects of Year
-                         switchCluster = 1 # or 0 to turn off random effects of Cluster
-    )
-    
-    lambdaL <- runif(1, 0, 5)# Abundance. Needs reasonable values between 0 and 5?
-    iSMinits <- list(
-      # Coefficients
-      phi = runif(1, 0, 1), # ZI part (‘suitability’ of the sample site).
-      # interceptL = rnorm(1, 0, 0.1), # Intercept local
-      beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
-      omega = rep(1, times = nvisits), # Bernoulli of phi, sample site ‘suitability’ ~ Has distribution, not sure need to provide
-      # NN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
-      lambdaLOmega = currentYearBirdData$counts, # Distribution of counts <- Is assigned, not sure need to provide # REMOVED FOR NOW --> Simplified
-      lambdaL = lambdaL, # Local model, poisson of counts <- Is assigned
-      loglambdaL = log(lambdaL), # log of lambda2
-      # lambda1 = rep(1, times = nvisits), # Neighborhood model, poisson of NN: effect in Local model <- Is assigned not sure need to provide
-      sd.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      sd.cluster = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      sd.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
-      mu.beta = runif(1, 0, 1),
-      YearRanEff = rep(0, times = NYears),
-      clusterRanEff = rep(0, times = NClusters)
-    )
-    params <- c("beta", "mu.beta", "lambdaN", 
-                "lambdaL", "omega", "lambdaLOmega",
-                "phi", "clusterRanEff", "YearRanEff")
-  }
-  
-  if (modelType == 6){
-    ################################### MODEL 4: 2 equations no ZI
-    iSMCode <- nimbleCode({
-      
-      ######## PRIORS ########
-      # Coefficient for disturbance
-      mu.beta ~ dnorm(0, 0.01)
-      tau.beta <- pow(sd.beta, -2)
-      sd.beta ~ dunif(0, 2) # cluster heterogeneity in lambda
-      for (b in 1:Nbeta) {
-        beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
-      }
-      
-      # Random effect
-      tau.clusters <- pow(sd.cluster, -2)
-      sd.cluster ~ dunif(0, 2) # year heterogeneity in lambda
-      tau.year <- pow(sd.year, -2)
-      sd.year ~ dunif(0, 2) # cluster heterogeneity in lambda
-      for (j in 1:NClusters) {
-        clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.cluster
-        # random cluster effects in log(density)
-      }
-      for (y in 1:NYears) {
-        YearRanEff[y] ~ dnorm(0, tau.year)
-        # random year effects in log(density)
-      }
-      
-      ##### END OF PRIORS ####
-      
-      for (i in 1:nvisits){ # each sample point / each row of the data table
-        # Neighborhood scale
-        yearInd <- YearIndex[i]
-        clusterInd <- ClusterIndex[i]
-        
-        # NN[i] ~ dpois(lambdaN[i])
-        lambdaN[i] <- exp(loglambdaN[i])
-        
-        loglambdaN[i] <- density[i] +
-          beta[1] * State_P_500[i] +
-          offset[i] +
-          clusterRanEff[clusterInd] * switchCluster +
-          YearRanEff[yearInd] * switchYear # Random Effects
-        
-        # Local scale
-        counts[i]  ~ dpois(lambdaL[i])
-        lambdaL[i] <- exp(loglambdaL[i])
-        loglambdaL[i] <- lambdaN[i] + beta[2] * State_P_100[i] # We can add an interceptL to NN?
-      } # end i
-    })
-    
-    ################################### MODEL
-    
-    # Data (doesn't need init)
-    iSMdata <- list(counts = currentYearBirdData$counts,  
-                    density = currentYearBirdData$density,
-                    State_P_100 = currentYearBirdData$State_P_100,
-                    State_P_500 = currentYearBirdData$State_P_500,
-                    offset = currentYearBirdData$offset,
-                    ClusterIndex = currentYearBirdData$ClusterSP,
-                    YearIndex = currentYearBirdData$YYYY)
-    # Constants
-    nvisits <- NROW(currentYearBirdData)
-    NClusters <- length(unique(currentYearBirdData$ClusterSP))
-    NYears <- length(unique(currentYearBirdData$YYYY))
-    Nbeta <- 2 # Number of different beta coefficients (coming from the same hyperparameter)
-    iSMconstants <- list(nvisits = nvisits,
-                         NClusters = NClusters,
-                         NYears = NYears,
-                         Nbeta = Nbeta, # number of coefficients, currently: beta[1] and beta[2]
-                         # Switches
-                         switchYear = 1, # or 0 to turn off random effects of Year
-                         switchCluster = 1 # or 0 to turn off random effects of Cluster
-    )
-    
-    lambdaL <- runif(1, 0, 5)# Abundance. Needs reasonable values between 0 and 5?
-    iSMinits <- list(
-      # Coefficients
-      # interceptL = rnorm(1, 0, 0.1), # Intercept local
-      beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
-      # NN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
-      lambdaL = lambdaL, # Local model, poisson of counts <- Is assigned
-      loglambdaL = log(lambdaL), # log of lambda2
-      # lambda1 = rep(1, times = nvisits), # Neighborhood model, poisson of NN: effect in Local model <- Is assigned not sure need to provide
-      sd.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      sd.cluster = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      sd.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
-      mu.beta = runif(1, 0, 1),
-      YearRanEff = rep(0, times = NYears),
-      clusterRanEff = rep(0, times = NClusters)
-    )
-    params <- c("beta", "mu.beta", "lambdaN", "lambdaL",
+    params <- c("beta", "mu.beta", "loglambdaN", 
+                "logNN", "lambdaL", "sd.year", "sd.cluster", 
+                "sd.beta", "sd.NN",
                 "clusterRanEff", "YearRanEff")
   }
   

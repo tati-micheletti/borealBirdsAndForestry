@@ -75,7 +75,7 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
                                                            P(sim)$modelType,
                                                            ".rds")))
       drive_upload(file.path(Paths$outputPath, paste0("model", P(sim)$modelType, ".rds")),
-                   as_id("1q6rH1Hawc5LobzbjK7AkZ0_YOKzy17xk"))
+                   as_id("1BAbKC-D4cGgBF2Sl9r_zkFcD2XOjh4wt"))
     },
     prediction = {
       message(paste0("Predicting from the statistical data frame...")) # Takes about 40Gb per species. Paralellize!
