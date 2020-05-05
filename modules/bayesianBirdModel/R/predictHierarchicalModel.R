@@ -107,7 +107,7 @@ predictHierarchicalModel <- function(bird,
       clusterRanEff = rep(0, times = NClusters)
     )
 
-    params <- c("beta", "mu.beta", "lambda", "omega", "phi", 
+    params <- c("beta", "mu.beta", "lambda", "omega", "phi", "tau.beta",
                 "clusterRanEff", "YearRanEff", "mu.poisson")
   }
   
@@ -209,7 +209,7 @@ predictHierarchicalModel <- function(bird,
       clusterRanEff = rep(0, times = NClusters)
     )
     params <- c("beta", "mu.beta", "loglambdaN", "sd.year", "sd.cluster", 
-                "sd.beta", "sd.NN",
+                "sd.beta", "sd.NN", "tau.beta",
                 "logNN", "lambdaL", "omega", "lambdaLOmega",
                 "phi", "clusterRanEff", "YearRanEff")
   }
@@ -292,7 +292,7 @@ predictHierarchicalModel <- function(bird,
       clusterRanEff = rep(0, times = NClusters)
     )
     
-    params <- c("beta", "mu.beta", "lambda",
+    params <- c("beta", "mu.beta", "lambda", "tau.beta",
                 "clusterRanEff", "YearRanEff")
   }
   
@@ -387,7 +387,7 @@ predictHierarchicalModel <- function(bird,
     )
     params <- c("beta", "mu.beta", "loglambdaN", 
                 "logNN", "lambdaL", "sd.year", "sd.cluster", 
-                "sd.beta", "sd.NN",
+                "sd.beta", "sd.NN", "tau.beta",
                 "clusterRanEff", "YearRanEff")
   }
   
