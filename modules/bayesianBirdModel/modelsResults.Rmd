@@ -68,9 +68,10 @@ Model 1 is composed of one equation, where the coefficients for disturbance come
 #### Loading 
 
 ```{r load1, echo=TRUE}
-model1 <- prepInputs(url = "https://drive.google.com/open?id=1jS36CdH3jJiVdVXlE6GOkznP4Ao50o5m",
+model1 <- prepInputs(url = "https://drive.google.com/open?id=1yIHt8JE1v3-d8VW_Z6Ypj74NtJ-ZZP5Y",
+                       # TRIAL 2: "https://drive.google.com/open?id=1jS36CdH3jJiVdVXlE6GOkznP4Ao50o5m",
                        #TRIAL 1: "https://drive.google.com/open?id=1jZHlCKP8goQZ1W-nFXcaiBabxSTzEQv4",
-                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial2"),
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial3"),
                      fun = "readRDS", targetFile = "model1.rds")
 ```
 
@@ -192,9 +193,10 @@ OBS.: NN needs to be initialized as well as local lambda
 #### Loading 
 
 ```{r load2, echo=TRUE}
-model2 <- prepInputs(url = "https://drive.google.com/open?id=17QiG44vd-Tsf-7QZreUz8Vq67UmpDLZH",
+model2 <- prepInputs(url = "https://drive.google.com/open?id=15d7j6wBj09a6XK1mF0C3cFLggrrqCao4",
+                       # TRIAL2: "https://drive.google.com/open?id=17QiG44vd-Tsf-7QZreUz8Vq67UmpDLZH",
                        #TRIAL 1: https://drive.google.com/open?id=1774Hwx9yFVkOn58eI5rEdGTerve6aqOA",
-                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial2"),
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial3"),
                      fun = "readRDS", targetFile = "model2.rds")
 ```
 
@@ -300,9 +302,10 @@ Model 3 is composed of one equation, where the coefficients for disturbance come
 #### Loading 
 
 ```{r load3, echo=TRUE}
-model3 <- prepInputs(url = "https://drive.google.com/open?id=1oVzMYvI7YXvL6TsgSh8BnYCda7GOAU2E",
-                       # TRIAL1: "https://drive.google.com/open?id=1UWoaLN1lNOjVQBSzSD2WpA1185i1x9ne",
-                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial2"),
+model3 <- prepInputs(url = "https://drive.google.com/open?id=1MLKMU-oz7MgnIhJ8XoqLZ_f5ki57SWm2",
+                       # TRIAL 2: "https://drive.google.com/open?id=1oVzMYvI7YXvL6TsgSh8BnYCda7GOAU2E",
+                       # TRIAL 1: "https://drive.google.com/open?id=1UWoaLN1lNOjVQBSzSD2WpA1185i1x9ne",
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial3"),
                      fun = "readRDS", targetFile = "model3.rds")
 ```
 
@@ -405,9 +408,10 @@ OBS.: NN needs to be initialized as well as local lambda
 #### Loading 
 
 ```{r load4, echo=TRUE}
-model4 <- prepInputs(url = "https://drive.google.com/open?id=1yMFNbIF7aPm6nmaqrjnz4518BsO6644L",
-                       #Trial 1 "https://drive.google.com/open?id=1YvG-FFvimDB_hHtSCsYfeZY9rwKfDjue",
-                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial2"),
+model4 <- prepInputs(url = "https://drive.google.com/open?id=1HQhyWsSHY8w54yUZPAmnv-Kv-zz-qtj-",
+                       # Trial 2: "https://drive.google.com/open?id=1yMFNbIF7aPm6nmaqrjnz4518BsO6644L",
+                       # Trial 1 "https://drive.google.com/open?id=1YvG-FFvimDB_hHtSCsYfeZY9rwKfDjue",
+                     destinationPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial3"),
                      fun = "readRDS", targetFile = "model4.rds")
 ```
 
