@@ -9,7 +9,7 @@ library("data.table")
 species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW",
              "CAWA", "CMWA", "CONW", "OVEN", "PISI",
              "RBNU", "SWTH", "TEWA", "WETA", "YRWA")
-spatialScale <- 500 # 500m DONE! 
+spatialScale <- 100 # 500m DONE! 
 posthocFolder <- file.path(getwd(), "outputs/posthocAnalysis")
 
 
@@ -182,27 +182,34 @@ source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/plotOfLostSpecies.
 namesTabs <- c("Managed Forest", "Unmanaged Forest") # Names you want
 names(namesTabs) <- c("1", "2") # Names in the dataset
 managedLostPlot <- plotOfLostSpecies(table = manUnmanTable, 
-                                     namesTabs = namesTabs)
+                                     namesTabs = namesTabs, 
+                                     plotScatter = TRUE)
 
 namesTabs <- c("QUEBEC") # Names you want
 names(namesTabs) <- c("1") # Names in the dataset
 quebecPlot <- plotOfLostSpecies(table = quebecTable, 
-                                namesTabs = namesTabs)
+                                namesTabs = namesTabs, 
+                                plotScatter = TRUE)
 
 namesTabs <- c("ALPAC") # Names you want
 names(namesTabs) <- c("1") # Names in the dataset
 albertaPlot <-  plotOfLostSpecies(table = AlbertaTable, 
-                                  namesTabs = namesTabs)
+                                  namesTabs = namesTabs, 
+                                  plotScatter = TRUE)
 
 namesTabs <- c(paste0("BCR", unique(BCRdt$BCR))) # Names you want
 names(namesTabs) <- unique(BCRdt$BCR) # Names in the dataset
 BCRPlot <-  plotOfLostSpecies(table = BCRTable, 
-                              namesTabs = namesTabs)
+                              namesTabs = namesTabs, 
+                              plotScatter = TRUE, 
+                              direction = "horizontal")
 
 namesTabs <- unique(BCRdt$PROVINCE_S) # Names you want
 names(namesTabs) <- unique(BCRdt$PROVINCE) # Names in the dataset
 PROVPlot <-  plotOfLostSpecies(table = PROVTable, 
-                               namesTabs = namesTabs)
+                               namesTabs = namesTabs, 
+                               plotScatter = TRUE, 
+                               direction = "horizontal")
 
 #####################################################################################
 

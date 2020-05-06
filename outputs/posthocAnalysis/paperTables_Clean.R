@@ -15,7 +15,7 @@ SpaDES.core::setPaths(cachePath = file.path(getwd(), "cache"))
 species <- c("BBWA", "BLPW", "BOCH", "BRCR", "BTNW", "CAWA", 
              "CMWA", "CONW", "OVEN", "PISI", "RBNU", "SWTH", 
              "TEWA", "WETA", "YRWA")
-spatialScale <- 500 # 500m DONE! 
+spatialScale <- 100 # 500m DONE! 
 doAssertions <- TRUE # Should NOT be turned off
 freeUpMem <- FALSE
 lightLoadFinalTable <- TRUE
@@ -34,10 +34,10 @@ library("future")
 library("future.apply")
 
 ############### CAUTION #####################
-runPredictedDensities <- FALSE
+runPredictedDensities <- TRUE
 overwriteInternals <- FALSE 
-runRatesTable <- FALSE
-runUncertainty <- FALSE
+runRatesTable <- TRUE
+runUncertainty <- TRUE
 overwrite <- FALSE
 runBCRLCC05 <- TRUE
 ############### CAUTION #####################
@@ -51,7 +51,7 @@ runBCRLCC05 <- TRUE
 
 # 1. THIS CREATES THE CALCULATED/PREDICTED DENSITIES
 if (runPredictedDensities){
-  fullTablePixels <- future_lapply(species, FUN = function(sp){
+  fullTablePixels <- lapply(species, FUN = function(sp){
     tableFileName <- paste0("birdsTableAbund", sp, spatialScale, "m")
     fullTablePixels <- Cache(makeBirdTable, species = sp, 
                              tableFileName = tableFileName,
@@ -75,8 +75,9 @@ if (runPredictedDensities){
 }
 
 # 2. THIS USES THE PREDICTED TABLES TO CREATE RATES OF CHANGE
+species <- "BBWA"
 if (runRatesTable){
-  fullTableAllBirds <- lapply(X = species, function(bird){
+  fullTableAllBirds <- lapply(X = species, function(bird){ # future_
     completeSummaryFile <- file.path(folderForTables,
                                      paste0("fullPixelTable", bird, 
                                             paste0(spatialScale, "m"), ".rds"))
@@ -114,7 +115,7 @@ if (runRatesTable){
       # 4.2 RATE YEARS 1984 - 2011 PER BIRD
       # 4.2.1 Rate per year: rate
       fullTableList <- readRDS(fullTablePixels[[bird]]) # CALCULATED TABLE WITH CHANGES
-      dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, value.var = "density")
+      dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, value.var = "abundance")
       ys <- usefun::substrBoth(unique(fullTableList$year), howManyCharacters = 4, fromEnd = TRUE)
       newNames <- c(names(dcastedTable)[1:2], paste0("abund", ys))
       names(dcastedTable) <- newNames
@@ -144,6 +145,7 @@ if (runRatesTable){
         yearRef <- usefun::substrBoth(strng = abundNames[i],
                                       howManyCharacters = 4,
                                       fromEnd = TRUE)
+        browser()
         thisYearsRate <- (fullTableList[,abundNames[i], with = FALSE]-
                             fullTableList[,"abund1984"])/
           fullTableList[,"abund1984"]
