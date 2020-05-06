@@ -17,12 +17,12 @@ makeBirdTable <- function(species = NULL,
   bigTableName <- file.path(folderForTables, paste0(tableFileName, ".rds"))
   if (!file.exists(bigTableName)){
     if (is.null(year))
-      year <- 1984:2011
+      year <- 1985:2011
     if (is.null(species))
       species <- "BBWA"
     fullTableList <- rbindlist(lapply(X = year, function(y){
       fullTableFilename <- file.path(folderForTables, 
-                                     paste0("fullTable",species, y,".rds"))
+                                     paste0("fullTable", species, spatialScale,"mYear", y,".rds"))
       summarizedTableFileName <- file.path(folderForTables,
                                            paste0("birdsTable",species, y,".rds"))
       fl <- usefun::grepMulti(x = list.files(path = folderForPredictedRasters, 
@@ -48,9 +48,8 @@ makeBirdTable <- function(species = NULL,
       densityTable$year <- paste0("year", y)
       return(densityTable)
     }))
-    # browser() # Not sure why I had a browser here. Probably forgotten? 08APR20
     dcastedTable <- dcast(data = fullTableList, formula = species + pixelID ~ year, 
-                          value.var = "density")
+                          value.var = "abundance")
     saveRDS(object = fullTableList, file = bigTableName)
     rm(fullTableList)
     gc()
