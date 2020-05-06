@@ -131,3 +131,6 @@ outputs/posthocAnalysis/masked*
 outputs/posthocAnalysis/CHECKSUMS.txt
 summarizedTableCertified.RDS
 Smallfile*
+modules/bayesianBirdModel/outputs/posthocAnalysis/bayesian
+outputs/posthocAnalysis/bayesian
+

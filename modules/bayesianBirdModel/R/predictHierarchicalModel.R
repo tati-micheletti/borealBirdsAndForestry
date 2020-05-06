@@ -28,23 +28,22 @@ predictHierarchicalModel <- function(bird,
     #MODEL 1: 1 equation + ZI
     iSMCode <- nimbleCode({
       
-      ######## PRIORS ########
+      ######## PRIORS ######## ---- MODEL 1
+      
       #Zero inflation - habitat suitability
       phi ~ dunif(0, 1) # proportion of suitable sites (we need to keep phi between 0 and 1)
-      
       # Coefficient for disturbance
       mu.beta ~ dnorm(0, 100)
-      tau.beta ~ dgamma(1, 0.01)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      tau.beta <- pow(sd.beta, -2)
+      sd.beta ~ dunif(0, 100) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
-      
       # Random effect
-      tau.clusters ~ dgamma(1, 0.01)
-      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
-      tau.year ~ dgamma(1, 0.01)
-      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
+      tau.clusters <- pow(sd.clusters, -2) # year heterogeneity in lambda
+      sd.cluster ~ dunif(0, 100)
+      tau.year <- pow(sd.year, -2) # cluster heterogeneity in lambda
+      sd.year ~ dunif(0, 100)
       for (j in 1:NClusters) {
         clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
@@ -97,12 +96,12 @@ predictHierarchicalModel <- function(bird,
     iSMinits <- list(
       # Coefficients
       phi = runif(1, 0, 1), # ZI part (‘suitability’ of the sample site).
-      beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
+      beta = runif(Nbeta, -10, 10), # Coefficient for disturbance ~ Has distribution, not sure need to provide
       omega = rep(1, times = nvisits), # Bernoulli of phi, sample site ‘suitability’ ~ Has distribution, not sure need to provide
-      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
-      mu.beta = runif(1, 0, 1),
+      sd.year = runif(1, 0, 100), # Deviation of year RE ~ Has distribution
+      sd.clusters = runif(1, 0, 100), # Deviation of cluester RE ~ Has distribution
+      sd.beta = runif(1, 0, 100), # Deviation of beta hyperparameter ~ Has distribution
+      mu.beta = runif(1, 0, 100),
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
     )
@@ -121,19 +120,19 @@ predictHierarchicalModel <- function(bird,
       
       # Coefficient for disturbance
       mu.beta ~ dnorm(0, 100)
-      tau.beta ~ dgamma(1, 0.01)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      sd.beta ~ dunif(0, 100)
+      tau.beta <- pow(sd.beta, -2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
-      tau.NN ~ dgamma(1, 0.01)
-      sd.NN <- 1/pow(tau.NN, 2) # cluster heterogeneity in NN
+      sd.NN ~ dunif(0, 100)
+      tau.NN <- pow(sd.NN, -2) # cluster heterogeneity in NN
       
       # Random effect
-      tau.clusters ~ dgamma(1, 0.01)
-      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
-      tau.year ~ dgamma(1, 0.01)
-      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
+      sd.cluster ~ dunif(0, 100)
+      tau.clusters <- pow(sd.clusters, -2) # year heterogeneity in lambda
+      sd.year  ~ dunif(0, 100)
+      tau.year <- pow(sd.year, -2) # cluster heterogeneity in lambda
       for (j in 1:NClusters) {
         clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
@@ -194,22 +193,22 @@ predictHierarchicalModel <- function(bird,
     iSMinits <- list(
       # Coefficients
       phi = runif(1, 0, 1), # ZI part (‘suitability’ of the sample site).
-      beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
+      beta = runif(Nbeta, -10, 10), # Coefficient for disturbance ~ Has distribution, not sure need to provide
       omega = rep(1, times = nvisits), # Bernoulli of phi, sample site ‘suitability’ ~ Has distribution, not sure need to provide
       logNN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
       lambdaLOmega = currentYearBirdData$counts, # Distribution of counts <- Is assigned, not sure need to provide # REMOVED FOR NOW --> Simplified
       lambdaL = lambdaL, # Local model, poisson of counts <- Is assigned
       loglambdaL = log(lambdaL), # log of lambda2
-      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
-      tau.NN = runif(1, 0, 1), # Deviation of logNN
-      mu.beta = runif(1, 0, 1),
+      sd.year = runif(1, 0, 100), # Deviation of year RE ~ Has distribution
+      sd.clusters = runif(1, 0, 100), # Deviation of cluester RE ~ Has distribution
+      sd.beta = runif(1, 0, 100), # Deviation of beta hyperparameter ~ Has distribution
+      mu.beta = runif(1, 0, 100),
+      tau.NN = runif(1, 0, 100), # Deviation of logNN
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
     )
     params <- c("beta", "mu.beta", "loglambdaN", "sd.year", "sd.cluster", 
-                "sd.beta", "sd.NN", "tau.beta",
+                "sd.beta", "sd.NN", "tau.beta", "tau.NN",
                 "logNN", "lambdaL", "omega", "lambdaLOmega",
                 "phi", "clusterRanEff", "YearRanEff")
   }
@@ -223,17 +222,17 @@ predictHierarchicalModel <- function(bird,
       
       # Coefficient for disturbance
       mu.beta ~ dnorm(0, 100)
-      tau.beta ~ dgamma(1, 0.01)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      sd.beta ~ dunif(0, 100)
+      tau.beta <- pow(sd.beta, -2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
       
       # Random effect
-      tau.clusters ~ dgamma(1, 0.01)
-      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
-      tau.year ~ dgamma(1, 0.01)
-      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
+      sd.cluster ~ dunif(0, 100)
+      tau.clusters <- pow(sd.clusters, -2) # year heterogeneity in lambda
+      sd.year ~ dunif(0, 100)
+      tau.year <- pow(sd.year, -2) # cluster heterogeneity in lambda
       for (j in 1:NClusters) {
         clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
@@ -283,11 +282,11 @@ predictHierarchicalModel <- function(bird,
     
     iSMinits <- list(
       # Coefficients
-      beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
-      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
-      mu.beta = runif(1, 0, 1),
+      beta = runif(Nbeta, -10, 10), # Coefficient for disturbance ~ Has distribution, not sure need to provide
+      sd.year = runif(1, 0, 100), # Deviation of year RE ~ Has distribution
+      sd.clusters = runif(1, 0, 100), # Deviation of cluester RE ~ Has distribution
+      sd.beta = runif(1, 0, 100), # Deviation of beta hyperparameter ~ Has distribution
+      mu.beta = runif(1, 0, 100),
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
     )
@@ -303,19 +302,19 @@ predictHierarchicalModel <- function(bird,
       ######## PRIORS ########
       # Coefficient for disturbance
       mu.beta ~ dnorm(0, 100)
-      tau.beta ~ dgamma(1, 0.01)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      sd.beta ~ dunif(0, 100)
+      tau.beta <- pow(sd.beta, -2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
-      tau.NN ~ dgamma(1, 0.01)
-      sd.NN <- 1/pow(tau.NN, 2) # cluster heterogeneity in NN
+      sd.NN ~ dunif(0, 100)
+      tau.NN <- pow(sd.NN, -2) # cluster heterogeneity in NN
       
       # Random effect
-      tau.clusters ~ dgamma(1, 0.01)
-      sd.cluster <- 1/pow(tau.clusters, 2) # year heterogeneity in lambda
-      tau.year ~ dgamma(1, 0.01)
-      sd.year <- 1/pow(tau.year, 2) # cluster heterogeneity in lambda
+      sd.cluster ~ dunif(0, 100)
+      tau.clusters <- pow(sd.clusters, -2) # year heterogeneity in lambda
+      sd.year ~ dunif(0, 100)
+      tau.year <- pow(sd.year, -2) # cluster heterogeneity in lambda
       for (j in 1:NClusters) {
         clusterRanEff[j] ~ dnorm(0, tau.clusters) # Note plural on tau.clusters, different than tau.clusters
         # random cluster effects in log(density)
@@ -373,21 +372,21 @@ predictHierarchicalModel <- function(bird,
     lambdaL <- runif(1, 0, 5)# Abundance. Needs reasonable values between 0 and 5?
     iSMinits <- list(
       # Coefficients
-      beta = rep(rnorm(1, 0, 0.1), times = Nbeta), # Coefficient for disturbance ~ Has distribution, not sure need to provide
+      beta = runif(Nbeta, -10, 10), # Coefficient for disturbance ~ Has distribution, not sure need to provide
       logNN = rep(1, times = nvisits), # Distribution of lambda1 ~ Has distribution, not sure need to provide
       lambdaL = lambdaL, # Local model, poisson of counts <- Is assigned
       loglambdaL = log(lambdaL), # log of lambda2
-      tau.year = runif(1, 0, 1), # Deviation of year RE ~ Has distribution
-      tau.clusters = runif(1, 0, 1), # Deviation of cluester RE ~ Has distribution
-      tau.beta = runif(1, 0, 1), # Deviation of beta hyperparameter ~ Has distribution
-      tau.NN = runif(1, 0, 1), # Deviation of NN ~ Has distribution
-      mu.beta = runif(1, 0, 1),
+      sd.year = runif(1, 0, 100), # Deviation of year RE ~ Has distribution
+      sd.clusters = runif(1, 0, 100), # Deviation of cluester RE ~ Has distribution
+      sd.beta = runif(1, 0, 100), # Deviation of beta hyperparameter ~ Has distribution
+      mu.beta = runif(1, 0, 100),
+      tau.NN = runif(1, 0, 100), # Deviation of logNN
       YearRanEff = rep(0, times = NYears),
       clusterRanEff = rep(0, times = NClusters)
     )
     params <- c("beta", "mu.beta", "loglambdaN", 
                 "logNN", "lambdaL", "sd.year", "sd.cluster", 
-                "sd.beta", "sd.NN", "tau.beta",
+                "sd.beta", "sd.NN", "tau.NN", "tau.beta",
                 "clusterRanEff", "YearRanEff")
   }
   
@@ -407,9 +406,9 @@ predictHierarchicalModel <- function(bird,
                          inits = iSMinits,
                          progressBar = TRUE,
                          monitors = params,
-                         thin = 3,
+                         thin = 10,
                          nburnin = 1000,
-                         nchains = 3, niter = 10000, # 10000
+                         nchains = 3, niter = 7500, # 10000
                          summary = TRUE, WAIC = FALSE)
   
   message(crayon::green(paste0("Predictions for ", crayon::yellow(birdSp), 
