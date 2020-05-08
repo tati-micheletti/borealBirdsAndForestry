@@ -31,6 +31,21 @@ Checksums(destPath, write = TRUE)
 
 ## Hierarchical scale model
 
+Before checking the models, here is the correlation between the variables disturbanceLocal and disturbanceNeighborhood
+```{r corrOriginal}
+OriginalData <- prepInputs(url = "https://drive.google.com/open?id=18Ii_g3wBGftmatCdNZLJdtczc5tzgwlW", 
+                           destinationPath = dirname(destPath), fun = "readRDS")
+plot(OriginalData$State_P_500, 
+     OriginalData$State_P_100, xlab = "State_P_500 - neighborhood", ylab = "State_P_100 - local", 
+     main = "Original Data")
+mod <- lm(data = OriginalData, State_P_500 ~ State_P_100)
+tab <- summary(mod)
+abline(mod, col = "red")
+mtext(paste0("cor = ", round(cor(OriginalData$State_P_100, OriginalData$State_P_500), 3), 
+             "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
+```
+
+
 ### Model 1: 
 Model 1 is composed of one equation, where the coefficients for disturbance come from the same hyperprior. 
 
@@ -192,16 +207,43 @@ boxplot(Mean ~ RE, data = dtRE, main = paste0("Random effects and habitat suitab
 
 At last, we check habitat suitability: omega
 ```{r omega1, echo = TRUE}
-chain2 <- data.table(model1$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
-omegaNames <- grepMulti(names(chain2), patterns = "omega")
-omega <- chain2[, grepMulti(names(chain2), patterns = "omega")]
-chain2Omega <- as.numeric(unlist(x = chain2[, ..omega], recursive = TRUE))
+chain1 <- data.table(model1$samples$chain1, keep.rownames = TRUE, check.names = TRUE)
+omegaNames <- grepMulti(names(chain1), patterns = "omega")
+omega <- chain1[, grepMulti(names(chain1), patterns = "omega")]
+chain1Omega <- as.numeric(unlist(x = chain1[, ..omega], recursive = TRUE))
 
 chain2 <- data.table(model1$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
 omegaNames <- grepMulti(names(chain2), patterns = "omega")
 omega <- chain2[, grepMulti(names(chain2), patterns = "omega")]
 allOmega <- c(chain2Omega, as.numeric(unlist(x = chain2[, ..omega], recursive = TRUE)))
 hist(allOmega, main = paste0("Average Habitat Suitability: ", whichModel), xlab = "omega")
+```
+
+Correlation between beta[1] and beta[2]
+```{r betaCorr1, echo = TRUE}
+chain1 <- data.table(model1$samples$chain1, keep.rownames = TRUE, check.names = TRUE)
+chain2 <- data.table(model1$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
+
+beta1 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "1"))] # Same for chain 2
+chain1beta1 <- chain1[, ..beta1]
+chain2beta1 <- chain2[, ..beta1]
+beta.neighborhood <- rbind(chain1beta1, chain2beta1)
+beta2 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "2"))]
+chain1beta2 <- chain1[, ..beta2]
+chain2beta2 <- chain2[, ..beta2]
+beta.local <- rbind(chain2beta2, chain1beta2)
+dt <- cbind(beta.local, beta.neighborhood)
+names(dt) <- c("beta.local", "beta.neighborhood")
+dt <- as.data.frame(dt)
+
+clearPlot()
+plot(dt$beta.neighborhood, 
+     dt$beta.local, xlab = "beta[1] - neighborhood", ylab = "beta[2] - local", main = whichModel)
+mod <- lm(data = dt, beta.neighborhood ~ beta.local)
+tab <- summary(mod)
+abline(mod, col = "red")
+mtext(paste0("cor = ", round(cor(dt$beta.neighborhood, dt$beta.local), 3), 
+             "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
 ```
 
 
@@ -381,10 +423,10 @@ boxplot(Mean ~ RE, data = dtRE, main = paste0("Random effects and habitat suitab
 
 At last, we check habitat suitability: omega
 ```{r omega2, echo = TRUE}
-chain2 <- data.table(model2$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
-omegaNames <- grepMulti(names(chain2), patterns = "omega")
-omega <- chain2[, grepMulti(names(chain2), patterns = "omega")]
-chain2Omega <- as.numeric(unlist(x = chain2[, ..omega], recursive = TRUE))
+chain1 <- data.table(model2$samples$chain1, keep.rownames = TRUE, check.names = TRUE)
+omegaNames <- grepMulti(names(chain1), patterns = "omega")
+omega <- chain1[, grepMulti(names(chain1), patterns = "omega")]
+chain1Omega <- as.numeric(unlist(x = chain1[, ..omega], recursive = TRUE))
 
 chain2 <- data.table(model2$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
 omegaNames <- grepMulti(names(chain2), patterns = "omega")
@@ -392,6 +434,34 @@ omega <- chain2[, grepMulti(names(chain2), patterns = "omega")]
 allOmega <- c(chain2Omega, as.numeric(unlist(x = chain2[, ..omega], recursive = TRUE)))
 hist(allOmega, main = paste0("Average Habitat Suitability: ", whichModel), xlab = "omega")
 ```
+
+Correlation between beta[1] and beta[2]
+```{r betaCorr2, echo = TRUE}
+chain1 <- data.table(model2$samples$chain1, keep.rownames = TRUE, check.names = TRUE)
+chain2 <- data.table(model2$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
+
+beta1 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "1"))] # Same for chain 2
+chain1beta1 <- chain1[, ..beta1]
+chain2beta1 <- chain2[, ..beta1]
+beta.neighborhood <- rbind(chain1beta1, chain2beta1)
+beta2 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "2"))]
+chain1beta2 <- chain1[, ..beta2]
+chain2beta2 <- chain2[, ..beta2]
+beta.local <- rbind(chain2beta2, chain1beta2)
+dt <- cbind(beta.local, beta.neighborhood)
+names(dt) <- c("beta.local", "beta.neighborhood")
+dt <- as.data.frame(dt)
+
+clearPlot()
+plot(dt$beta.neighborhood, 
+     dt$beta.local, xlab = "beta[1] - neighborhood", ylab = "beta[2] - local", main = whichModel)
+mod <- lm(data = dt, beta.neighborhood ~ beta.local)
+tab <- summary(mod)
+abline(mod, col = "red")
+mtext(paste0("cor = ", round(cor(dt$beta.neighborhood, dt$beta.local), 3), 
+             "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
+```
+
 
 ### Model 3: 
 Model 3 is composed of one equation, where the coefficients for disturbance come from the same hyperprior, but has no Zero Inflation.
@@ -542,6 +612,33 @@ ys <- length(grepMulti(dtRE$rn, "Year"))
 cls <- length(grepMulti(dtRE$rn, "cluster"))
 dtRE$RE <- c(rep("YearRandomEffect", times = ys), rep("ClusterRandomEffect", times = cls))
 boxplot(Mean ~ RE, data = dtRE, main = paste0("Random effects and habitat suitability: ", whichModel))
+```
+
+Correlation between beta[1] and beta[2]
+```{r betaCorr3, echo = TRUE}
+chain1 <- data.table(model3$samples$chain1, keep.rownames = TRUE, check.names = TRUE)
+chain2 <- data.table(model3$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
+
+beta1 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "1"))] # Same for chain 2
+chain1beta1 <- chain1[, ..beta1]
+chain2beta1 <- chain2[, ..beta1]
+beta.neighborhood <- rbind(chain1beta1, chain2beta1)
+beta2 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "2"))]
+chain1beta2 <- chain1[, ..beta2]
+chain2beta2 <- chain2[, ..beta2]
+beta.local <- rbind(chain2beta2, chain1beta2)
+dt <- cbind(beta.local, beta.neighborhood)
+names(dt) <- c("beta.local", "beta.neighborhood")
+dt <- as.data.frame(dt)
+
+clearPlot()
+plot(dt$beta.neighborhood, 
+     dt$beta.local, xlab = "beta[1] - neighborhood", ylab = "beta[2] - local", main = whichModel)
+mod <- lm(data = dt, beta.neighborhood ~ beta.local)
+tab <- summary(mod)
+abline(mod, col = "red")
+mtext(paste0("cor = ", round(cor(dt$beta.neighborhood, dt$beta.local), 3), 
+             "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
 ```
 
 ### Model 4: 
@@ -706,6 +803,34 @@ ys <- length(grepMulti(dtRE$rn, "Year"))
 cls <- length(grepMulti(dtRE$rn, "cluster"))
 dtRE$RE <- c(rep("YearRandomEffect", times = ys), rep("ClusterRandomEffect", times = cls))
 boxplot(Mean ~ RE, data = dtRE, main = paste0("Random effects and habitat suitability: ", whichModel))
+```
+
+
+Correlation between beta[1] and beta[2]
+```{r betaCorr4, echo = TRUE}
+chain1 <- data.table(model4$samples$chain1, keep.rownames = TRUE, check.names = TRUE)
+chain2 <- data.table(model4$samples$chain2, keep.rownames = TRUE, check.names = TRUE)
+
+beta1 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "1"))] # Same for chain 2
+chain1beta1 <- chain1[, ..beta1]
+chain2beta1 <- chain2[, ..beta1]
+beta.neighborhood <- rbind(chain1beta1, chain2beta1)
+beta2 <- chain1[, grepMulti(names(chain1), patterns = c("beta", "2"))]
+chain1beta2 <- chain1[, ..beta2]
+chain2beta2 <- chain2[, ..beta2]
+beta.local <- rbind(chain2beta2, chain1beta2)
+dt <- cbind(beta.local, beta.neighborhood)
+names(dt) <- c("beta.local", "beta.neighborhood")
+dt <- as.data.frame(dt)
+
+clearPlot()
+plot(dt$beta.neighborhood, 
+     dt$beta.local, xlab = "beta[1] - neighborhood", ylab = "beta[2] - local", main = whichModel)
+mod <- lm(data = dt, beta.neighborhood ~ beta.local)
+tab <- summary(mod)
+abline(mod, col = "red")
+mtext(paste0("cor = ", round(cor(dt$beta.neighborhood, dt$beta.local), 3), 
+             "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
 ```
 
   
