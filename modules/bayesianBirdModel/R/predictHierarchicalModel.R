@@ -35,7 +35,7 @@ predictHierarchicalModel <- function(bird,
       # Coefficient for disturbance
       mu.beta ~ dunif(-40, 40)
       tau.beta ~ T(dgamma(1, 1), 0.01, 100)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      sd.beta <- 1/pow(tau.beta, -2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
@@ -124,7 +124,7 @@ predictHierarchicalModel <- function(bird,
       # Coefficient for disturbance
       mu.beta ~ dunif(-40, 40)
       tau.beta ~ T(dgamma(1, 1), 0.01, 100)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      sd.beta <- 1/pow(tau.beta, -2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
@@ -227,7 +227,7 @@ predictHierarchicalModel <- function(bird,
       # Coefficient for disturbance
       mu.beta ~ dunif(-40, 40)
       tau.beta ~ T(dgamma(1, 1), 0.01, 100)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      sd.beta <- 1/pow(tau.beta, -2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
@@ -308,7 +308,7 @@ predictHierarchicalModel <- function(bird,
       # Coefficient for disturbance
       mu.beta ~ dunif(-40, 40)
       tau.beta ~ T(dgamma(1, 1), 0.01, 100)
-      sd.beta <- 1/pow(tau.beta, 2) # cluster heterogeneity in lambda
+      sd.beta <- 1/pow(tau.beta, -2) # cluster heterogeneity in lambda
       for (b in 1:Nbeta) {
         beta[b] ~ dnorm(mu.beta, tau.beta) # Hyperparameter for beta coefficients # No idea what to put here!
       }
