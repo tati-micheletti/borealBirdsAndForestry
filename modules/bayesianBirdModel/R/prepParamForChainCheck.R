@@ -1,6 +1,6 @@
-prepParamForChainCheck <- function(samplesList, param){
+prepParamForChainCheck <- function(samplesList, param, unwantted){
   redChain <- lapply(samplesList, function(chain){
-    nms <- grep(pattern = param, x = colnames(chain))
+    nms <- usefun::grepMulti(pattern = param, unwanted = unwantted, x = colnames(chain))
     chanRed <- chain[, nms]
     return(chanRed)
     })

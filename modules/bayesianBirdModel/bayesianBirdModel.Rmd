@@ -71,16 +71,14 @@ parameters <- list(
       "modelType" = 1
   )
 )
-bayes1 <- simInitAndSpades(times = times, params = parameters, modules = modules,
-                 objects = objects, debug = 2)
+bayes1 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
 
 parameters <- list(
   "bayesianBirdModel" = list(
       "modelType" = 2
   )
 )
-bayes2 <- simInitAndSpades(times = times, params = parameters, modules = modules,
-                 objects = objects, debug = 2)
+bayes2 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
 
 
 parameters <- list(
@@ -88,8 +86,7 @@ parameters <- list(
       "modelType" = 3
   )
 )
-bayes3 <- simInitAndSpades(times = times, params = parameters, modules = modules,
-                 objects = objects, debug = 2)
+bayes3 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
 
 
 parameters <- list(
@@ -97,8 +94,7 @@ parameters <- list(
       "modelType" = 4
   )
 )
-bayes4 <- simInitAndSpades(times = times, params = parameters, modules = modules,
-                 objects = objects, debug = 2)
+bayes4 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
 
 ```
 
