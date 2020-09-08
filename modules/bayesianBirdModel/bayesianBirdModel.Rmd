@@ -34,11 +34,13 @@ library("raster")
 setPaths(modulePath = file.path(getwd(), "modules"),
          cachePath = file.path(getwd(), "cache"),
          inputPath = file.path(getwd(), "inputs"),
-         outputPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian"))
+         outputPath = file.path(getwd(), "outputs/posthocAnalysis/bayesian/trial9"))
 getPaths() # shows where the 4 relevant paths are
-# invisible(sapply(X = list.files(file.path(getwd(), "functions"), full.names = TRUE), FUN = source))
 
-times <- list(start = 1985, end = 1985)
+# trial9: we started trying with the new approach: new layers and new models...
+# trial8: has the predictedDT of the latest model 1: before we adjusted the modelling approach. Still, has the older version of LCC
+
+times <- list(start = 1985, end = 2011)
 
 posthocFolder <- file.path(getwd(),"outputs/posthocAnalysis")
 modules <- list("bayesianBirdModel")
@@ -61,41 +63,23 @@ RTM <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
                        destinationPath = file.path(getwd(), "inputs"), 
                        userTags = "objectName:managedForest")
 
-objects <- list("rP" = managedForest,
-                 "birdSpecies" = c("BBWA"))
+objects <- list("rP" = managedForest)
 inputs <- list()
 outputs <- list()
 
 parameters <- list(
   "bayesianBirdModel" = list(
-      "modelType" = 1
+    "modelType" = 3,
+    "GDriveFolder" = "1VfLUqH4Kkr5zZNwmRb4OjJzt_FrRiK8-",
+    "fitFrequentistModel" = FALSE,
+    "savePredictedDT" = TRUE,
+    "plotBaysModel" = FALSE,
+    "quickLoad" = FALSE
   )
 )
-bayes1 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
-
-parameters <- list(
-  "bayesianBirdModel" = list(
-      "modelType" = 2
-  )
-)
-bayes2 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
-
-
-parameters <- list(
-  "bayesianBirdModel" = list(
-      "modelType" = 3
-  )
-)
-bayes3 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
-
-
-parameters <- list(
-  "bayesianBirdModel" = list(
-      "modelType" = 4
-  )
-)
-bayes4 <- simInitAndSpades(times = times, params = parameters, modules = modules, objects = objects, debug = 2)
-
+bayes <- simInitAndSpades(times = times, params = parameters, 
+                          modules = modules, objects = objects, 
+                          debug = 2)
 ```
 
       # Observations

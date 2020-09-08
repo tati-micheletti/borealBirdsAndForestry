@@ -21,7 +21,6 @@ For help writing in R Markdown, see http://rmarkdown.rstudio.com/.
 # Usage
 
 ```{r module_usage}
-setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
 source(file.path(getwd(), 'functions/isGDALInstalled.R'))
 if (!isGDALInstalled()) message("GDAL was not found in your computer, please make sure you install it before running these modules.")
 if (!length(Sys.which("unzip")) > 0) message("unzip was not found in your computer, please make sure you install it before running these modules.")

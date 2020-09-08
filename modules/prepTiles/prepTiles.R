@@ -99,7 +99,7 @@ doEvent.prepTiles = function(sim, eventTime, eventType) {
                            destinationPath = dataPath(sim),
                            studyArea = sim$rP,
                            length = TRUE,
-                           filename2 = "Raster1.tif",
+                           filename2 = NULL,
                            userTags = c("objectName:Raster1",
                                         "fileName:C2C_change_type"),
                            cacheId = "d7ad428c01272d1c7644fdb791b86b41") # cacheId updated for BorealCloud cache / artifact = "547733c53ee1357531bb0a719d1c68c4"

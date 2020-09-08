@@ -1,7 +1,6 @@
 dataframeBuilding <- function(birdData,
                               birdSpecies
                               ){
-
   forestListName <- grepMulti(x = names(birdData), patterns = c("Transitional"))
   forestList <- rbindlist(birdData[names(birdData) %in% forestListName])
   birdData <- forestList[!duplicated(forestList)]
@@ -35,9 +34,5 @@ dataframeBuilding <- function(birdData,
     return(spDT)
   })
   names(listOfTables) <- birdSpecies
-  
   return(listOfTables)
 }
-
-
-

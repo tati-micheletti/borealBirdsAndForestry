@@ -1,5 +1,5 @@
 processOffsets <- function(offsetFilesName = "offsetFiles", envirSim = envir(sim), birdSpecies = sim$birdSpecies){
-  
+
   offsetFiles <- get(x = offsetFilesName, envir = envirSim)
   birdSpecies <- c(birdSpecies, "PKEY")
   
@@ -9,6 +9,7 @@ processOffsets <- function(offsetFilesName = "offsetFiles", envirSim = envir(sim
     listSize <- unlist(lapply(offsetFiles[["newerOffsets"]], FUN = function(x) object.size(x)))
     biggstObj <- which(listSize == max(listSize))
     nameList <- attributes(biggstObj)
+    browser()
     off1 <- offsetFiles[["newerOffsets"]][[nameList$names]] %>%
       .[, ..birdSpecies]
     

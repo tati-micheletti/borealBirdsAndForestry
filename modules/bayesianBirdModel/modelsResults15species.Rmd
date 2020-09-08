@@ -1,0 +1,178 @@
+---
+title: "modelsResults15species"
+author: "Tati Micheletti"
+date: "5/15/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reproducible)
+library(quickPlot)
+library(usefulFuns)
+library(ggplot2)
+library(data.table)
+library(googledrive)
+reproducible::Require("basicMCMCplots")
+modelsPath <- file.path(getwd(), "modules/bayesianBirdModel/data")
+prepParamForChainCheck <- function(samplesList, param, unwantted){
+  redChain <- lapply(samplesList, function(chain){
+    nms <- usefun::grepMulti(pattern = param, unwanted = unwantted, x = colnames(chain))
+    chanRed <- chain[, nms]
+    return(chanRed)
+    })
+  return(redChain)
+}
+TRIAL <- "trial8"
+destPath <- reproducible::checkPath(file.path(getwd(), "outputs/posthocAnalysis/bayesian", TRIAL), 
+                                                               create = TRUE)
+googledrive::drive_auth(email = "tati.micheletti@gmail.com")
+# Checksums(destPath, write = TRUE)
+```
+
+## Hierarchical scale model
+
+Before checking the models, here is the correlation between the variables disturbanceLocal and disturbanceNeighborhood
+```{r corrOriginal}
+originalData <- prepInputs(url = "https://drive.google.com/open?id=1aDWUEHOCqQx0jd7Yi22fR83Q2uvooqXY", 
+                           destinationPath = dirname(destPath), fun = "readRDS")
+OriginalData <- originalData[[1]] # Its the same for all species, when the species is not present, it is NA'ed in the count
+plot(OriginalData$State_P_500, 
+     OriginalData$State_P_100, xlab = "State_P_500 - neighborhood", ylab = "State_P_100 - local", 
+     main = "Original Data")
+mod <- lm(data = OriginalData, State_P_500 ~ State_P_100)
+tab <- summary(mod)
+abline(mod, col = "red")
+mtext(paste0("cor = ", round(cor(OriginalData$State_P_100, OriginalData$State_P_500), 3), 
+             "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
+
+```
+
+We see that the local and neighborhood covariates are extremely correlated.
+
+Looking at frequentist models now. First, we observe the parameter's estimates:
+
+```{r parametersEstimates}
+freqModPath <- grepMulti(x = list.files(destPath, full.names = TRUE), 
+                                     patterns = c("modelFreq_", ".rds"))
+species <- substrBoth(tools::file_path_sans_ext(freqModPath), 
+                      howManyCharacters = 4, 
+                      fromEnd = TRUE)
+quickLoadThePlot <- TRUE
+if (!quickLoadThePlot){
+freqMod <- rbindlist(lapply(species, function(sp){
+  fMod <- readRDS(file = file.path(destPath, paste0("modelFreq_",sp,".rds")))
+  sumFMod <- summary(fMod)
+  coeff <- data.table(species = sp,
+                      model = "frequentist",
+                      covariate = c("State_P_100", "State_P_500"),
+                      estimate = sumFMod$coefficients[c("State_P_100", "State_P_500"), "Estimate"],
+                      stdError = sumFMod$coefficients[c("State_P_100", "State_P_500"), "Std. Error"],
+                      varCov = sumFMod$vcov["State_P_500", "State_P_100"],
+                      significancy = c(ifelse(sumFMod$coefficients["State_P_100", "Pr(>|z|)"] < 0.05, "significant", "non-significant"),
+                                       ifelse(sumFMod$coefficients["State_P_500", "Pr(>|z|)"] < 0.05, "significant", "non-significant"))
+                      )
+  return(coeff)
+}))
+
+baysMod1 <- rbindlist(lapply(species, function(sp, plots = FALSE){
+  fMod <- readRDS(file = file.path(destPath, paste0("modelBay1_",sp,".rds")))
+  fModDT <- data.table(fMod$summary$all.chains, keep.rownames = TRUE)
+  if (plots){
+    fModChains <- do.call(rbind, args = fMod$samples)
+    fModChainsDT <- data.table(fModChains, keep.rownames = TRUE)
+    fModChainsDTRed <- fModChainsDT[, c("beta[1]", "beta[2]")]
+    plot(
+      fModChainsDTRed$`beta[1]`,
+      fModChainsDTRed$`beta[2]`,
+      xlab = "beta[1] - neighborhood",
+      ylab = "beta[2] - local",
+      main = paste0("Model 1: ", sp)
+    )
+    mod <- lm(data = fModChainsDTRed, `beta[1]` ~ `beta[2]`)
+    tab <- summary(mod)
+    abline(mod, col = "red")
+    mtext(paste0(
+      "cor = ",
+      round(cor(fModChainsDTRed$`beta[1]`, fModChainsDTRed$`beta[2]`), 3),
+      "\nadj.R^2 = ",
+      round(tab$adj.r.squared, 3)
+    ), 3, line = -0.2)
+    return(NULL)
+  }
+betas <- grepMulti(fModDT$rn, patterns = "beta")
+sumFMod <- summary(fMod)
+modBeta <- fModDT[rn %in% betas,]
+coeff <- data.table(species = sp,
+                      model = "bayesian1",
+                      covariate = c("State_P_500", "State_P_100", "hyperPriorMean", "hyperParMean_500", "hyperParMean_100"),
+                      estimate = modBeta$Mean,
+                      minConf = modBeta$`95%CI_low`,
+                      maxConf = modBeta$`95%CI_upp`
+                      )
+  return(coeff)
+}))
+
+if (FALSE){
+baysMod2 <- rbindlist(lapply(species, function(sp, plots = TRUE){
+  fMod <- readRDS(file = file.path(destPath, paste0("modelBay2_",sp,".rds")))
+  fModDT <- data.table(fMod$summary$all.chains, keep.rownames = TRUE)
+    if (plots){
+    fModChains <- do.call(rbind, args = fMod$samples)
+    fModChainsDT <- data.table(fModChains, keep.rownames = TRUE)
+    fModChainsDTRed <- fModChainsDT[, c("beta[1]", "beta[2]")]
+    plot(
+      fModChainsDTRed$`beta[1]`,
+      fModChainsDTRed$`beta[2]`,
+      xlab = "beta[1] - neighborhood",
+      ylab = "beta[2] - local",
+      main = paste0("Model 2: ", sp)
+    )
+    mod <- lm(data = fModChainsDTRed, `beta[1]` ~ `beta[2]`)
+    tab <- summary(mod)
+    abline(mod, col = "red")
+    mtext(paste0(
+      "cor = ",
+      round(cor(fModChainsDTRed$`beta[1]`, fModChainsDTRed$`beta[2]`), 3),
+      "\nadj.R^2 = ",
+      round(tab$adj.r.squared, 3)
+    ), 3, line = -0.2)
+    return(NULL)
+  }
+betas <- grepMulti(fModDT$rn, patterns = "beta")
+sumFMod <- summary(fMod)
+modBeta <- fModDT[rn %in% betas,]
+coeff <- data.table(species = sp,
+                      model = "bayesian2",
+                      covariate = c("State_P_500", "State_P_100", "hyperPriorMean", "hyperParMean_500", "hyperParMean_100"),
+                      estimate = modBeta$Mean,
+                      minConf = modBeta$`95%CI_low`,
+                      maxConf = modBeta$`95%CI_upp`
+                      )
+  return(coeff)
+}))  
+}
+
+mergedMods <- rbind(baysMod1, baysMod2)
+mergedMods$covariate <- factor(mergedMods$covariate)
+freqMod$covariate <- factor(freqMod$covariate)
+freqMod[, minConf := estimate-stdError]
+freqMod[, maxConf := estimate+stdError]
+freqMod[, c("stdError", "varCov", "significancy") := NULL]
+dt <- rbind(mergedMods, freqMod)
+saveRDS(dt, file.path(destPath, "modelsTableForPlot.rds"))
+}
+dt <- readRDS(file.path(destPath, "modelsTableForPlot.rds"))
+excl <- grepMulti(as.character(unique(dt$covariate)), patterns = "hyper")
+coeffPlot <- ggplot(dt[!covariate %in% excl], aes(x = covariate, y = estimate, 
+                            ymin = minConf, ymax = maxConf, group = model)) +
+  geom_point(aes(shape = covariate, color = model), size = 5, position = position_dodge(width = 2)) +
+  geom_errorbar(aes(color = model), width = 0.2, position = position_dodge(width = 2)) +
+  facet_grid(. ~ species) + 
+  geom_hline(yintercept = 0) +
+  theme_gray() +
+  theme(axis.text.x = element_blank())
+coeffPlot
+
+```
+
