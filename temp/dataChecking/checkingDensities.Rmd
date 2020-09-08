@@ -1,0 +1,133 @@
+---
+title: "Checking density values for Suarez et al 2018"
+author: "Tati Micheletti"
+date: "7/13/2018"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+```
+
+## Why this file?
+
+Talking to Nicole and Alberto to understand where the data from Alberto's `Final_points_2010.csv` 
+table come from in order to be able to predict correctly using the same abundances, I came across
+a situation where Alberto used a file named `DDB_BCR_PROV_LCC_Apr4-2012.csv` while Nicole suggested 
+that the right densities should come from a file named `Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv`.
+
+Therefore, to analyze/understand how much the manuscript was affected by using a different file, I 
+started the following check-up. First thing is to place both files in folder `~/inputs/`, as well as a copy of 
+Alberto's `Final_points_2010.csv`.
+
+### Loading the tables (run this using the borealBirdsAndForestry.Rproj)
+```{r load_tables}
+usedDens <- data.table::fread(file.path(getwd(), "inputs", "DDB_BCR_PROV_LCC_Apr4-2012.csv"))
+corrDens <- data.table::fread(file.path(getwd(), "inputs", "Habitat_Association_by_jurisdiction(bamddb_Apr19-2012).csv"))
+Final_table <- data.table::fread(file.path(getwd(), "inputs", "Final_points_2010.csv"))
+usedDens
+corrDens
+```
+
+### Testing for unique LCC and BCR values
+I reduced the table to the important columns: D (hopefully stands for densiy!), LCC, BCR, PROV
+```{r test_unique}
+usedDens_reduced <- usedDens[,c("SPECIES", "D", "LCC", "BCR", "PROV"), with = FALSE]
+corrDens_reduced <- corrDens[,c("SPECIES", "D", "LCC", "BCR", "PROV"), with = FALSE]
+
+unique(sort(usedDens_reduced$LCC)) 
+unique(sort(corrDens_reduced$LCC))
+```
+
+**Results:** Alberto's data only lacks LCC cover 33 (burned).
+
+### Excluding duplicated densities 
+```{r identifying_duplicates}
+usedDenUnique <- unique(usedDens_reduced, by = c("SPECIES", "LCC", "BCR", "PROV"))
+corrDenUnique <- unique(corrDens_reduced, by = c("SPECIES", "LCC", "BCR", "PROV"))
+identical(usedDenUnique, usedDens_reduced)
+identical(corrDenUnique, corrDens_reduced)
+```
+
+**Results:** Nothing to exclude, all rows are unique.
+
+### Checking where these differ in terms of province, species and BCR
+```{r identifying_differences}
+usedSpec <- unique(usedDens_reduced, by = "SPECIES")
+corrSpec <- unique(corrDens_reduced, by = "SPECIES") # Same number of species
+
+usedProv <- unique(usedDens_reduced, by = "PROV")
+corrProv <- unique(corrDens_reduced, by = "PROV") # Same number of provinces
+
+usedBCR <- unique(usedDens_reduced, by = "BCR")
+corrBCR <- unique(corrDens_reduced, by = "BCR") # Not the same number of BCR
+```
+
+**Results:** The corrected dataset lacks BCR 10 (Northern Rockies), 11 (Prairies), 13 (Lower great lakes), 
+which means it considers only areas inside the boreal.  
+
+### Exclude BCR 10, 11 and 13 from the corrected dataset to compare with the used one
+```{r exclude_BCRs}
+usedDens_reduced <- usedDens_reduced[!BCR == 10 & !BCR == 13 & !BCR == 11]
+corrDens_reduced <- corrDens_reduced[!LCC == 33]
+usedDens_reduced
+corrDens_reduced
+```
+**Results:** There is one more difference among the datasets. The used one has extra values for birds in 
+provinces that the corrected is missing. 
+
+### Checking where these differ in terms of density values
+```{r identifying_densities}
+usedDens_reduced$D <- round(usedDens_reduced$D, 4)
+sortUsed <- data.table::setorder(usedDens_reduced, "SPECIES", "LCC", "BCR", "PROV")
+sortCorr <- data.table::setorder(corrDens_reduced, "SPECIES", "LCC", "BCR", "PROV")
+sortUsed
+sortCorr
+```
+**Results:** We can see some values are the same and some are not. I will exclude from 'used' the values that are not 
+present in corrected and compare row by row.
+
+```{r data_identical}
+names(sortUsed)[2] <- "usedD"
+names(sortCorr)[2] <- "correctD"
+mergedDT <- merge(sortUsed, sortCorr, by = c("SPECIES", "LCC", "BCR", "PROV"))
+notMatching <- which(mergedDT[,!mergedDT$usedD == mergedDT$correctD])
+rowsNotMatching <- mergedDT[notMatching,]
+percentDifferent <- nrow(rowsNotMatching)/nrow(usedDens) * 100
+percentDifferent
+```
+**Results:** We have 13,309 rows that do not match the density when comparing Alberto's and the "Correct" density. This 
+represents approximately 38% of Alberto's bird count data. However, Alberto did not run the models for all these species.
+I will check now the difference for the species Alberto used.
+
+```{r specific_species}
+spOfInterest <- c("BBWA", "BLPW","BOCH",
+                  "BRCR", "BTNW", "CAWA",
+                  "CMWA","CONW", "OVEN", 
+                  "PISI", "RBNU", "SWTH",
+                  "TEWA", "WETA", "YRWA")
+notMatchRightSpecies <- rowsNotMatching[SPECIES %in% spOfInterest]
+percentDifferent <- nrow(notMatchRightSpecies)/nrow(usedDens) * 100
+percentDifferent
+```
+**Results:** The percentage of values that differ dropped to ~8.4% when considering only the species used by Alberto. 
+As a last test, I want to have an idea of the extent of the differences.
+
+```{r minMax_differences}
+ratioUsedCorrect <- notMatchRightSpecies$usedD / notMatchRightSpecies$correctD
+ratioUsedInteger <- ratioUsedCorrect[!ratioUsedCorrect == 0 & !ratioUsedCorrect == Inf]
+minRatio <- min(ratioUsedInteger)
+maxRatio <- max(ratioUsedInteger)
+minRatio
+maxRatio
+```
+**Results:** Ignoring the situations (n = 729) which the corrected values of abundance 0 (leading the ratio to `Inf`) 
+and the situations where the used values are 0 (leading the ratio to `0`), we have a minimum of 0.017, but a max of 260. 
+This *can* mean a change for some species.  
+
+
+##CONCLUSION: I will re-run Suarez et al 2018 analysis using the corrected densities and compare the results of the graphs visually to see if the tendencies differ from what was done, and I will inform the co-authors on the differences found. Hopefully we won't see much and will just have to fix the model coefficients.
+

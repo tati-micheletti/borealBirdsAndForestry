@@ -1,0 +1,122 @@
+---
+title: "On Peter's Offsets"
+author: "Tati Micheletti"
+date: "7/18/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+tryCatch(require(reproducible), error = function(e) install.packages("reproducible")) 
+```
+
+## About Peters Offsets
+
+On 18th July 18, Peter sent me the most updated offset values for BAM. They came from the weblink: http://ftp.public.abmi.ca/species.abmi.ca/bam-cawa/offsets-v3_2017-04-19.zip. I downloaded, 
+extracted to the inputs folder and ended up with 4 files:
+
+\textcolor{blue}{FILE 1:} `offsets-v3_2017-04-19.Rdata`  
+\textcolor{blue}{FILE 2:} `offsets-v3data_2016-12-01.Rdata`  
+\textcolor{blue}{FILE 3:} `offsets-v3-new-chunk_2017-05-26.Rdata`  
+\textcolor{blue}{FILE 4:} `offsets-v3-new-chunk-data_2017-05-26.Rdata`  
+
+### FILE 1
+
+```{r File1}
+load(file.path(getwd(), "inputs", "offsets-v3_2017-04-19.Rdata"))
+```
+
+This gives 2 files: OFF and SPP
+```{r OFF}
+head(OFF)[,1:10]
+colnames(OFF)
+dim(OFF)
+```
+
+\textcolor{red}{OFF:} Returns rownames as PKEY and columns as bird species with offset values, with 
+`921275` locations and `151` species.
+
+```{r SPP}
+head(SPP)
+colnames(SPP)
+```
+
+\textcolor{red}{SPP:} Returns a vector of all species present in the offset table
+
+### FILE 2
+```{r FILE2}
+rm(OFF, SPP)
+load(file.path(getwd(), "inputs", "offsets-v3data_2016-12-01.Rdata"))
+```
+
+This returns 1 file: offdat
+```{r offdat}
+head(offdat)
+```
+
+\textcolor{red}{OFF:} Returns original PKEY, TSSR, JDAY, DSLS, TREE, LCC4, MAXDUR 
+and MAXDIS used to create the offsets (original data).
+
+### FILE 3
+```{r FILE3}
+rm(offdat)
+load(file.path(getwd(), "inputs", "offsets-v3-new-chunk_2017-05-26.Rdata"))
+```
+
+This returns 2 files: OFF and SPP
+```{r OFF2}
+head(OFF)[,1:10]
+colnames(OFF)
+dim(OFF)
+```
+
+\textcolor{red}{FILE 3:} Returns similar file as the FILE 1, my guess is that it is complementary, as 
+it has a dimension of `126904` rows. Will compare with FILE 1::OFF to be sure.
+
+```{r OFF_Comp}
+OFF2 <- OFF # New data is OFF2, old data is OFF
+load(file.path(getwd(), "inputs", "offsets-v3_2017-04-19.Rdata"))
+locationsOFF <- rownames(OFF) # Bigger older dataset
+locationsOFF2 <- rownames(OFF2) # Smaller newer dataset
+similar <- which(locationsOFF2 %in% locationsOFF) # seems to be a LOT!
+length(similar)
+```
+
+Apparently `19424` locations in the newer dataset (considered the date on the file name to say it is newer) 
+are the same as in the first one. Do they have the same values? We will subset to see better.
+
+```{r OFF_Comp_Val}
+valOFF2 <- OFF2[1:9,] # smaller dataset
+rowNamesOFF2 <- rownames(valOFF2)
+rowNumbersOFF <- which(rownames(OFF) %in% rowNamesOFF2) # seems to be a LOT!
+valOFF <- OFF[rowNumbersOFF,]
+all(c(valOFF2) == c(valOFF))
+any(c(valOFF2) == c(valOFF))
+```
+
+Not all values are the same, but some are. I should update the values that are outdated 
+(I considered the dates written on the names of the file) accordingly. 
+
+```{r merge_Datasets}
+
+dtOFF <- data.table::data.table(OFF)
+dtOFF2 <- data.table::data.table(OFF2)
+dtOFF$PKEY <- rownames(OFF)
+dtOFF2$PKEY <- rownames(OFF2)
+
+whichToChange <- dtOFF$PKEY[which(dtOFF$PKEY %in% dtOFF2$PKEY)]
+append <- dtOFF2[!PKEY %in% whichToChange,]
+dtOFF[PKEY %in% whichToChange,] <- dtOFF2[PKEY %in% whichToChange,]
+DataJoin <- rbind(dtOFF, append)
+```
+
+Testing to see if it worked. If it did, `valOFF2[, 1:5]` should be the values in `DataJoin[rowNumbersOFF, c(1:5, ncol(DataJoin))]`, and yet, DataJoin should have 
+more rows than OFF.
+```{r}
+DataJoin[rowNumbersOFF, c(152, 1:5)]
+valOFF2[, 1:5]
+valOFF[, 1:5]
+dim(DataJoin) > dim(OFF)
+```
+
+Offsets are updated to version `2017-05-26`.

@@ -1,0 +1,93 @@
+---
+title: "Setting up Microsoft SQL Server in Linux"
+author: "Tati Micheletti"
+date: "7/17/2018"
+output: html_document
+---
+
+## Set up the SQL
+
+### 1. Steps
+Install brew using the Terminal (maybe better if you install in root if your user has sudo access) - from http://linuxbrew.sh/:
+```{bash install}
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+```
+
+### 2. Follow the next steps
+- Install the Linuxbrew dependencies if you have sudo access:
+  Debian, Ubuntu, etc.
+```{bash build}
+    sudo apt-get install build-essential # I didn't install it because I don't have sudo access
+```
+  
+  See http://linuxbrew.sh/#dependencies for more information.
+- Add Linuxbrew to your ~/.profile by running
+```{bash paths}
+    echo 'export PATH="/home/tmichele/.linuxbrew/bin:$PATH"' >>~/.profile
+    echo 'export MANPATH="/home/tmichele/.linuxbrew/share/man:$MANPATH"' >>~/.profile
+    echo 'export INFOPATH="/home/tmichele/.linuxbrew/share/info:$INFOPATH"' >>~/.profile
+```
+
+- Add Linuxbrew to your PATH
+```{bash linbrewPath}
+    PATH="/home/tmichele/.linuxbrew/bin:$PATH"
+```
+
+- We recommend that you install GCC by running:
+```{bash gcc}
+    brew install gcc
+```
+
+- After modifying your shell profile, you may need to restart your session
+  (logout and then log back in) if the brew command isn't found.
+  
+- Run `brew help` to get started
+
+- Further documentation:
+    https://docs.brew.sh
+    
+I got this warning... Not really sure what it means...
+`\textcolor{red}{Warning:} /home/tmichele/.linuxbrew/bin is not in your PATH.`
+
+### 3. Test to see if this is working
+```{bash steps}
+test -d ~/.linuxbrew && PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
+test -d /home/linuxbrew/.linuxbrew && PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
+test -r ~/.bash_profile && echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.bash_profile
+echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.profile
+
+```
+
+### 4. Further test if brew is working
+```{bash testing}
+brew install hello
+```
+
+# If running into trouble, try 
+brew doctor
+
+### 5. Connecting
+
+There are six settings needed to make a connection:
+
+Driver - See the Drivers section for more information
+Server - A network path to the database server
+Database - The name of the database
+UID - The user’s network ID or server local account
+PWD - The account’s password
+Port - Should be set to 1433
+                      
+```{r testing}
+con <- DBI::dbConnect(odbc::odbc(),
+                      Driver   = "/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so", # Driver for Linux
+                      Server   = "boreal.biology.ualberta.ca", 
+# Note: even though the address is set up in Windows as boreal.biology.ualberta.ca\boreal, in R I need to exclude the \boreal
+                      Database = "BAM_National_V4_2015_0206", #master or BAM_National_V4_2015_0206? # Got the names from the Windows ODBC connection
+                      UID      = rstudioapi::askForPassword("Database User"),
+                      PWD      = rstudioapi::askForPassword("Database Password"),
+                      Port     = 1433)
+```
+
+
+
+For more info on how to deal with SQL in R: https://db.rstudio.com/odbc/
