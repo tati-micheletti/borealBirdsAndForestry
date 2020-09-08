@@ -5,9 +5,9 @@ library("data.table")
 library("usefun")
 library("magrittr")
 wd <- getwd()
-if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/mnt/data/Micheletti/borealBirdsAndForestry")){
+if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/home/tmichele/projects/borealBirdsAndForestry")){
   warning("Make sure you are in the correct working directory!")
-  setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
+  setwd("/home/tmichele/projects/borealBirdsAndForestry")
 }
 maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
 originalDensFolder <- file.path(wd, "modules/birdDensityBCR_Prov_LCC/data")
@@ -452,7 +452,7 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     
     # Identify which pixels changed before 2005
     BIRDfullTable[, pixelChanged := ifelse(cummRate1985-cummRate2005 != 0, TRUE, FALSE)] #all(LCC %in% 1:15)
-    source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/percentOfAreaAffectedByDisturbance.R')
+    source('/home/tmichele/projects/borealBirdsAndForestry/functions/percentOfAreaAffectedByDisturbance.R')
     percChange <- percentOfAreaAffectedByDisturbance(tableWithChange = BIRDfullTable, logicalColChange = "pixelChanged")
     message(crayon::cyan(paste0("Percent area that is affected by ANY change for ", BIRD, ": ", 
                                 100*round(as.numeric(percChange), 2), "%")))
@@ -822,12 +822,12 @@ plot2 <- changeInHabitatSupplyThroughTime(fullTableList = fullTableAllBirds, pat
 # MAPS
 
 # MAP 1: Map of change in disturbance: mergedFocal2011 -- only works if this is cummulative (which is)! [ UPLOADED ]
-mergedFocal2011 <- raster("/mnt/data/Micheletti/borealBirdsAndForestry/modules/focalCalculation/data/mergedFocal2011-500Res250m.tif")
+mergedFocal2011 <- raster("/home/tmichele/projects/borealBirdsAndForestry/modules/focalCalculation/data/mergedFocal2011-500Res250m.tif")
 
 
 # MAP2: Change in habitat supply (absolute number -- realAbund2011-realAbund0) for each species
 d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
+source('/home/tmichele/projects/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
 absoluteHabitatSupplyMAP <- changeInHabitatSupply(tble = pixelTablesWithUncertaintyPre05,
                                                   RTM = d,
                                                   whichType = "absolute", # absolute, proportional
@@ -838,7 +838,7 @@ absoluteHabitatSupplyMAP <- changeInHabitatSupply(tble = pixelTablesWithUncertai
 
 # MAP2B: Change in habitat supply (absolute number -- realAbund2011-realAbund0) for all species together
 d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupplyAll.R')
+source('/home/tmichele/projects/borealBirdsAndForestry/functions/changeInHabitatSupplyAll.R')
 absoluteHabitatSupplyMAPall <-  changeInHabitatSupplyAll(tble = pixelTablesWithUncertaintyPre05,
                                                          RTM = d,
                                                          whichType = "absolute", # absolute, proportional
@@ -871,7 +871,7 @@ p <- ggplot(data = allChanges, aes(x = species, y = change, fill = species)) +
 # for each species (Especially SAR?)
 # HOW MUCH THE LOSS IS COMPARED TO POPULATION ABUNDANCE PROJECTIONS (abund0)?
 d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
+source('/home/tmichele/projects/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
 proportionalHabitatSupplyMAPeach <- Cache(changeInHabitatSupply, tble = pixelTablesWithUncertaintyPre05,
                                           whichType = "proportional", # absolute, proportional
                                           RTM = d,
@@ -882,7 +882,7 @@ proportionalHabitatSupplyMAPeach <- Cache(changeInHabitatSupply, tble = pixelTab
 # for each species (Especially SAR?)
 # HOW MUCH THE LOSS IS COMPARED TO POPULATION ABUNDANCE PROJECTIONS (abund0)?
 d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
+source('/home/tmichele/projects/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
 proportionalHabitatSupplyMAPall <-  Cache(changeInHabitatSupplyAll, tble = pixelTablesWithUncertaintyPre05, # LATER
                                           whichType = "proportional", # absolute, proportional
                                           RTM = d,

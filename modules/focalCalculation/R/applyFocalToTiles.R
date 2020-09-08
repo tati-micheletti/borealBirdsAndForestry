@@ -47,7 +47,7 @@ applyFocalToTiles <- function(
         clusterExport(cl = cl, varlist = ls(), envir = environment())
         loadAllPackagesInCluster <- function(reproducible = "reproducible", pakages = pkg){
           tryCatch(require(reproducible), error = devtools::install_github("PredictiveEcology/SpaDES.core", ref = "development"))
-          reproducible::Require(pkg)
+          Require(pkg)
         }
         clusterCall(cl = cl, fun = loadAllPackagesInCluster)
 

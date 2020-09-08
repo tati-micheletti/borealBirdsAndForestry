@@ -133,4 +133,8 @@ summarizedTableCertified.RDS
 Smallfile*
 modules/bayesianBirdModel/outputs/posthocAnalysis/bayesian
 outputs/posthocAnalysis/bayesian
+inputs/
+inputs/*.dat
+inputs/*.hdr
+inputs/*.qs
 

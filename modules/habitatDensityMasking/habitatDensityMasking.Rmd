@@ -22,7 +22,7 @@ For help writing in R Markdown, see http://rmarkdown.rstudio.com/.
 
 ```{r module_usage}
 library("SpaDES")
-setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
+
 setPaths(modulePath = file.path(getwd(), "modules"))
 getPaths() # shows where the 4 relevant paths are
 

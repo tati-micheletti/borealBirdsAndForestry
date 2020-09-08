@@ -1,11 +1,11 @@
-setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
+
 source(file.path(getwd(), 'functions/isGDALInstalled.R'))
 if (!isGDALInstalled()) message("GDAL was not found in your computer, please make sure you install it before running these modules.")
 if (!length(Sys.which("unzip")) > 0) message("unzip was not found in your computer, please make sure you install it before running these modules.")
 # We also need to set a 'scratch' temporary folder for raster (if our home folder doesn't have enough space)
 maxMemory <- 5e+12
 user <- pemisc::user()
-scratchDir <- reproducible::checkPath(path = paste0("/mnt/tmp/rasterTMP/", user), create = TRUE)
+scratchDir <- reproducible::checkPath(path = file.path(dirname(getwd()), "scratch"), create = TRUE)
 
 #Here we check that the creation of the folder worked (we might have problems with writting access, only tested with my own user)
 if(dir.create(scratchDir)) system(paste0("sudo chmod -R 777 /mnt/tmp/rasterTMP"), wait = TRUE) 

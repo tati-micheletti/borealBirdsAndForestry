@@ -23,7 +23,7 @@ prepParamForChainCheck <- function(samplesList, param, unwantted){
     })
   return(redChain)
 }
-TRIAL <- "trial5"
+TRIAL <- "trial6"
 destPath <- reproducible::checkPath(file.path(getwd(), "outputs/posthocAnalysis/bayesian", TRIAL), 
                                                                create = TRUE)
 Checksums(destPath, write = TRUE)
@@ -143,7 +143,8 @@ Model 1 is composed of one equation, where the coefficients for disturbance come
 
 ```{r load1, echo=TRUE}
 whichModel <- "Model 1"
-model1 <- prepInputs(url = "https://drive.google.com/open?id=1eMgRiHnDoVLJqMXpUE75YeIwVnRI2U29",
+model1 <- prepInputs(url = "https://drive.google.com/open?id=16fvWSrO0ITVH64NwP5xPXKT5IP6KLi9f", 
+                       # TRIAL 5: "https://drive.google.com/open?id=1eMgRiHnDoVLJqMXpUE75YeIwVnRI2U29",
                        # TRIAL 4: "https://drive.google.com/open?id=1Hw8CcQ7tSkHtR5cx-1JCRAUYuz3JRCUH",
                        # TRIAL3: "https://drive.google.com/open?id=1yIHt8JE1v3-d8VW_Z6Ypj74NtJ-ZZP5Y",
                        # TRIAL 2: "https://drive.google.com/open?id=1jS36CdH3jJiVdVXlE6GOkznP4Ao50o5m",
@@ -157,9 +158,15 @@ model1 <- prepInputs(url = "https://drive.google.com/open?id=1eMgRiHnDoVLJqMXpUE
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains1, echo = TRUE}
-betaChain <- prepParamForChainCheck(samplesList = model1$samples, 
+if (TRIAL != "trial6"){
+   betaChain <- prepParamForChainCheck(samplesList = model1$samples, 
                                     param = "beta", 
                                     unwantted = "sd")
+} else {
+betaChain <- prepParamForChainCheck(samplesList = model1$samples, 
+                                    param = "beta", 
+                                    unwantted = "tau.beta")  
+}
 # dev.off()
 basicMCMCplots::chainsPlot(samplesList = betaChain)
 # dev.off()
@@ -182,9 +189,16 @@ hist(lambda[, Mean], main = "Average density: Model 1", xlim = c(0, 3), breaks =
 
 Now the coefficient for disturbance, beta. Beta[1] is the neighborhood disturbance coefficient, and beta[2] is the local disturbance coefficient.
 ```{r beta1, echo = TRUE}
-beta <- c(grepMulti(modelDT$rn, patterns = c("beta", "1")),
+if (TRIAL != "trial6"){
+ beta <- c(grepMulti(modelDT$rn, patterns = c("beta", "1")),
                    grepMulti(modelDT$rn, patterns = c("beta", "2")),
                    grepMulti(modelDT$rn, patterns = c("beta", "mu")))
+} else {
+  beta <- c(grepMulti(modelDT$rn, patterns = c("beta", "1")),
+                   grepMulti(modelDT$rn, patterns = c("beta", "2")),
+                   grepMulti(modelDT$rn, patterns = c("beta", "mu", "1")),
+                   grepMulti(modelDT$rn, patterns = c("beta", "mu", "2")))
+}
 dt <- data.frame(modelDT[rn %in% beta,c("rn", "Mean")])
 boxplot(Mean ~ rn, data = dt, main = paste0("Disturbance Coefficients: ", whichModel), 
         xlab = "beta[1] = neighborhood; beta[2] = local\n mu.beta = hyperparameter average")
@@ -233,10 +247,11 @@ chain1beta2 <- chain1[, ..beta2]
 chain2beta2 <- chain2[, ..beta2]
 beta.local <- rbind(chain2beta2, chain1beta2)
 dt <- cbind(beta.local, beta.neighborhood)
-names(dt) <- c("beta.local", "beta.neighborhood")
+names(dt) <- c("beta.local", "mu.beta.local", "beta.neighborhood", "mu.beta.neighborhood")
 dt <- as.data.frame(dt)
 
 clearPlot()
+# BETA
 plot(dt$beta.neighborhood, 
      dt$beta.local, xlab = "beta[1] - neighborhood", ylab = "beta[2] - local", main = whichModel)
 mod <- lm(data = dt, beta.neighborhood ~ beta.local)
@@ -244,6 +259,17 @@ tab <- summary(mod)
 abline(mod, col = "red")
 mtext(paste0("cor = ", round(cor(dt$beta.neighborhood, dt$beta.local), 3), 
              "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
+
+clearPlot()
+# MU.BETA
+plot(dt$mu.beta.neighborhood, 
+     dt$mu.beta.local, xlab = "mu.beta[1] - neighborhood", ylab = "mu.beta[2] - local", main = whichModel)
+mod <- lm(data = dt, mu.beta.neighborhood ~ mu.beta.local)
+tab <- summary(mod)
+abline(mod, col = "red")
+mtext(paste0("cor = ", round(cor(dt$mu.beta.neighborhood, dt$mu.beta.local), 3), 
+             "\nadj.R^2 = ", round(tab$adj.r.squared, 3)), 3, line = -0.2)
+
 ```
 
 
@@ -360,7 +386,8 @@ OBS.: NN needs to be initialized as well as local lambda
 
 ```{r load2, echo=TRUE}
 whichModel <- "Model 2"
-model2 <- prepInputs(url = "https://drive.google.com/open?id=1eTWpb-1mxYXX1KYZ66RvrXMB0_zyV1AB",
+model2 <- prepInputs(url = "https://drive.google.com/open?id=1AXPoAfzZMy9M0EEmtggSKnjLIAYwAo3W",
+                       # TRIAL 5: "https://drive.google.com/open?id=1eTWpb-1mxYXX1KYZ66RvrXMB0_zyV1AB",
                        # TRIAL 4: "https://drive.google.com/open?id=1R6EReTfdLHtv8O3EeK1bwayfZgs-n4eh", 
                        # TRIAL 3: "https://drive.google.com/open?id=15d7j6wBj09a6XK1mF0C3cFLggrrqCao4",
                        # TRIAL 2: "https://drive.google.com/open?id=17QiG44vd-Tsf-7QZreUz8Vq67UmpDLZH",
@@ -374,9 +401,16 @@ model2 <- prepInputs(url = "https://drive.google.com/open?id=1eTWpb-1mxYXX1KYZ66
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains2, echo = TRUE}
-betaChain <- prepParamForChainCheck(samplesList = model2$samples, 
+if (TRIAL != "trial6"){
+   betaChain <- prepParamForChainCheck(samplesList = model2$samples, 
                                     param = "beta", 
                                     unwantted = "sd")
+} else {
+betaChain <- prepParamForChainCheck(samplesList = model2$samples, 
+                                    param = "beta", 
+                                    unwantted = "tau.beta")  
+}
+
 # dev.off()
 basicMCMCplots::chainsPlot(samplesList = betaChain)
 # dev.off()
@@ -553,7 +587,8 @@ Model 3 is composed of one equation, where the coefficients for disturbance come
 
 ```{r load3, echo=TRUE}
 whichModel <- "Model 3"
-model3 <- prepInputs(url = "https://drive.google.com/open?id=1HyHw09Uh2fQPQ0TUnjcutQ9ox-yTaSDJ",
+model3 <- prepInputs(url = "https://drive.google.com/open?id=1WOri5BstOs36AjaGLPhFMV_Cqv4VRInp",
+                       # TRIAL 5: "https://drive.google.com/open?id=1HyHw09Uh2fQPQ0TUnjcutQ9ox-yTaSDJ",
                        # TRIAL 4: "https://drive.google.com/open?id=1d20NQmaGxD71JnFn5LWf9HW3M6esi__b",
                        # TRIAL 3: "https://drive.google.com/open?id=1MLKMU-oz7MgnIhJ8XoqLZ_f5ki57SWm2",
                        # TRIAL 2: "https://drive.google.com/open?id=1oVzMYvI7YXvL6TsgSh8BnYCda7GOAU2E",
@@ -567,9 +602,18 @@ model3 <- prepInputs(url = "https://drive.google.com/open?id=1HyHw09Uh2fQPQ0TUnj
 First of all, we should check chain mixing. We use the function `chainsPlot` from the package `basicMCMCplots`. OBS.: These will likely not work in RStudio server.
 
 ```{r chains3, echo = TRUE}
-betaChain <- prepParamForChainCheck(samplesList = model3$samples, 
+if (TRIAL != "trial6"){
+   betaChain <- prepParamForChainCheck(samplesList = model3$samples, 
                                     param = "beta", 
                                     unwantted = "sd")
+} else {
+betaChain <- prepParamForChainCheck(samplesList = model3$samples, 
+                                    param = "beta", 
+                                    unwantted = "tau.beta")  
+}
+Rchain <- prepParamForChainCheck(samplesList = model3$samples, 
+                                    param = "R", 
+                                    unwantted = NULL)
 # dev.off()
 basicMCMCplots::chainsPlot(samplesList = betaChain)
 # dev.off()
@@ -746,7 +790,8 @@ OBS.: NN needs to be initialized as well as local lambda
 
 ```{r load4, echo=TRUE}
 whichModel <- "Model 4"
-model4 <- prepInputs(url = "https://drive.google.com/open?id=1LeHxu3G5dVMWiGEsATbmNaACCdRdk9Ln",
+model4 <- prepInputs(url = "https://drive.google.com/open?id=1sjobb4TFJ6AXzAq_SePAg7ysck2o4oKG",
+                       # TRIAL 5: "https://drive.google.com/open?id=1LeHxu3G5dVMWiGEsATbmNaACCdRdk9Ln",
                        # TRIAL 4: "https://drive.google.com/open?id=1WY0R9_Jkf7imMJ5ZqDsH2s9NrwmicPns",
                        # TRIAL 3: "https://drive.google.com/open?id=1HQhyWsSHY8w54yUZPAmnv-Kv-zz-qtj-",
                        # TRIAL 2: "https://drive.google.com/open?id=1yMFNbIF7aPm6nmaqrjnz4518BsO6644L",

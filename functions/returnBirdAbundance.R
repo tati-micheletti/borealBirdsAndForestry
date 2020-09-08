@@ -20,7 +20,7 @@ returnBirdAbundance <- function(filepath,
     message(crayon::yellow(basename(fullTableFilename), " or ", 
                            basename(summarizedTableFileName), " does not exist. ",
                            "Creating and saving"))
-    source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/areaAndAbundance.R')
+    source(file.path(getwd(), 'functions/areaAndAbundance.R'))
     denRasters <- Cache(areaAndAbundance, 
                         filepath = filepath, 
                         onlyNA = onlyNA, 
