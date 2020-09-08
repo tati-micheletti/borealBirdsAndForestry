@@ -5,9 +5,9 @@ library("data.table")
 library("usefun")
 library("magrittr")
 wd <- getwd()
-if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/mnt/data/Micheletti/borealBirdsAndForestry")){
-  warning("Make sure you are in the correct working directory!")
-  setwd("/mnt/data/Micheletti/borealBirdsAndForestry")
+if (all(pemisc::user() %in% c("Tati", "tmichele"), wd != "/home/tmichele/projects/borealBirdsAndForestry")){
+  warning("Make sure you are in the correct working directory!", immediate. = TRUE)
+  # setwd("/home/tmichele/projects/borealBirdsAndForestry")
 }
 maskedDensityRasFolder <- file.path(wd, "outputs/posthocAnalysis/maskedDensityRas")
 originalDensFolder <- file.path(wd, "modules/birdDensityBCR_Prov_LCC/data")
@@ -160,7 +160,7 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
     
     # Identify which pixels changed before 2005
     BIRDfullTable[, pixelChanged := ifelse(cummRate1985-cummRate2005 != 0, TRUE, FALSE)] #all(LCC %in% 1:15)
-    source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/percentOfAreaAffectedByDisturbance.R')
+    source(file.path(getwd(), 'functions/percentOfAreaAffectedByDisturbance.R'))
     percChange <- percentOfAreaAffectedByDisturbance(tableWithChange = BIRDfullTable, logicalColChange = "pixelChanged")
     message(crayon::cyan(paste0("Percent area that is affected by ANY change for ", BIRD, ": ", 
                                 100*round(as.numeric(percChange), 2), "%")))
@@ -201,7 +201,7 @@ pixelTablesWithUncertaintyPre05 <- lapply(X = species, FUN = function(BIRD){
 names(pixelTablesWithUncertaintyPre05) <- species
 
 d <- raster(file.path(maskedDensityRasFolder, "densityBBWA.tif"))
-source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/changeInHabitatSupply.R')
+source('~/functions/changeInHabitatSupply.R')
 absoluteHabitatSupplyMAPCAWA <-  changeInHabitatSupply(tble = pixelTablesWithUncertaintyPre05,
                                                          RTM = d,
                                                          whichType = "proportional", # absolute, proportional

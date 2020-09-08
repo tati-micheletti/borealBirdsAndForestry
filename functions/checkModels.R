@@ -1,7 +1,7 @@
 checkModels <- function(useRE, species, dt, disturbancePerc, multiplyByExpectedDensity = FALSE){
   
   library("lme4")
-  source('/mnt/data/Micheletti/borealBirdsAndForestry/functions/createModel.R')
+  source(file.path(getwd(), 'functions/createModel.R'))
   # Create the model object from data (dt)
   if (useRE){
     m <- createModel(bird = species, data = dt, useRE = TRUE)
