@@ -15,42 +15,77 @@ defineModule(sim, list(
                   "future.apply", "stringr", "nimble", "tati-micheletti/usefun@development",
                   "ggplot2", "qs"),
   parameters = rbind(
-    defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant"),
-    defineParameter("testArea", "logical", FALSE, NA, NA, "Should use study area?"),
-    defineParameter("modelType", "numeric", 1, NA, NA, "Should use study area?"),
-    defineParameter("fitFrequentistModel", "logical", TRUE, NA, NA, "Should run frequentist glmer model too?"),
-    defineParameter("GDriveFolder", "character", NULL, NA, NA, "GDrive folder to upload model objects"),
-    defineParameter("reRunModels", "logical", FALSE, NA, NA, "Should the bayesian and/or frequentist models be re-ran?"),
-    defineParameter("useFuture", "logical", FALSE, NA, NA, "If lapply, should it use multicore future?"),
-    defineParameter("plotBaysModel", "logical", TRUE, NA, NA, "Should plot bays models?"),
-    defineParameter("savePredictedDT", "logical", FALSE, NA, NA, "Should save sim$predictedDT?"),
-    defineParameter("numberGroups", "numeric", NA, NA, NA, "Should the species be divided into groups due to memory? If so, how many?"),
-    defineParameter("overwriteBirdDensityDT", "logical", FALSE, NA, NA, "Should the density tables be overwritten?"),
-    defineParameter("quickLoad", "logical", FALSE, NA, NA, paste0("Should the final density table be loaded? ",
-                                                                  "This will error if the table doesn't yet exist ",
-                                                                  "and needs to be set to FALSE if models need to be re-ran"))
+    defineParameter(".useCache", "logical", FALSE, NA, NA, 
+                    paste0("Should this entire module be run with caching ",
+                           "activated? This is generally intended for data-type",
+                           " modules, where stochasticity and time are not",
+                           " relevant")),
+    defineParameter("testArea", "logical", FALSE, NA, NA, 
+                    paste0("Should use",
+                           " study area?")),
+    defineParameter("modelType", "numeric", 1, NA, NA, 
+                    paste0("Should use",
+                           " study area?")),
+    defineParameter("fitFrequentistModel", "logical", TRUE, NA, NA, 
+                    paste0("Should run frequentist glmer model too?")),
+    defineParameter("GDriveFolder", "character", NULL, NA, NA, 
+                    paste0("GDrive folder to upload model objects")),
+    defineParameter("reRunModels", "logical", FALSE, NA, NA, 
+                    paste0("Should the bayesian and/or frequentist",
+                           " models be re-ran?")),
+    defineParameter("useFuture", "logical", FALSE, NA, NA, 
+                    paste0("If lapply, should it use multicore future?")),
+    defineParameter("plotBaysModel", "logical", TRUE, NA, NA, 
+                    paste0("Should plot bays models?")),
+    defineParameter("savePredictedDT", "logical", FALSE, NA, NA, 
+                    paste0("Should save sim$predictedDT?")),
+    defineParameter("numberGroups", "numeric", NA, NA, NA, 
+                    paste0("Should the species be divided into groups due ",
+                           "to memory? If so, how many?")),
+    defineParameter("overwriteBirdDensityDT", "logical", FALSE, NA, NA, 
+                    paste0("Should the density tables be overwritten?")),
+    defineParameter("quickLoad", "logical", FALSE, NA, NA, 
+                    paste0(
+                      "Should the final density table be loaded? ",
+                      "This will error if the table doesn't yet exist ",
+                      "and needs to be set to FALSE if models need to be ",
+                      "re-ran"))
   ),
   inputObjects = bind_rows(
     expectsInput(objectName = "birdDensityRasters", objectClass = "RasterStack", 
-                 desc = "Raster stack of expected density of all birdSpecies", sourceURL = NA),
+                 desc = "Raster stack of expected density of all birdSpecies", 
+                 sourceURL = NA),
     expectsInput(objectName = "focalRasters", objectClass = "RasterStack", 
-                 desc = "Raster stack of all disturbances 100 and 500m for all years", sourceURL = NA),
+                 desc = paste0("Raster stack of all disturbances 100 and ",
+                               "500m for all years"), 
+                 sourceURL = NA),
     expectsInput(objectName = "dataName", objectClass = "character", 
                  desc = "File name of used dataset", sourceURL = NA),
     expectsInput(objectName = "rP", objectClass = "SpatialPolygonDataFrame", 
-                 desc = "Random polygon in Ontario for when testArea = TRUE", sourceURL = NA),
+                 desc = "Random polygon in Ontario for when testArea = TRUE", 
+                 sourceURL = NA),
     expectsInput(objectName = "birdSpecies", objectClass = "character",
-                 desc = "list of bird species to run the models for (same as Suarez 2019 et al.)", sourceURL = NA)
+                 desc = paste0("list of bird species to run the models for",
+                               " (same as Suarez 2019 et al.)"), 
+                 sourceURL = NA)
   ),
   outputObjects = bind_rows(
-    createsOutput(objectName = "data", objectClass = "data.table", desc = "Bird dataset: Minidataset_master29JAN19.csv"),
-    createsOutput(objectName = "fixedDT", objectClass = "list", desc = "Data.table of fixed values (model values) for the bayesian DT"),
-    createsOutput(objectName = "yearDT", objectClass = "list", desc = "Data.table of yearly values (for prediction values) for the bayesian DT"),
-    createsOutput(objectName = "hierarchicalModel", objectClass = "list", desc = "List of model types for each bird species"),
-    createsOutput(objectName = "freqModels", objectClass = "list", desc = "List of frequentist models for each bird species"),
-    createsOutput(objectName = "predictedDT", objectClass = "list", desc = "List of data table per species with predictions per pixel"),
-    createsOutput(objectName = "coeff", objectClass = "list", desc = "List of full posterios from models per species"), 
-    createsOutput(objectName = "dataForPrediction", objectClass = "list", desc = "List of data.table per species for predictions")
+    createsOutput(objectName = "data", objectClass = "data.table", 
+                  desc = "Bird dataset: Minidataset_master29JAN19.csv"),
+    createsOutput(objectName = "fixedDT", objectClass = "list", 
+                  desc = "Data.table of fixed values (model values) for the bayesian DT"),
+    createsOutput(objectName = "yearDT", objectClass = "list", 
+                  desc = "Data.table of yearly values (for prediction values) for the bayesian DT"),
+    createsOutput(objectName = "hierarchicalModel", objectClass = "list", 
+                  desc = "List of model types for each bird species"),
+    createsOutput(objectName = "freqModels", objectClass = "list", 
+                  desc = "List of frequentist models for each bird species"),
+    createsOutput(objectName = "predictedDT", objectClass = "list", 
+                  desc = "List of data table per species with predictions per pixel"),
+    createsOutput(objectName = "coeff", objectClass = "list", 
+                  desc = "List of full posterios from models per species"), 
+    createsOutput(objectName = "dataForPrediction", objectClass = "list", 
+                  desc = "List of data.table per species for predictions")
   ) 
 ))
 
@@ -60,9 +95,11 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
     init = {
       sim$freqModels <- sim$predictedDT <- list()
       if (any(nchar(start(sim)) < 4, nchar(end(sim)) < 4)) # Sanity check on years
-        stop("This module deals with explictit years (1985 - 2011). Please provide the time in YYYY format.")
+        stop(paste0("This module deals with explictit years (1985 - 2011). ",
+                    "Please provide the time in YYYY format."))
       
-      sim$data <- prepInputs(url = "https://drive.google.com/open?id=1KoL6QzKqCiBUZ8i6O-llCiit0G2APWLI", 
+      sim$data <- prepInputs(url = paste0("https://drive.google.com/open?id=",
+                                          "1KoL6QzKqCiBUZ8i6O-llCiit0G2APWLI"), 
                              fun = "base::readRDS", 
                              targetFile = "data.rds",
                              destinationPath = dataPath(sim))
@@ -73,24 +110,28 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
         if (file.exists(finalTablePath)){
           sim$predictedDT <- qs::qread(finalTablePath)
         } else {
-          stop("Parameter quickLoad is TRUE, but file doesn't exist yeat. Please make a full run of the module first.")
+          stop(paste0("Parameter quickLoad is TRUE, but file doesn't exist yet.",
+                      " Please make a full run of the module first."))
         }
         sim$predictedDT <- file.path(Paths$outputPath, "predictedDT.qs")
       } else {
         sim <- scheduleEvent(sim, time(sim), "bayesianBirdModel", "model")
-        sim <- scheduleEvent(sim, ifelse(P(sim)$plotBaysModel, time(sim), NA), "bayesianBirdModel", "plot")
+        sim <- scheduleEvent(sim, ifelse(P(sim)$plotBaysModel, time(sim), NA), 
+                             "bayesianBirdModel", "plot")
         sim <- scheduleEvent(sim, time(sim), "bayesianBirdModel", "prediction")
       }
     },
     model = {
       message(paste0("Building the statistical data frame..."))
-      sim$fixedDT <- dataframeBuilding(birdData = sim$data, birdSpecies = sim$birdSpecies)
+      sim$fixedDT <- dataframeBuilding(birdData = sim$data, 
+                                       birdSpecies = sim$birdSpecies)
    
       # Fit an equivalent frequentist model
       if (isTRUE(P(sim)$fitFrequentistModel)){
         library(lme4)
         sim$freqModels <- lapply(X = sim$birdSpecies, FUN = function(name){
-          modelRDSpath <- file.path(Paths$outputPath, paste0("modelFreq_", name, ".rds"))
+          modelRDSpath <- file.path(Paths$outputPath, 
+                                    paste0("modelFreq_", name, ".rds"))
           if (file.exists(modelRDSpath) & !isTRUE(P(sim)$reRunModels)){
             suppressMessages(assign("mod", readRDS(modelRDSpath)))
             } else {
@@ -117,7 +158,9 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
           if (file.exists(fileName)){
             sim$freqModels[[BIRD]] <- readRDS(fileName) 
           } else {
-            sim$freqModels[[BIRD]] <- "File doesnt exist and was not created. Set the parameter fitFrequentistModel = TRUE"
+            sim$freqModels[[BIRD]] <- paste0("File doesnt exist and was ",
+                                             "not created. Set the parameter",
+                                             " fitFrequentistModel = TRUE")
           }
         })
       }
@@ -143,10 +186,14 @@ doEvent.bayesianBirdModel = function(sim, eventTime, eventType) {
       if (P(sim)$reRunModels){
         lapply(sim$birdSpecies, FUN = function(BIRD){
           lapply(P(sim)$modelType, FUN = function(modType){
-            saveRDS(sim$hierarchicalModel[[BIRD]][[modType]], file.path(Paths$outputPath, 
-                                                                        paste0("modelBay", modType, "_", BIRD,".rds")))
+            saveRDS(sim$hierarchicalModel[[BIRD]][[modType]], 
+                    file.path(Paths$outputPath, 
+                              paste0("modelBay", modType, "_", 
+                                     BIRD,".rds")))
             if (!is.null(P(sim)$GDriveFolder))
-              drive_upload(file.path(Paths$outputPath, paste0("modelBay", modType, "_", BIRD,".rds")),
+              drive_upload(file.path(Paths$outputPath, 
+                                     paste0("modelBay", modType, "_", 
+                                            BIRD,".rds")),
                            as_id(P(sim)$GDriveFolder))
           })
         })
