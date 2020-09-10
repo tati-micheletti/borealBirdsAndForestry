@@ -12,8 +12,10 @@ predictHierarchicalModel <- function(bird,
                                  ". (Time: ", startTime,")")))
   # Change Counts, Offset and density
   names(currentYearBirdData)[names(currentYearBirdData) == birdSp] <- "counts"
-  names(currentYearBirdData)[names(currentYearBirdData) == grepMulti(x = names(currentYearBirdData), patterns = "OFFSET")] <- "offset"
-  names(currentYearBirdData)[names(currentYearBirdData) == grepMulti(x = names(currentYearBirdData), patterns = "DENSITY")] <- "density"
+  names(currentYearBirdData)[names(currentYearBirdData) == grepMulti(x = names(currentYearBirdData), 
+                                                                     patterns = "OFFSET")] <- "offset"
+  names(currentYearBirdData)[names(currentYearBirdData) == grepMulti(x = names(currentYearBirdData), 
+                                                                     patterns = "DENSITY")] <- "density"
   currentYearBirdData <- na.omit(currentYearBirdData)
   
   # Integer Cluster and Year.
@@ -24,7 +26,7 @@ predictHierarchicalModel <- function(bird,
   library("nimble")
   startTime <- Sys.time()
   lapplyFun <- ifelse(useFuture, future_lapply, lapply)
-  mcmc.out <- do.call(lapplyFun, args = list(X = modelType, FUN = function(modType){
+  mcmc.out <- do.call(lapplyFun, args = alist(X = modelType, FUN = function(modType){
       modelRDSpath <- file.path(Paths$outputPath, paste0("modelBay", modType, "_", birdSp, ".rds"))
       if (all(file.exists(modelRDSpath), !isTRUE(reRunModels))){
         mcmc <- readRDS(modelRDSpath)
