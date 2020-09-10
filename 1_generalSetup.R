@@ -90,22 +90,23 @@ outputSubFolder <- paste0("outputs/", toupper(format(Sys.time(), "%d%b%y")))
 message(crayon::underline(crayon::yellow(paste0("Your outputs folder is: ", 
                                                 crayon::green(file.path(getwd(), outputSubFolder))))))
 
+message("Your current temporary directory is ", tempdir())
+maxMemory <- 5e+12
+scratchDir <- file.path("~/scratch/borealForestryAndBirds")
+if(dir.create(scratchDir)) system(paste0("chmod -R 777 ", scratchDir), wait = TRUE)
+raster::rasterOptions(default = TRUE)
+options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
+
 SpaDES.core::setPaths(modulePath = file.path(getwd(), "modules"), 
                       inputPath = file.path(getwd(), "inputs"), 
                       outputPath = file.path(getwd(), outputSubFolder), 
-                      cachePath = file.path(getwd(), "cache"))
+                      cachePath = file.path(getwd(), "cache"), 
+                      rasterPath = scratchDir)
 
 # Check for any log leftovers
 leftoverLogs <- list.files(SpaDES.core::Paths$cachePath, pattern = "logParallel")
 if (length(leftoverLogs) != 0)
   unlink(file.path(Paths$cachePath, leftoverLogs))
-
-message("Your current temporary directory is ", tempdir())
-maxMemory <- 5e+12
-scratchDir <- file.path("~/scratch")
-if(dir.create(scratchDir)) system(paste0("sudo chmod -R 777 ", scratchDir), wait = TRUE) 
-raster::rasterOptions(default = TRUE)
-options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
 
 # Sessting up the cache folder: it is hosted in the project's GDrive
 cloudFolderID <- "https://drive.google.com/open?id=1PoEkOkg_ixnAdDqqTQcun77nUvkEHDc0"
