@@ -1,4 +1,4 @@
-runModel3 <- function(birdData, # NOT FINISHED! Added intercept to the formula, need init and prior
+runModel3 <- function(birdData, # NOT FINISHED! Added intercept to the formula, need init and prior # <~~ Seems to be outdated?
                       bird, startTime, currentTime){
   
   message("Running model 3 multivariate model, BCR+LCC covars for ", bird)
