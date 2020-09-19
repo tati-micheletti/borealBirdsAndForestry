@@ -1,5 +1,5 @@
 integerFocal <- function (x, ...){
-  library(raster)
+  library("raster")
   .local <- function(x, w, fun, filename = "", na.rm = FALSE, 
                       pad = FALSE, padValue = NA, NAonly = FALSE, ...){
     stopifnot(hasValues(x))

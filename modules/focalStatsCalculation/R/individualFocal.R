@@ -1,9 +1,36 @@
-individualFocal <- function(inList, inWeight, denomRas) {
-
-  a <- raster::focal(inList, w = inWeight, na.rm = TRUE)
-  b <- overlay(x = a, y = denomRas, fun = function(x,y) {return(x/y)})
-  b[is.infinite(b)] <- 0 #some inf values returned from dividing by 0 (non-forest in LCC)
-
-  return(b)
-
+individualFocal <- function(ras, 
+                            weightMatrix, 
+                            useInteger = FALSE,
+                            maskTo = NULL, # length 2+ vector of c(maskWhat, ..., ToWhat)
+                            ...) { 
+  # denominatorRaster == raster to devide the focal by
+  focalRas <- raster::focal(x = ras,
+                            w = weightMatrix,
+                            na.rm = TRUE,
+                            fun = sum,
+                             pad = TRUE)
+  if (!is.null(maskTo)){
+    maskWhat <- maskTo[-length(maskTo)]
+    ToWhat <- maskTo[length(maskTo)]
+    if (any(is.na(maskWhat))){
+      focalRas[is.na(ras)] <- ToWhat
+      if (!all(is.na(maskWhat))){
+        focalRas[ras %in% !is.na(maskWhat)] <- ToWhat
+      }
+    } else {
+      focalRas[ras %in% maskWhat] <- ToWhat
+    }
+  }
+  
+  if (useInteger){
+    storage.mode(focalRas[]) <- "integer" # Reducing size of raster by converting it to a real binary
+    gc()
+  }
+  
+  dots <- list(...)
+  if (!is.null(dots[["denominatorRaster"]])){
+    focalRas <- focalRas/dots[["denominatorRaster"]]
+  }
+  
+  return(focalRas)
 }

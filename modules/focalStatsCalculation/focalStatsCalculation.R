@@ -22,27 +22,35 @@ defineModule(sim, list(
   documentation = deparse(list("README.txt", "focalStatsCalculation.Rmd")),
   reqdPkgs = list(),
   parameters = rbind(
-    defineParameter("nx", "numeric", 2, 1, NA, "the number of tiles to split raster into, along horizontal axis"),
-    defineParameter("ny", "numeric", 2, 1, NA, "the number of tiles to split raster into, along vertical axis"),
-    defineParameter("rType", "character", "INT1U", NA, NA, "pixel data type for splitRaster"),
-    defineParameter("buffer", "numeric", 3, 0, NA, paste0("the number of cells to buffer tiles ",
-                                                          "during splitRaster. Measured in cells, not distance")),
-    defineParameter(".useCache", "logical", FALSE, NA, NA, paste0("Should this entire module be ",
-                                                                  "run with caching activated? ",
-                                                                  "This is generally intended for ",
-                                                                  "data-type modules, where ",
-                                                                  "stochasticity and time are ",
-                                                                  "not relevant")),
-    defineParameter("useParallel", "character", NULL, NA, NA, 
+    defineParameter("classesToExcludeInLCC", "numeric", c(20, 31:32), NA, NA,
+                    paste0("The landcover classes to convert to 0 in the RTM (so the focal does not)",
+                           "consider these as habitat for the birds")),
+    defineParameter("nx", "numeric", 2, 1, NA, 
+                    paste0("The number of tiles to split raster into, along horizontal axis")),
+    defineParameter("ny", "numeric", 2, 1, NA, 
+                    paste0("the number of tiles to split raster into, along vertical axis")),
+    defineParameter("rType", "character", "INT1U", NA, NA, 
+                    paste0("pixel data type for splitRaster")),
+    defineParameter("buffer", "numeric", 3, 0, NA, 
+                    paste0("the number of cells to buffer tiles ",
+                           "during splitRaster. Measured in cells, not distance")),
+    defineParameter(".useCache", "logical", FALSE, NA, NA, 
+                    paste0("Should this entire module be ",
+                           "run with caching activated ? ",
+                           "This is generally intended for ",
+                           "data - type modules, where ",
+                           "stochasticity and time are ",
+                           "not relevant")),
+    defineParameter("useParallel", "logical", FALSE, NA, NA, 
                     "Should we parallelize tile processing?"),
-    defineParameter("focalDistance", "numeric", 100, NA, NA, 
-                    paste0("The distance at which to compute focal statistics, in units of", 
-                           " the input rastesr CRS. This will be used to ", 
-                           "create a matrix with circular weights summing to 1)")),
-    defineParameter("cores", "numeric", NULL, NA, NA, paste0("How many nodes/cores to use when",
-                                                             " parallelizing?", 
-                                                             "If NULL and useParallel, calculates",
-                                                             "an optimal"))
+    defineParameter("focalDistance", "list", list(100), NA, NA, 
+                    paste0("A list over all the distances at which to compute focal statistics,",
+                           "in units of the input rastesr CRS. This will be used to ", 
+                           "create a matrix with circular weights summing to 1)", 
+                           "It is important to note that if the element in the list is a length 2",
+                           "vector, the first element will be the annulus of the second")),
+    defineParameter("recoverTime", "numeric", 30, NA, NA, 
+                    paste0("How long are we considering a forest to be unsuitable for birds?"))
   ),
   inputObjects = bind_rows(
     expectsInput(objectName = "disturbanceRaster", objectClass = "RasterLayer", 
@@ -60,7 +68,10 @@ defineModule(sim, list(
     expectsInput(objectName = "studyArea", objectClass = "", 
                  desc = paste0("Shapefile of the study area.",
                                "It is needed only if the disturbance raster is not provided.",
-                               "Used in .inputObjects but not in the simuation"))
+                               "Used in .inputObjects but not in the simuation")),
+    expectsInput(objectName = "LandCoverRaster", objectClass = "", 
+                 desc = paste0("Raster where pixels are representing the type of landcover ",
+                               "to be used to mask the RTM to pixels where habitat is not available"))
   ),
   outputObjects = bind_rows(
     createsOutput(objectName = "focalYearList", objectClass = "list", 
@@ -69,6 +80,9 @@ defineModule(sim, list(
     createsOutput(objectName = "splittedRTM", objectClass = "list", 
                   desc = paste0("This is a list of rasters, each one is a tile ")),
     createsOutput(objectName = "splittedDisturbance", objectClass = "list", 
+                  desc = paste0("This is a list of rasters, each one is a tile ",
+                                "At this time, it hasn't yet been processed")),
+    createsOutput(objectName = "splittedLCC", objectClass = "list", 
                   desc = paste0("This is a list of rasters, each one is a tile ",
                                 "At this time, it hasn't yet been processed"))
   )
@@ -82,46 +96,79 @@ doEvent.focalStatsCalculation = function(sim, eventTime, eventType) {
       sim <- scheduleEvent(sim, start(sim), "focalStatsCalculation", "calculatingFocal")
     },
     tile = {
+
+      sim$splittedRTM <- tryCatch({
+        Cache(SpaDES.tools::splitRaster, # cacheId:676d2b492f669e53
+              r = sim$rasterToMatch,
+              nx = P(sim)$nx,
+              ny = P(sim)$ny,
+              buffer = P(sim)$buffer,  # Splitting disturbanceYear Raster, write to disk,
+              rType = P(sim)$rType,
+              path = dataPath(sim),
+              userTags = paste0("splitRTM_x", P(sim)$nx, "y", 
+                                P(sim)$ny))
+      }, error = function(e){
+        TAG <- paste0("splitRTM_x", P(sim)$nx, "y", 
+                      P(sim)$ny)
+        ch <- setkey(showCache(userTag = TAG), "createdDate")
+        cacheID <- ch[NROW(ch), cacheId]
+        fl <- list.files(Paths$cachePath, recursive = TRUE, 
+                         full.names = TRUE, pattern = cacheID)
+        qs::qread(fl)
+      })
+            
+      sim$splittedDisturbance <- tryCatch({
+        Cache(SpaDES.tools::splitRaster, #cacheId:c031e0b28d3e0283
+              r = sim$disturbanceRaster,
+              nx = P(sim)$nx,
+              ny = P(sim)$ny,
+              buffer = P(sim)$buffer,  # Splitting disturbanceYear Raster, write to disk,
+              rType = P(sim)$rType,
+              path = dataPath(sim),
+              userTags = paste0("splitDisturbance_x", P(sim)$nx, "y",
+                                P(sim)$ny))
+      }, error = function(e){
+        TAG <- paste0("splitDisturbance_x", P(sim)$nx, "y", 
+                      P(sim)$ny)
+        ch <- setkey(showCache(userTag = TAG), "createdDate")
+        cacheID <- ch[NROW(ch), cacheId]
+        fl <- list.files(Paths$cachePath, recursive = TRUE, 
+                         full.names = TRUE, pattern = cacheID)
+        qs::qread(fl)
+      })
       
-      browser() # Work on the functions below
-      sim$splittedRTM <- Cache(splitRaster, r = sim$Raster3,
-                           nx = params(sim)$prepTiles$nx, 
-                           ny = params(sim)$prepTiles$ny, 
-                           buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceYear Raster, write to disk,
-                           rType = params(sim)$prepTiles$rType,
-                           path = file.path(cachePath(sim), "Raster3"),
-                           cacheId = paste0("splitRaster3_x", params(sim)$prepTiles$nx, "y", 
-                                            params(sim)$prepTiles$ny))
-      sim$splittedDisturbance <- Cache(splitRaster, r = sim$Raster3,
-                               nx = params(sim)$prepTiles$nx, 
-                               ny = params(sim)$prepTiles$ny, 
-                               buffer = params(sim)$prepTiles$buffer,  # Splitting disturbanceYear Raster, write to disk,
-                               rType = params(sim)$prepTiles$rType,
-                               path = file.path(cachePath(sim), "Raster3"),
-                               cacheId = paste0("splitRaster3_x", params(sim)$prepTiles$nx, "y", 
-                                                params(sim)$prepTiles$ny))
-      
-      
-      
+      sim$splittedLCC <- tryCatch({
+        Cache(SpaDES.tools::splitRaster, #cacheId:c031e0b28d3e0283
+              r = sim$LandCoverRaster,
+              nx = P(sim)$nx,
+              ny = P(sim)$ny,
+              buffer = P(sim)$buffer,  # Splitting disturbanceYear Raster, write to disk,
+              rType = P(sim)$rType,
+              path = dataPath(sim),
+              userTags = paste0("splitLCC_x", P(sim)$nx, "y",
+                                P(sim)$ny))
+      }, error = function(e){
+        TAG <- paste0("splitLCC_x", P(sim)$nx, "y", 
+                      P(sim)$ny)
+        ch <- setkey(showCache(userTag = TAG), "createdDate")
+        cacheID <- ch[NROW(ch), cacheId]
+        fl <- list.files(Paths$cachePath, recursive = TRUE, 
+                         full.names = TRUE, pattern = cacheID)
+        qs::qread(fl)
+      })
     },
     calculatingFocal = {
-      # REVISE THE STRUCTURE OF FUNS BELOW... A LOT WAS DONE BECAUSE OF THE DIFFERENT 3 RASTERS 
-      # WHICH WE DON'T HAVE ANYMORE...
-      # sim$focalYearList[[paste0("Year", time(sim))]] <- Cache(applyFocalToTiles,
-      #                                                         listTilePaths = sim$rastersList,
-      #                                                         pathData = dataPath(sim),
-      #                                                         pathCache = cachePath(sim),
-      #                                                         forestClass = P(sim)$forestClass,
-      #                                                         focalDistance = P(sim)$focalDistance,
-      #                                                         disturbanceClass = P(sim)$disturbanceClass,
-      #                                                         recoverTime = P(sim)$recoverTime,
-      #                                                         resampledRes = P(sim)$resampledRes,
-      #                                                         useParallel = P(sim)$useParallel,
-      #                                                         nNodes = P(sim)$nNodes,
-      #                                                         currentYear = time(sim), 
-      #                                                         cacheId = paste0("focalToTiles", max(P(sim)$focalDistance),
-      #                                                                          "m", time(sim)))
-
+      sim$focalYearList[[paste0("Year", time(sim))]] <- applyFocalToTiles(listTilesDisturbance = sim$splittedDisturbance,
+                                                                          listTilesRTM = sim$splittedRTM,
+                                                                          listTilesLCC = sim$splittedLCC,
+                                                                          pathCache = Paths$cachePath,
+                                                                          focalDistance = P(sim)$focalDistance,
+                                                                          recoverTime = P(sim)$recoverTime,
+                                                                          pathData = dataPath(sim),
+                                                                          year = time(sim),
+                                                                          classesToExcludeInLCC = P(sim)$classesToExcludeInLCC)
+      
+      sim <- scheduleEvent(sim, time(sim)+1, "focalStatsCalculation", "calculatingFocal")
     },
     warning(paste("Undefined event type: \'", current(sim)[1, "eventType", with = FALSE],
                   "\' in module \'", current(sim)[1, "moduleName", with = FALSE], "\'", sep = ""))

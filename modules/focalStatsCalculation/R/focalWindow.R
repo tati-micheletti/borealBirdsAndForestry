@@ -1,4 +1,4 @@
-focalWindow <- function (x, d, type = c("circle", "rectangle")){
+focalWindow <- function (x, d, type = "circle"){ # or "rectangle"
   type <- match.arg(type)
   x <- res(x)
   if (type == "circle") {
