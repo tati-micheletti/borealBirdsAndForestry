@@ -1,4 +1,4 @@
-runModel3 <- function(birdData, # NOT FINISHED! Added intercept to the formula, need init and prior # <~~ Seems to be outdated?
+runModel3 <- function(birdData, # WE DECIDED TO GO FOR INLA WITH THIS --> NEED TO CONVERT THIS SCRIPT
                       bird, startTime, currentTime){
   
   message("Running model 3 multivariate model, BCR+LCC covars for ", bird)
@@ -59,35 +59,68 @@ runModel3 <- function(birdData, # NOT FINISHED! Added intercept to the formula, 
     for (i in 1:nvisits) {
       # Indices
       yearInd <- YearIndex[i]
-      classInd <- LCCIndex[i]
-      clusterInd <- ClusterIndex[i]
+      # classInd <- LCCIndex[i]
+      BCR_PROV_LCCInd <- BCR_PROV_LCC[i]
       # each sample point / each row of the data table
       # Local scale
       counts[i]  ~ dpois(lambda[i])
       lambda[i] <- exp(loglambda[i])
       loglambda[i] <-
-        LCCvec[classInd] +
-        beta[1] * State_P_500[i] + 
-        beta[2] * State_P_100[i] + 
-        offset[i] +
-        clusterRanEff[clusterInd] * switchCluster +
+        beta[1] * State_P_500[i] + # Disturbance on neighborhood (annulus) % of forested cells in the total
+        beta[2] * State_P_100[i] + # Disturbance on local (annulus) % of forested cells in the total
+        beta[3] * State_P_0[i] + # Disturbance on the cell
+        offsetMethods[i] +
+        offsetNumberPixelsAvailable[i] +
+        BCR_PROV_LCC[BCR_PROV_LCCInd] * switchCluster +
+        location.Temporal + # as random effect
         YearRanEff[yearInd] * switchYear # Random Effects
+      
+      # REVISED PROPOSAL --> Needs to be worked on
+      # 2 models
+      # 
+      # loglambda[i] <-
+      # gamma[1] * proportionOf30YPlusForest_500[i] + # Proportion of forested areas calculated
+      #   gamma[2] * proportionOf30YPlusForest_100[i] + #
+      #   gamma[3] * is30YPlusForest[i] + # Disturbance on the cell -- categorical
+      #   offsetMethods[i] +
+      #   BCR_PROV_LCC[BCR_PROV_LCCInd] * switchCluster
+      # spatioTemporal + # as random effect
+      #   # YearRanEff[yearInd] * switchYear # Random Effects
+      #   
+      #   AND
+      #   
+      #   loglambda[i] <-
+      #   beta[1] * proportionOfForest_500[i] + # Proportion of forested areas calculated
+      #   beta[2] * proportionOfForest_100[i] + #
+      #   beta[3] * isForest[i] + # Disturbance on the cell -- categorical
+      #   gamma[1] * proportionOf30YPlusForest_500[i] + # Proportion of forested areas calculated
+      #   gamma[2] * proportionOf30YPlusForest_100[i] + #
+      #   gamma[3] * is30YPlusForest[i] + # Disturbance on the cell -- categorical
+      #   offsetMethods[i] +
+      #   BCR_PROV_LCC[BCR_PROV_LCCInd] * switchCluster +
+      #   spatioTemporal + # as random effect
+      #   # YearRanEff[yearInd] * switchYear # Random Effects
+      #   
+      
     } # end i
   })
-  
+  # Original model
+  # counts ~ density(LCC_PROV_BCR) + disturbance100 + offsets + 1|YYYY + 1|Cluster
+  # counts ~ density(LCC_PROV_BCR) + disturbance500 + offsets + 1|YYYY + 1|Cluster
   ################################### MODEL
   
   # Data (doesn't need init)
   iSMdata <-
     list(
       counts = birdData$counts,
-      LCCIndex = birdData$LCC, # Need to create
-      BCR = birdData$BCR, # Need to create
-      Prov = birdData$Prov, # Need to create
+      # LCCIndex = birdData$LCC, # Need to create
+      # BCR = birdData$BCR, # Need to create
+      # Prov = birdData$Prov, # Need to create
       State_P_100 = birdData$State_P_100,
       State_P_500 = birdData$State_P_500,
       offset = birdData$offset,
-      ClusterIndex = birdData$ClusterSP,
+      location.Temporal = birdData$location.Temporal, # need to create
+      BCR_PROV_LCC = birdData$ClusterSP,
       YearIndex = birdData$YYYY
     )
   # Constants
