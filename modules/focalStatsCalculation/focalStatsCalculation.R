@@ -22,7 +22,12 @@ defineModule(sim, list(
   documentation = deparse(list("README.txt", "focalStatsCalculation.Rmd")),
   reqdPkgs = list(),
   parameters = rbind(
-    defineParameter("classesToExcludeInLCC", "numeric", c(20, 31:32), NA, NA,
+    defineParameter("doAssertions", "logical", TRUE, NA, NA,
+                    paste0("Should it do assertions? This consumes time but increases testing")),
+    defineParameter("cleanScratch", "character", NULL, NA, NA,
+                    paste0("If the scratch dir should be claned after each focal operation, pass",
+                           "the directory here")),
+    defineParameter("classesToExcludeInLCC", "numeric", c(0, 20, 31, 32, 33, 40, 50, 80, 81, 100), NA, NA,
                     paste0("The landcover classes to convert to 0 in the RTM (so the focal does not)",
                            "consider these as habitat for the birds")),
     defineParameter("nx", "numeric", 2, 1, NA, 
@@ -97,32 +102,12 @@ doEvent.focalStatsCalculation = function(sim, eventTime, eventType) {
     },
     tile = {
 
-      sim$splittedRTM <- tryCatch({
-        Cache(SpaDES.tools::splitRaster, # cacheId:676d2b492f669e53
-              r = sim$rasterToMatch,
-              nx = P(sim)$nx,
-              ny = P(sim)$ny,
-              buffer = P(sim)$buffer,  # Splitting disturbanceYear Raster, write to disk,
-              rType = P(sim)$rType,
-              path = dataPath(sim),
-              userTags = paste0("splitRTM_x", P(sim)$nx, "y", 
-                                P(sim)$ny))
-      }, error = function(e){
-        TAG <- paste0("splitRTM_x", P(sim)$nx, "y", 
-                      P(sim)$ny)
-        ch <- setkey(showCache(userTag = TAG), "createdDate")
-        cacheID <- ch[NROW(ch), cacheId]
-        fl <- list.files(Paths$cachePath, recursive = TRUE, 
-                         full.names = TRUE, pattern = cacheID)
-        qs::qread(fl)
-      })
-            
       sim$splittedDisturbance <- tryCatch({
         Cache(SpaDES.tools::splitRaster, #cacheId:c031e0b28d3e0283
               r = sim$disturbanceRaster,
               nx = P(sim)$nx,
               ny = P(sim)$ny,
-              buffer = P(sim)$buffer,  # Splitting disturbanceYear Raster, write to disk,
+              buffer = P(sim)$buffer,
               rType = P(sim)$rType,
               path = dataPath(sim),
               userTags = paste0("splitDisturbance_x", P(sim)$nx, "y",
@@ -136,13 +121,13 @@ doEvent.focalStatsCalculation = function(sim, eventTime, eventType) {
                          full.names = TRUE, pattern = cacheID)
         qs::qread(fl)
       })
-      
+
       sim$splittedLCC <- tryCatch({
         Cache(SpaDES.tools::splitRaster, #cacheId:c031e0b28d3e0283
               r = sim$LandCoverRaster,
               nx = P(sim)$nx,
               ny = P(sim)$ny,
-              buffer = P(sim)$buffer,  # Splitting disturbanceYear Raster, write to disk,
+              buffer = P(sim)$buffer,
               rType = P(sim)$rType,
               path = dataPath(sim),
               userTags = paste0("splitLCC_x", P(sim)$nx, "y",
@@ -156,17 +141,39 @@ doEvent.focalStatsCalculation = function(sim, eventTime, eventType) {
                          full.names = TRUE, pattern = cacheID)
         qs::qread(fl)
       })
+      
+      sim$splittedRTM <- tryCatch({
+        Cache(SpaDES.tools::splitRaster, #cacheId:676d2b492f669e53
+              r = sim$rasterToMatch,
+              nx = P(sim)$nx,
+              ny = P(sim)$ny,
+              buffer = P(sim)$buffer,
+              rType = P(sim)$rType,
+              path = dataPath(sim),
+              userTags = paste0("splitRTM_x", P(sim)$nx, "y",
+                                P(sim)$ny))
+      }, error = function(e){
+        TAG <- paste0("splitRTM_x", P(sim)$nx, "y", 
+                      P(sim)$ny)
+        ch <- setkey(showCache(userTag = TAG), "createdDate")
+        cacheID <- ch[NROW(ch), cacheId]
+        fl <- list.files(Paths$cachePath, recursive = TRUE, 
+                         full.names = TRUE, pattern = cacheID)
+        qs::qread(fl)
+      })
     },
     calculatingFocal = {
       sim$focalYearList[[paste0("Year", time(sim))]] <- applyFocalToTiles(listTilesDisturbance = sim$splittedDisturbance,
-                                                                          listTilesRTM = sim$splittedRTM,
                                                                           listTilesLCC = sim$splittedLCC,
+                                                                          listTilesRTM = sim$splittedRTM,
                                                                           pathCache = Paths$cachePath,
                                                                           focalDistance = P(sim)$focalDistance,
                                                                           recoverTime = P(sim)$recoverTime,
                                                                           pathData = dataPath(sim),
                                                                           year = time(sim),
-                                                                          classesToExcludeInLCC = P(sim)$classesToExcludeInLCC)
+                                                                          classesToExcludeInLCC = P(sim)$classesToExcludeInLCC,
+                                                                          doAssertions = P(sim)$doAssertions,
+                                                                          cleanScratch = P(sim)$cleanScratch)
       
       sim <- scheduleEvent(sim, time(sim)+1, "focalStatsCalculation", "calculatingFocal")
     },

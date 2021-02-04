@@ -4,6 +4,7 @@ individualFocal <- function(ras,
                             maskTo = NULL, # length 2+ vector of c(maskWhat, ..., ToWhat)
                             ...) { 
   # denominatorRaster == raster to devide the focal by
+  ras[] <- ras[]
   focalRas <- raster::focal(x = ras,
                             w = weightMatrix,
                             na.rm = TRUE,
@@ -13,12 +14,12 @@ individualFocal <- function(ras,
     maskWhat <- maskTo[-length(maskTo)]
     ToWhat <- maskTo[length(maskTo)]
     if (any(is.na(maskWhat))){
-      focalRas[is.na(ras)] <- ToWhat
+      focalRas[is.na(ras[])] <- ToWhat
       if (!all(is.na(maskWhat))){
-        focalRas[ras %in% !is.na(maskWhat)] <- ToWhat
+        focalRas[ras[] %in% !is.na(maskWhat)] <- ToWhat
       }
     } else {
-      focalRas[ras %in% maskWhat] <- ToWhat
+      focalRas[ras[] %in% maskWhat] <- ToWhat
     }
   }
   
