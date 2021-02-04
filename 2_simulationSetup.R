@@ -160,10 +160,12 @@ if (!file.exists(LCC15FilePath)){
   LCC2015 <- raster::raster(LCC15FilePath)
 }
 
-# Cluster is probably not going to be necessary, but might have the ECOREGION and BCR!!!
+# Cluster is probably not going to be necessary, but might have the PROVINCE and BCR!!!
 # Needs to intersect with LCC
-# 
-# clusterFilePath <- file.path(Paths$inputPath, "clusterRaster.tif")
+
+# HERE --> make BCR_PROV_LCC raster!!!
+
+# clusterFilePath <- file.path(Paths$inputPath, "BCR_Prov_LCCRaster.tif")
 # if (!file.exists(clusterFilePath)){
 #   ecodistrict <- Cache(reproducible::prepInputs, 
 #                        url = "https://drive.google.com/file/d/1fAesdNQDIeoNL3kir4j9lHoOZSKtmkb8/view?usp=sharing", 
@@ -215,79 +217,18 @@ times <- list(start = 1985,
               end = 2015, 
               timeunit = "year")
 
-focalDistance <- list(local = 100, neighborhood = c(100, 500), landscape = c(500, 1000))
+focalDistance <- list(local = c(1, 100), neighborhood = c(100, 500), landscape = c(500, 1000))
 buffer <- round(max(unlist(focalDistance))/unique(res(disturbanceRaster)), 0) + 1
 
 parameters <- list(
-  # "classesToExcludeInLCC" = c(0, 20, 31, 32, 33, 40, 50, 80, 81, 100), # alternatively c(0, 20, 31, 32)
-  #   [18SEP20 ~ TM]
-  #   # This is the crux of the whole study. What we have observed so far is:
-  #   #  the more classes we exclude from the focal statistics (via modifying RTM internally in 
-  #   #  focalToTiles.R), the stronger the effect of forestry on the birds is. 
-  #   #  ==> Rationale to exclude all non-forested areas: 
-  #   #               1. The birds we are dealing with are forest birds, they don't have proper 
-  #   #               habitat outside the forest (i.e. if we have only 1 forest pixel available 
-  #   #               surrounded by grassland, and we cut it, we lose 100% of the forest habitat, 
-  #   #               not 20% of the habitat.
-  #   # That being said, we still would not have the full picture because even the forested areas
-  #   # are not all harvestable (i.e. parks)
-  #   # On the other hand... If we convert these to NA, we will also NOT be predicting for these points
-  #   # which means that the effect of forestry on the density of birds on these other classes would
-  #   # likely be underestimated
-  #   # However, I am not sure how this choices will affect the final results... 
-  #   
-  #   ====
-  #   
-  #   [UPDATE 19SEP20 ~ TM]: Because of the problem above, we decided to go with another approach: 
-  #   i.e. all NAs are 0's, so focal is always fixed sized. We will:
-  #   
-  #   1a. Calculate the sum of forested pixels (210, 220, 230 of LCC1985) over all pixels
-  #   (i.e. outside of study area also being 0) using the focal window. Each pixel that is 210, 
-  #   20 or 230 is 1, all others are 0. 
-  #       MIDDLE RESULT. We will need to save the raster showing each pixel that isidentified as 
-  #   forest or not (210, 220, 230 of LCC1985), which is used right before the focal. We will name 
-  #   it isForest.
-  #   1b. We then divide the sum of forested pixels by the sum of the focal window (i.e. as our 
-  #   window is composed of 1 and 0 -- unweighted -- so we will generate a proportion of the 
-  #   forested pixels over the whole window area) 
-  #       RESULT: This is the proportion of forested area (and will be used throughout the study to
-  #               understand the losses in comparison to that), which we will name it 
-  #               proportionOfForest_XXX where XXX is either 100m-30m annulus or 500-100m annulus 
-  #               or 1000m-500m annulus
-  #                 PRODUCT: 
-  #                   A. 1 raster showing the pixels that are forested = 1 raster
-  #                   B. 3 rasters, one for each focal distance = 3 rasters
-  #   
-  #   2a. Then we will calculate the sum of harvesting (i.e. outside of study area also being 0) 
-  #   using the focal window. Each pixel where harvesting occured in the last 30 years (cumulative) 
-  #   is 1, all others are 0.
-  #       MIDDLE RESULT. We will need to save the raster showing each pixel that is identified as 
-  #   harvested, which is used right before the focal. We will do `ras <- 1 - ras` name it 
-  #   is30YPlusForest.
-  #   2b. We then divide the sum of harvested pixels by the sum of the focal window (i.e. as our 
-  #   window is composed of 1 and 0 -- unweighted -- so we will generate a proportion of the 
-  #   harvested pixels over the whole window area).
-  #   2c. Then we will subtract 2b from 1, as we don't want the proportion of forest > 30y missing, 
-  #   but the proportion of forest > 30y that is still standing.
-  #       RESULT: This is the proportion of forest > 30y that is still standing, which we will name 
-  #       proportionOf30YPlusForest_XXX where XXX is either 100 for 100m-30m annulus, 500 for 500-100m 
-  #       annulus or 1000 for 1000m-500m annulus.
-  #         PRODUCT: 
-  #                 A. 1 raster showing the pixels that are forested * each year from 1985 to 2015
-  #                 = 30 rasters
-  #                 B. 3 rasters (one for each focal distance) * each year from 1985 to 2015 = 90 
-  #                 rasters
-  #     
- 
-  #   
-  #   3b. And each pixel being identified as 
-  
   "focalStatsCalculation" = list(
+    "classesToExcludeInLCC" = c(0, 20, 31, 32, 33, 40, 50, 80, 81, 100), # Non-forested classes
     "nx" = 2,
     "ny" = 2,
     "buffer" = c(buffer, buffer),
     # Buffer to make sure that when rasters are slip, they won't have edge effects
-    "focalDistance" = focalDistance
+    "focalDistance" = focalDistance,
+    "cleanScratch" = scratchDir
   )
 )
 

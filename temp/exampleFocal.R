@@ -10,14 +10,34 @@ testRas[c(3:4, 18, 21, 23:24)] <- 1
 testRas[c(1:2, 6:7, 11:12, 16)] <- NA
 plot(testRas)
 
-RTM <- testRas
-RTM[RTM == 0] <- 1
-RTM[is.na(RTM)] <- 0
-raster::plot(RTM)
-plot(RTM)
+LCC <- testRas
+LCC[LCC == 0] <- 1
+LCC[is.na(LCC)] <- 0
+raster::plot(LCC)
+plot(LCC)
 
 testFocal <- focalWindow(x = testRas, d = 1)
 
-finalRas <- individualFocal(ras = testRas, 
+finalRTM <- individualFocal(ras = LCC, 
                             weightMatrix = testFocal, 
-                            RTM = RTM)
+                            useInteger = TRUE)
+
+finalRTMwithMask0 <- individualFocal(ras = LCC,
+                                     weightMatrix = testFocal,
+                                     useInteger = TRUE,
+                                     maskTo = c(0, 0))
+
+finalFocal <- individualFocal(ras = testRas,
+                              weightMatrix = testFocal,
+                              denominatorRaster = finalRTMwithMask0,
+                              maskTo = c(NA, NA))
+
+finalRTMwithMaskNA <- individualFocal(ras = RTM,
+                                      weightMatrix = testFocal,
+                                      useInteger = TRUE,
+                                      maskTo = c(0, NA))
+
+finalRTMwithMaskAnd0 <- individualFocal(ras = RTM,
+                                        weightMatrix = testFocal,
+                                        useInteger = TRUE,
+                                        maskTo = c(0, 1, 3))

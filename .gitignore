@@ -137,4 +137,4 @@ inputs/
 inputs/*.dat
 inputs/*.hdr
 inputs/*.qs
-
+[alias]      diff = diff --ignore-space-change --ignore-blank-lines

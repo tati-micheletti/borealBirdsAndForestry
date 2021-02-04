@@ -93,6 +93,8 @@ message(crayon::underline(crayon::yellow(paste0("Your outputs folder is: ",
 message("Your current temporary directory is ", tempdir())
 maxMemory <- 5e+12
 scratchDir <- file.path("~/scratch/borealForestryAndBirds")
+# Cleanup the scratch folder
+unlink(scratchDir, recursive = TRUE)
 if(dir.create(scratchDir)) system(paste0("chmod -R 777 ", scratchDir), wait = TRUE)
 raster::rasterOptions(default = TRUE)
 options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
