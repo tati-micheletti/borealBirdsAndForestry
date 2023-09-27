@@ -91,7 +91,7 @@ if (!file.exists(RTMfile)){
 # I need to have a preamble for dealing with the focal calculation so I can use this data also 
 # to fit the birds models. This needs to be done on a yearly basis. 
 # Then, once I have focal for all years, I can use those maps + bird data to fit
-# the statistical models (using hierarchical models)
+# the statistical models (using hierarchical models or maybe as random forest?)
 # I should run already the 3 scales: 100m, 500m annulus, 1000m annulus
 disturbanceRasterFilePath <- file.path(Paths$inputPath, "disturbanceRasterProcessed.tif")
 if (!file.exists(disturbanceRasterFilePath)){
